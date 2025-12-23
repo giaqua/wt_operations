@@ -1,0 +1,333 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "allow_rename": 1,
+ "autoname": "format:DOR-{unit}-{date}",
+ "creation": "2025-05-08 09:20:16.672672",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_ojye",
+  "amended_from",
+  "naming_series",
+  "project",
+  "unit",
+  "unit_assignment_record",
+  "is_operational",
+  "column_break_uaoh",
+  "prepared_by",
+  "date",
+  "reason_for_non_operational",
+  "team_section",
+  "shift_supervisor",
+  "operator",
+  "column_break_hxle",
+  "technician",
+  "technician_2",
+  "tanks_level_section",
+  "tank_level_table",
+  "treatment_parameters_section",
+  "treatment_parameters_table",
+  "average_flow_rate",
+  "energy_consumtion",
+  "chemical_consumption_section",
+  "chemical_dilution_table",
+  "chemical_usage_table",
+  "physical_parameters_section",
+  "influent_parameters_table",
+  "influent_picture",
+  "influent_picture_view",
+  "effluent_parameters_table",
+  "effluent_picture",
+  "effluent_picture_view",
+  "section_break_ybeh",
+  "noncompliant",
+  "safety",
+  "physical_parameters_tab"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_ojye",
+   "fieldtype": "Section Break",
+   "label": "General Information"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Daily Operation Report",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "naming series",
+   "options": "DOR-.YY.MM.DD."
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Project",
+   "options": "Project",
+   "reqd": 1
+  },
+  {
+   "fieldname": "unit",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Unit",
+   "options": "Asset"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_operational",
+   "fieldtype": "Check",
+   "label": "Is Operational"
+  },
+  {
+   "fieldname": "column_break_uaoh",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "prepared_by",
+   "fieldtype": "Link",
+   "in_standard_filter": 1,
+   "label": "Prepared by",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Date"
+  },
+  {
+   "depends_on": "eval:doc.is_operational=='0'",
+   "fieldname": "reason_for_non_operational",
+   "fieldtype": "Data",
+   "label": "Reason for non operational",
+   "mandatory_depends_on": "eval:doc.is_operational=='0'"
+  },
+  {
+   "fieldname": "team_section",
+   "fieldtype": "Section Break",
+   "label": "Team"
+  },
+  {
+   "fieldname": "shift_supervisor",
+   "fieldtype": "Link",
+   "label": "Shift Supervisor",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "operator",
+   "fieldtype": "Link",
+   "label": "Operator",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "technician",
+   "fieldtype": "Link",
+   "label": "Technician 1",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "column_break_hxle",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "technician_2",
+   "fieldtype": "Link",
+   "label": "Technician 2",
+   "options": "Employee"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "tanks_level_section",
+   "fieldtype": "Section Break",
+   "label": "Tanks Level"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "treatment_parameters_section",
+   "fieldtype": "Section Break",
+   "label": "Treatment parameters"
+  },
+  {
+   "fieldname": "treatment_parameters_table",
+   "fieldtype": "Table",
+   "label": "Treatment parameters table",
+   "options": "Treatment parameters table"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "physical_parameters_section",
+   "fieldtype": "Section Break",
+   "label": "Physical Parameters"
+  },
+  {
+   "fieldname": "influent_parameters_table",
+   "fieldtype": "Table",
+   "label": "Influent Parameters Table",
+   "options": "Influent Parameters Table"
+  },
+  {
+   "fieldname": "effluent_parameters_table",
+   "fieldtype": "Table",
+   "label": "Effluent Parameters Table",
+   "options": "Effluent Parameters Table"
+  },
+  {
+   "fieldname": "influent_picture",
+   "fieldtype": "Attach",
+   "label": "Influent Picture"
+  },
+  {
+   "fieldname": "effluent_picture",
+   "fieldtype": "Attach Image",
+   "label": "Effluent Picture"
+  },
+  {
+   "fieldname": "influent_picture_view",
+   "fieldtype": "Image",
+   "label": "influent picture view",
+   "options": "influent_picture"
+  },
+  {
+   "fieldname": "physical_parameters_tab",
+   "fieldtype": "Tab Break",
+   "label": "Physical Parameters"
+  },
+  {
+   "fieldname": "effluent_picture_view",
+   "fieldtype": "Image",
+   "label": "effluent picture view",
+   "options": "effluent_picture"
+  },
+  {
+   "fieldname": "section_break_ybeh",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "noncompliant",
+   "fieldtype": "Small Text",
+   "label": "Non-compliant discharges/emissions"
+  },
+  {
+   "fieldname": "safety",
+   "fieldtype": "Small Text",
+   "label": "Safety"
+  },
+  {
+   "fieldname": "average_flow_rate",
+   "fieldtype": "Float",
+   "label": "Average flow rate",
+   "read_only": 1
+  },
+  {
+   "fieldname": "energy_consumtion",
+   "fieldtype": "Float",
+   "label": "Energy consumtion",
+   "read_only": 1
+  },
+  {
+   "fieldname": "unit_assignment_record",
+   "fieldtype": "Link",
+   "label": "Unit Assignment Record",
+   "options": "Project Unit Assignment"
+  },
+  {
+   "fieldname": "tank_level_table",
+   "fieldtype": "Table",
+   "label": "Tank Level Table",
+   "options": "Tank Level Table"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "chemical_consumption_section",
+   "fieldtype": "Section Break",
+   "label": "Chemical Consumption"
+  },
+  {
+   "fieldname": "chemical_dilution_table",
+   "fieldtype": "Table",
+   "label": "Chemical Dilution Table",
+   "options": "Chemical Dilution Table"
+  },
+  {
+   "fieldname": "chemical_usage_table",
+   "fieldtype": "Table",
+   "label": "Chemical Usage Table",
+   "options": "Chemical Usage Table"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2025-07-13 11:53:16.581365",
+ "modified_by": "Administrator",
+ "module": "WT Operations",
+ "name": "Daily Operation Report",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Operations Technician",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Operations Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

@@ -1,0 +1,60 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-10-02 12:20:47.225212",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "scope_of_work",
+  "responsible",
+  "not_required",
+  "remarks"
+ ],
+ "fields": [
+  {
+   "columns": 4,
+   "fieldname": "scope_of_work",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Scope Of Work",
+   "options": "Scope Of Work",
+   "reqd": 1
+  },
+  {
+   "columns": 1,
+   "default": "0",
+   "fieldname": "not_required",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Not Required "
+  },
+  {
+   "columns": 3,
+   "fieldname": "remarks",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Remarks"
+  },
+  {
+   "fieldname": "responsible",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Responsible",
+   "options": "\nGI\nCustomer"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-10-09 13:44:12.674694",
+ "modified_by": "Administrator",
+ "module": "WT Operations",
+ "name": "TQ Roles and Responsibilities",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

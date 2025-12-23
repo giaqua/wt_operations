@@ -1,0 +1,223 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2025-10-02 13:40:14.935231",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_szng",
+  "naming_series",
+  "amended_from",
+  "sample_tag",
+  "site_visit",
+  "site_visit_date",
+  "column_break_ltzh",
+  "date_sample_received",
+  "report_date",
+  "test_by",
+  "approved_by",
+  "section_break_iixs",
+  "lab_test_results_parameters",
+  "workflow_management_section",
+  "test_template",
+  "sample_receipt_date",
+  "analysis_start_date",
+  "analysis_completion_date",
+  "column_break_workflow_ltr",
+  "approved_by_user",
+  "approval_date",
+  "compliance_status",
+  "regulatory_standard",
+  "deadline_date",
+  "test_priority",
+  "lab_technician",
+  "review_notes"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_szng",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Lab Test Result",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "sample_tag",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Sample Tag",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "date_sample_received",
+   "fieldtype": "Date",
+   "label": "Date sample Received"
+  },
+  {
+   "fieldname": "report_date",
+   "fieldtype": "Date",
+   "label": "Report Date"
+  },
+  {
+   "fieldname": "test_by",
+   "fieldtype": "Link",
+   "label": "Test by",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "approved_by",
+   "fieldtype": "Link",
+   "label": "Approved by",
+   "options": "User"
+  },
+  {
+   "fieldname": "column_break_ltzh",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_iixs",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "lab_test_results_parameters",
+   "fieldtype": "Table",
+   "label": "Lab Test Results Parameters",
+   "options": "Lab Test Results Parameters"
+  },
+  {
+   "fieldname": "site_visit",
+   "fieldtype": "Link",
+   "label": "Site Visit",
+   "options": "Site Visit"
+  },
+  {
+   "fetch_from": "site_visit.date",
+   "fieldname": "site_visit_date",
+   "fieldtype": "Date",
+   "label": "site Visit Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "naming series",
+   "options": "STP-LTR-"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "workflow_management_section",
+   "fieldtype": "Section Break",
+   "label": "Workflow Management"
+  },
+  {
+   "fieldname": "test_template",
+   "fieldtype": "Link",
+   "label": "Test Template",
+   "options": "Lab Test Template"
+  },
+  {
+   "fieldname": "sample_receipt_date",
+   "fieldtype": "Datetime",
+   "label": "Sample Receipt Date"
+  },
+  {
+   "fieldname": "analysis_start_date",
+   "fieldtype": "Datetime",
+   "label": "Analysis Start Date"
+  },
+  {
+   "fieldname": "analysis_completion_date",
+   "fieldtype": "Datetime",
+   "label": "Analysis Completion Date"
+  },
+  {
+   "fieldname": "column_break_workflow_ltr",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "approved_by_user",
+   "fieldtype": "Link",
+   "label": "Approved By",
+   "options": "User"
+  },
+  {
+   "fieldname": "approval_date",
+   "fieldtype": "Datetime",
+   "label": "Approval Date"
+  },
+  {
+   "fieldname": "compliance_status",
+   "fieldtype": "Select",
+   "label": "Compliance Status",
+   "options": "Compliant\nNon-Compliant\nPending Review"
+  },
+  {
+   "fieldname": "regulatory_standard",
+   "fieldtype": "Link",
+   "label": "Regulatory Standard",
+   "options": "Compliance Standard"
+  },
+  {
+   "fieldname": "deadline_date",
+   "fieldtype": "Date",
+   "label": "Deadline Date"
+  },
+  {
+   "fieldname": "test_priority",
+   "fieldtype": "Select",
+   "label": "Test Priority",
+   "options": "Low\nMedium\nHigh\nUrgent"
+  },
+  {
+   "fieldname": "lab_technician",
+   "fieldtype": "Link",
+   "label": "Lab Technician",
+   "options": "User"
+  },
+  {
+   "fieldname": "review_notes",
+   "fieldtype": "Text Editor",
+   "label": "Review Notes"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2025-10-02 13:50:21.521704",
+ "modified_by": "Administrator",
+ "module": "WT Operations",
+ "name": "Lab Test Result",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "track_views": 1
+}

@@ -1,0 +1,119 @@
+[
+ {
+  "docstatus": 0,
+  "doctype": "Treatment parameter",
+  "modified": "2025-06-24 19:05:15.128060",
+  "name": "Waste water treated volume",
+  "parameter_name": "Waste water treated volume",
+  "parameter_type": "Treatment",
+  "parameter_uom": "Square Meter"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Treatment parameter",
+  "modified": "2025-06-24 19:05:15.115726",
+  "name": "Running Hours",
+  "parameter_name": "Running Hours",
+  "parameter_type": "Treatment",
+  "parameter_uom": "Hour"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Treatment parameter",
+  "modified": "2025-05-08 10:11:29.726419",
+  "name": "Average flow rate",
+  "parameter_name": "Average flow rate",
+  "parameter_type": null,
+  "parameter_uom": "m³/h"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Treatment parameter",
+  "modified": "2025-06-24 19:05:15.103789",
+  "name": "Treated water production",
+  "parameter_name": "Treated water production",
+  "parameter_type": "Treatment",
+  "parameter_uom": "Square Meter"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Treatment parameter",
+  "modified": "2025-05-08 10:11:53.324959",
+  "name": "Sludge production",
+  "parameter_name": "Sludge production",
+  "parameter_type": null,
+  "parameter_uom": "Square Meter"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Treatment parameter",
+  "modified": "2025-06-23 14:14:18.190384",
+  "name": "Drain volume",
+  "parameter_name": "Drain volume",
+  "parameter_type": "Treatment",
+  "parameter_uom": "Square Meter"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Treatment parameter",
+  "modified": "2025-05-08 10:12:25.175492",
+  "name": "Energy consumption",
+  "parameter_name": "Energy consumption",
+  "parameter_type": null,
+  "parameter_uom": "Kilowatt-Hour"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Treatment parameter",
+  "modified": "2025-05-08 10:12:43.457692",
+  "name": "pH",
+  "parameter_name": "pH",
+  "parameter_type": null,
+  "parameter_uom": null
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Treatment parameter",
+  "modified": "2025-05-08 10:12:51.828280",
+  "name": "TDS",
+  "parameter_name": "TDS",
+  "parameter_type": null,
+  "parameter_uom": null
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Treatment parameter",
+  "modified": "2025-05-08 10:12:57.742934",
+  "name": "Turbidity",
+  "parameter_name": "Turbidity",
+  "parameter_type": null,
+  "parameter_uom": null
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Treatment parameter",
+  "modified": "2025-06-24 19:05:15.086573",
+  "name": "Energy Consumed",
+  "parameter_name": "Energy Consumed",
+  "parameter_type": "Treatment",
+  "parameter_uom": null
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Treatment parameter",
+  "modified": "2025-06-23 20:22:42.551060",
+  "name": "test",
+  "parameter_name": "test",
+  "parameter_type": "Physical",
+  "parameter_uom": "Meter"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Treatment parameter",
+  "modified": "2025-06-26 18:18:59.303674",
+  "name": "test2",
+  "parameter_name": "test2",
+  "parameter_type": "Physical",
+  "parameter_uom": null
+ }
+]

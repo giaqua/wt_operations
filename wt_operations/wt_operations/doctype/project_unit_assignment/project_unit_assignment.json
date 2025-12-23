@@ -1,0 +1,211 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2025-06-19 13:17:55.340505",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_xs3a",
+  "amended_from",
+  "section_break_nnaw",
+  "naming_series",
+  "unit",
+  "project",
+  "project_type",
+  "column_break_rhez",
+  "assignment_date",
+  "assignment_expected_end_date",
+  "section_break_bkak",
+  "tank_level_template_table",
+  "treatment_parameters_template_table",
+  "chemical_consumption_section",
+  "chemical_dilution_template_table",
+  "chemical_usage_template_table",
+  "physical_parameters_section",
+  "influent_parameters_template_table",
+  "effluent_parameters_template_table"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_xs3a",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Project Unit Assignment",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "section_break_nnaw",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "naming series",
+   "options": "PUA-.####"
+  },
+  {
+   "fieldname": "unit",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Unit",
+   "options": "Asset",
+   "reqd": 1
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Project",
+   "options": "Project",
+   "reqd": 1
+  },
+  {
+   "default": "Today",
+   "fieldname": "assignment_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Assignment Date",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "project.project_type",
+   "fieldname": "project_type",
+   "fieldtype": "Link",
+   "label": "Project Type",
+   "options": "Project Type",
+   "read_only": 1
+  },
+  {
+   "fieldname": "assignment_expected_end_date",
+   "fieldtype": "Date",
+   "label": "Assignment Expected end date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_rhez",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_bkak",
+   "fieldtype": "Section Break",
+   "label": "Assignment Defalts"
+  },
+  {
+   "fieldname": "tank_level_template_table",
+   "fieldtype": "Table",
+   "label": "Tank level table",
+   "options": "Tank level Template table"
+  },
+  {
+   "fieldname": "treatment_parameters_template_table",
+   "fieldtype": "Table",
+   "label": "Treatment parameters table",
+   "options": "Treatment parameters template table"
+  },
+  {
+   "fieldname": "physical_parameters_section",
+   "fieldtype": "Section Break",
+   "label": "Physical Parameters"
+  },
+  {
+   "fieldname": "influent_parameters_template_table",
+   "fieldtype": "Table",
+   "label": "Influent Parameters Table",
+   "options": "Influent Parameters Template Table"
+  },
+  {
+   "fieldname": "effluent_parameters_template_table",
+   "fieldtype": "Table",
+   "label": "Effluent Parameters Table",
+   "options": "Effluent Parameters Template Table"
+  },
+  {
+   "fieldname": "chemical_consumption_section",
+   "fieldtype": "Section Break",
+   "label": "Chemical Consumption"
+  },
+  {
+   "fieldname": "chemical_dilution_template_table",
+   "fieldtype": "Table",
+   "label": "Chemical Dilution Table",
+   "options": "Chemical Dilution Template Table"
+  },
+  {
+   "fieldname": "chemical_usage_template_table",
+   "fieldtype": "Table",
+   "label": "Chemical Usage Table",
+   "options": "Chemical Usage Template Table"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_calendar_and_gantt": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2025-06-30 09:31:00.604098",
+ "modified_by": "Administrator",
+ "module": "WT Operations",
+ "name": "Project Unit Assignment",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "amend": 1,
+   "cancel": 1,
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Operations Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "import": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Operations Technician",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

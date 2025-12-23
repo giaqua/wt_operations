@@ -1,0 +1,781 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2025-10-02 13:51:02.254725",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "tab_proposal_overview",
+  "amended_from",
+  "naming_series",
+  "customer",
+  "customer_contact",
+  "lead",
+  "opportunity",
+  "wwtp_technical_proposal",
+  "wwtp_technical_questionnaire",
+  "site_visit",
+  "water_sample",
+  "column_break_proposal_info",
+  "issue_date",
+  "valid_up_to",
+  "account_manager",
+  "prepared_by",
+  "technical_manager",
+  "tab_project_summary",
+  "project_title",
+  "project_description",
+  "wastewater_generator_type",
+  "design_capacity",
+  "current_capacity",
+  "treatment_technology",
+  "process_description",
+  "treatment_stages",
+  "tab_scope_terms",
+  "scope_of_work",
+  "termination_points",
+  "exclusions",
+  "roles_and_responsibilities_table",
+  "tab_technical_specifications",
+  "daily_flow",
+  "operation_hours",
+  "average_hourly_flow",
+  "site_conditions_summary",
+  "site_accessibility_rating",
+  "power_availability_rating",
+  "ground_conditions_rating",
+  "environmental_impact_assessment",
+  "influent_characteristics",
+  "effluent_requirements",
+  "treatment_challenges",
+  "compliance_status",
+  "influent_quality_table",
+  "proposal_effluent_quality_table",
+  "tab_implementation_requirements",
+  "civil_requirements",
+  "site_preparation_needs",
+  "utility_connections",
+  "equalization_tank_minimum_capacity",
+  "sludge_holding_tank_minimum_capacity",
+  "product_tank_minimum_capacity",
+  "concrete_pads_for_stp",
+  "design_period",
+  "procurement_period",
+  "construction_period",
+  "commissioning_period",
+  "total_implementation_time",
+  "tab_commercial_offer",
+  "option_one_section",
+  "option_1_title",
+  "option_1_table",
+  "operation_and_maintenance",
+  "option_1_terms",
+  "option_two_section",
+  "option_2_title",
+  "option_2_table",
+  "option_2_terms",
+  "option_three_section",
+  "option_3_title",
+  "option_3_table",
+  "boot_concession_period",
+  "boot_operation_period",
+  "boot_transfer_terms",
+  "option_3_terms",
+  "tab_warranty_support",
+  "warranty_text",
+  "maintenance_requirements",
+  "chemical_consumption",
+  "energy_consumption",
+  "environmental_permits_required",
+  "discharge_permit_status",
+  "environmental_monitoring",
+  "technical_risks",
+  "environmental_risks",
+  "mitigation_strategies",
+  "tab_workflow_management",
+  "workflow_status",
+  "deadline_date",
+  "proposal_priority",
+  "column_break_workflow_cp",
+  "customer_response_deadline",
+  "follow_up_schedule"
+ ],
+ "fields": [
+  {
+   "fieldname": "tab_proposal_overview",
+   "fieldtype": "Tab Break",
+   "label": "Proposal Overview"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Customer Proposal",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Naming Series",
+   "options": "CP-.YYYY.-"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Customer",
+   "options": "Customer",
+   "reqd": 1,
+   "description": "Final customer who will own and operate the WWTP facility"
+  },
+  {
+   "fieldname": "customer_contact",
+   "fieldtype": "Link",
+   "label": "Customer Contact",
+   "options": "Contact",
+   "description": "Specific contact person at the customer organization"
+  },
+  {
+   "fieldname": "lead",
+   "fieldtype": "Link",
+   "label": "Lead",
+   "options": "Lead",
+   "description": "Primary contact person or organization interested in the WWTP project"
+  },
+  {
+   "fieldname": "opportunity",
+   "fieldtype": "Link",
+   "label": "Opportunity",
+   "options": "Opportunity",
+   "description": "Sales opportunity associated with this customer proposal"
+  },
+  {
+   "fieldname": "wwtp_technical_proposal",
+   "fieldtype": "Link",
+   "label": "WWTP Technical Proposal",
+   "options": "WWTP Technical Proposal",
+   "reqd": 1,
+   "description": "Technical proposal that forms the basis of this customer proposal"
+  },
+  {
+   "fieldname": "wwtp_technical_questionnaire",
+   "fieldtype": "Link",
+   "label": "WWTP Technical Questionnaire",
+   "options": "WWTP Technical Questionnaire",
+   "read_only": 1,
+   "description": "Technical questionnaire (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "site_visit",
+   "fieldtype": "Link",
+   "label": "Site Visit",
+   "options": "Site Visit",
+   "read_only": 1,
+   "description": "Site visit report (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "water_sample",
+   "fieldtype": "Link",
+   "label": "Water Sample",
+   "options": "Water Sample",
+   "read_only": 1,
+   "description": "Water quality analysis (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "column_break_proposal_info",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Today",
+   "fieldname": "issue_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Issue Date",
+   "reqd": 1,
+   "description": "Date when this customer proposal was issued"
+  },
+  {
+   "fieldname": "valid_up_to",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Valid Up To",
+   "reqd": 1,
+   "description": "Proposal validity period - typically 30-90 days from issue date"
+  },
+  {
+   "fieldname": "account_manager",
+   "fieldtype": "Link",
+   "label": "Account Manager",
+   "options": "Employee",
+   "description": "Account manager responsible for customer relationship"
+  },
+  {
+   "fieldname": "prepared_by",
+   "fieldtype": "Link",
+   "label": "Prepared By",
+   "options": "User",
+   "description": "Sales engineer who prepared this customer proposal"
+  },
+  {
+   "fieldname": "technical_manager",
+   "fieldtype": "Link",
+   "label": "Technical Manager",
+   "options": "User",
+   "description": "Technical manager who reviewed and approved this proposal"
+  },
+  {
+   "fieldname": "tab_project_summary",
+   "fieldtype": "Tab Break",
+   "label": "Project Summary"
+  },
+  {
+   "fieldname": "project_title",
+   "fieldtype": "Data",
+   "label": "Project Title",
+   "read_only": 1,
+   "description": "Project title (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "project_description",
+   "fieldtype": "Text Editor",
+   "label": "Project Description",
+   "read_only": 1,
+   "description": "Project description (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "wastewater_generator_type",
+   "fieldtype": "Data",
+   "label": "Wastewater Generator Type",
+   "read_only": 1,
+   "description": "Type of facility generating wastewater (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "design_capacity",
+   "fieldtype": "Float",
+   "label": "Design Capacity (m³/day)",
+   "read_only": 1,
+   "description": "Maximum daily treatment capacity (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "current_capacity",
+   "fieldtype": "Float",
+   "label": "Current Capacity (m³/day)",
+   "read_only": 1,
+   "description": "Existing treatment capacity (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "treatment_technology",
+   "fieldtype": "Data",
+   "label": "Treatment Technology",
+   "read_only": 1,
+   "description": "Primary treatment technology (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "process_description",
+   "fieldtype": "Text Editor",
+   "label": "Process Description",
+   "read_only": 1,
+   "description": "Detailed description of the treatment process (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "treatment_stages",
+   "fieldtype": "Text Editor",
+   "label": "Treatment Stages",
+   "read_only": 1,
+   "description": "Step-by-step breakdown of treatment stages (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "tab_scope_terms",
+   "fieldtype": "Tab Break",
+   "label": "Scope & Terms"
+  },
+  {
+   "fieldname": "scope_of_work",
+   "fieldtype": "Text Editor",
+   "label": "Scope of Work",
+   "description": "Detailed scope of work including all deliverables and services"
+  },
+  {
+   "fieldname": "termination_points",
+   "fieldtype": "Text Editor",
+   "label": "Termination Points",
+   "description": "Define where our responsibility ends and customer's begins"
+  },
+  {
+   "fieldname": "exclusions",
+   "fieldtype": "Text Editor",
+   "label": "Exclusions",
+   "description": "Items explicitly not included in this proposal"
+  },
+  {
+   "fieldname": "roles_and_responsibilities_table",
+   "fieldtype": "Table",
+   "label": "Roles and Responsibilities",
+   "options": "TQ Roles and Responsibilities",
+   "description": "Clear definition of roles and responsibilities for all parties"
+  },
+  {
+   "fieldname": "tab_technical_specifications",
+   "fieldtype": "Tab Break",
+   "label": "Technical Specifications"
+  },
+  {
+   "fieldname": "daily_flow",
+   "fieldtype": "Data",
+   "label": "Daily Flow",
+   "read_only": 1,
+   "description": "Expected daily wastewater flow rate (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "operation_hours",
+   "fieldtype": "Data",
+   "label": "Operation Hours",
+   "read_only": 1,
+   "description": "Daily operation hours for the WWTP (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "average_hourly_flow",
+   "fieldtype": "Data",
+   "label": "Average Hourly Flow",
+   "read_only": 1,
+   "description": "Average hourly flow rate (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "site_conditions_summary",
+   "fieldtype": "Text Editor",
+   "label": "Site Conditions Summary",
+   "read_only": 1,
+   "description": "Overall assessment of site conditions (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "site_accessibility_rating",
+   "fieldtype": "Select",
+   "label": "Site Accessibility Rating",
+   "options": "Excellent\nGood\nFair\nPoor",
+   "read_only": 1,
+   "description": "Rating of site accessibility (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "power_availability_rating",
+   "fieldtype": "Select",
+   "label": "Power Availability Rating",
+   "options": "Excellent\nGood\nFair\nPoor",
+   "read_only": 1,
+   "description": "Rating of electrical power availability (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "ground_conditions_rating",
+   "fieldtype": "Select",
+   "label": "Ground Conditions Rating",
+   "options": "Excellent\nGood\nFair\nPoor",
+   "read_only": 1,
+   "description": "Rating of soil conditions (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "environmental_impact_assessment",
+   "fieldtype": "Text Editor",
+   "label": "Environmental Impact Assessment",
+   "read_only": 1,
+   "description": "Assessment of environmental impacts (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "influent_characteristics",
+   "fieldtype": "Text Editor",
+   "label": "Influent Characteristics",
+   "read_only": 1,
+   "description": "Detailed analysis of influent wastewater characteristics (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "effluent_requirements",
+   "fieldtype": "Text Editor",
+   "label": "Effluent Requirements",
+   "read_only": 1,
+   "description": "Specific effluent quality requirements (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "treatment_challenges",
+   "fieldtype": "Text Editor",
+   "label": "Treatment Challenges",
+   "read_only": 1,
+   "description": "Identified challenges for treatment (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "compliance_status",
+   "fieldtype": "Select",
+   "label": "Compliance Status",
+   "options": "Compliant\nNon-Compliant\nPartially Compliant\nUnder Review",
+   "read_only": 1,
+   "description": "Current compliance status (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "influent_quality_table",
+   "fieldtype": "Table",
+   "label": "Influent Quality Parameters",
+   "options": "proposal influent quality table",
+   "description": "Expected influent quality parameters"
+  },
+  {
+   "fieldname": "proposal_effluent_quality_table",
+   "fieldtype": "Table",
+   "label": "Effluent Quality Parameters",
+   "options": "Proposal Effluent Quality Table",
+   "description": "Guaranteed effluent quality parameters and discharge standards"
+  },
+  {
+   "fieldname": "tab_implementation_requirements",
+   "fieldtype": "Tab Break",
+   "label": "Implementation Requirements"
+  },
+  {
+   "fieldname": "civil_requirements",
+   "fieldtype": "Text Editor",
+   "label": "Civil Requirements",
+   "read_only": 1,
+   "description": "Civil engineering requirements (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "site_preparation_needs",
+   "fieldtype": "Text Editor",
+   "label": "Site Preparation Needs",
+   "read_only": 1,
+   "description": "Site preparation requirements (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "utility_connections",
+   "fieldtype": "Text Editor",
+   "label": "Utility Connections",
+   "read_only": 1,
+   "description": "Requirements for utility connections (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "equalization_tank_minimum_capacity",
+   "fieldtype": "Data",
+   "label": "Equalization Tank Minimum Capacity",
+   "read_only": 1,
+   "description": "Minimum required capacity for equalization tank (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "sludge_holding_tank_minimum_capacity",
+   "fieldtype": "Data",
+   "label": "Sludge Holding Tank Minimum Capacity",
+   "read_only": 1,
+   "description": "Minimum required capacity for sludge holding tank (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "product_tank_minimum_capacity",
+   "fieldtype": "Data",
+   "label": "Product Tank Minimum Capacity",
+   "read_only": 1,
+   "description": "Minimum required capacity for treated water storage (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "concrete_pads_for_stp",
+   "fieldtype": "Data",
+   "label": "Concrete Pads for STP",
+   "read_only": 1,
+   "description": "Concrete pad requirements (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "design_period",
+   "fieldtype": "Int",
+   "label": "Design Period (weeks)",
+   "read_only": 1,
+   "description": "Time required for detailed engineering design (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "procurement_period",
+   "fieldtype": "Int",
+   "label": "Procurement Period (weeks)",
+   "read_only": 1,
+   "description": "Time required for equipment procurement (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "construction_period",
+   "fieldtype": "Int",
+   "label": "Construction Period (weeks)",
+   "read_only": 1,
+   "description": "Time required for construction (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "commissioning_period",
+   "fieldtype": "Int",
+   "label": "Commissioning Period (weeks)",
+   "read_only": 1,
+   "description": "Time required for commissioning (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "total_implementation_time",
+   "fieldtype": "Int",
+   "label": "Total Implementation Time (weeks)",
+   "read_only": 1,
+   "description": "Total project implementation time (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "tab_commercial_offer",
+   "fieldtype": "Tab Break",
+   "label": "Commercial Offer"
+  },
+  {
+   "fieldname": "option_one_section",
+   "fieldtype": "Section Break",
+   "label": "Option 1: Supply & Installation"
+  },
+  {
+   "fieldname": "option_1_title",
+   "fieldtype": "Data",
+   "label": "Option 1 Title",
+   "default": "Supply & Installation",
+   "description": "Title for Option 1 commercial offer"
+  },
+  {
+   "fieldname": "option_1_table",
+   "fieldtype": "Table",
+   "label": "Option 1 Items",
+   "options": "Quotation Item",
+   "description": "Equipment and services for Option 1"
+  },
+  {
+   "fieldname": "operation_and_maintenance",
+   "fieldtype": "Table",
+   "label": "Operation and Maintenance",
+   "options": "Quotation Item",
+   "description": "Ongoing operation and maintenance services"
+  },
+  {
+   "fieldname": "option_1_terms",
+   "fieldtype": "Text Editor",
+   "label": "Option 1 Terms & Conditions",
+   "description": "Terms and conditions for Option 1"
+  },
+  {
+   "fieldname": "option_two_section",
+   "fieldtype": "Section Break",
+   "label": "Option 2: Design-Build"
+  },
+  {
+   "fieldname": "option_2_title",
+   "fieldtype": "Data",
+   "label": "Option 2 Title",
+   "default": "Design-Build",
+   "description": "Title for Option 2 commercial offer"
+  },
+  {
+   "fieldname": "option_2_table",
+   "fieldtype": "Table",
+   "label": "Option 2 Items",
+   "options": "Quotation Item",
+   "description": "Equipment and services for Option 2"
+  },
+  {
+   "fieldname": "option_2_terms",
+   "fieldtype": "Text Editor",
+   "label": "Option 2 Terms & Conditions",
+   "description": "Terms and conditions for Option 2"
+  },
+  {
+   "fieldname": "option_three_section",
+   "fieldtype": "Section Break",
+   "label": "Option 3: BOOT (Build-Own-Operate-Transfer)"
+  },
+  {
+   "fieldname": "option_3_title",
+   "fieldtype": "Data",
+   "label": "Option 3 Title",
+   "default": "BOOT (Build-Own-Operate-Transfer)",
+   "description": "Title for Option 3 BOOT offer"
+  },
+  {
+   "fieldname": "option_3_table",
+   "fieldtype": "Table",
+   "label": "Option 3 BOOT Items",
+   "options": "Quotation Item",
+   "description": "Equipment and services for BOOT option"
+  },
+  {
+   "fieldname": "boot_concession_period",
+   "fieldtype": "Int",
+   "label": "BOOT Concession Period (years)",
+   "description": "Total concession period for BOOT arrangement",
+   "placeholder": "e.g., 20"
+  },
+  {
+   "fieldname": "boot_operation_period",
+   "fieldtype": "Int",
+   "label": "BOOT Operation Period (years)",
+   "description": "Period during which we operate the facility",
+   "placeholder": "e.g., 15"
+  },
+  {
+   "fieldname": "boot_transfer_terms",
+   "fieldtype": "Text Editor",
+   "label": "BOOT Transfer Terms",
+   "description": "Terms and conditions for facility transfer at end of BOOT period"
+  },
+  {
+   "fieldname": "option_3_terms",
+   "fieldtype": "Text Editor",
+   "label": "Option 3 BOOT Terms & Conditions",
+   "description": "Terms and conditions for BOOT option"
+  },
+  {
+   "fieldname": "tab_warranty_support",
+   "fieldtype": "Tab Break",
+   "label": "Warranty & Support"
+  },
+  {
+   "fieldname": "warranty_text",
+   "fieldtype": "Text Editor",
+   "label": "Warranty Terms",
+   "description": "Equipment warranty terms and conditions"
+  },
+  {
+   "fieldname": "maintenance_requirements",
+   "fieldtype": "Text Editor",
+   "label": "Maintenance Requirements",
+   "read_only": 1,
+   "description": "Ongoing maintenance requirements (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "chemical_consumption",
+   "fieldtype": "Text Editor",
+   "label": "Chemical Consumption",
+   "read_only": 1,
+   "description": "Expected chemical consumption rates (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "energy_consumption",
+   "fieldtype": "Text Editor",
+   "label": "Energy Consumption",
+   "read_only": 1,
+   "description": "Expected energy consumption (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "environmental_permits_required",
+   "fieldtype": "Text Editor",
+   "label": "Environmental Permits Required",
+   "read_only": 1,
+   "description": "List of required environmental permits (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "discharge_permit_status",
+   "fieldtype": "Select",
+   "label": "Discharge Permit Status",
+   "options": "Obtained\nPending\nNot Required\nUnder Review",
+   "read_only": 1,
+   "description": "Status of discharge permit (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "environmental_monitoring",
+   "fieldtype": "Text Editor",
+   "label": "Environmental Monitoring Requirements",
+   "read_only": 1,
+   "description": "Required environmental monitoring (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "technical_risks",
+   "fieldtype": "Text Editor",
+   "label": "Technical Risks",
+   "read_only": 1,
+   "description": "Identified technical risks (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "environmental_risks",
+   "fieldtype": "Text Editor",
+   "label": "Environmental Risks",
+   "read_only": 1,
+   "description": "Identified environmental risks (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "mitigation_strategies",
+   "fieldtype": "Text Editor",
+   "label": "Mitigation Strategies",
+   "read_only": 1,
+   "description": "Risk mitigation strategies (auto-filled from technical proposal)"
+  },
+  {
+   "fieldname": "tab_workflow_management",
+   "fieldtype": "Tab Break",
+   "label": "Workflow Management"
+  },
+  {
+   "fieldname": "workflow_status",
+   "fieldtype": "Select",
+   "label": "Workflow Status",
+   "options": "Draft\nUnder Review\nApproved\nSent to Customer",
+   "read_only": 1
+  },
+  {
+   "fieldname": "deadline_date",
+   "fieldtype": "Date",
+   "label": "Deadline Date"
+  },
+  {
+   "fieldname": "proposal_priority",
+   "fieldtype": "Select",
+   "label": "Proposal Priority",
+   "options": "Low\nMedium\nHigh\nUrgent"
+  },
+  {
+   "fieldname": "column_break_workflow_cp",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "customer_response_deadline",
+   "fieldtype": "Date",
+   "label": "Customer Response Deadline"
+  },
+  {
+   "fieldname": "follow_up_schedule",
+   "fieldtype": "Table",
+   "label": "Follow Up Schedule",
+   "options": "Follow Up Schedule"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2025-10-18 18:30:00.000000",
+ "modified_by": "Administrator",
+ "module": "WT Operations",
+ "name": "Customer Proposal",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Site Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

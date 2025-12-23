@@ -1,0 +1,693 @@
+[
+ {
+  "doctype": "Workflow",
+  "name": "WWTP Technical Questionnaire Workflow",
+  "document_type": "WWTP Technical Questionnaire",
+  "workflow_name": "WWTP Technical Questionnaire Workflow",
+  "is_active": 1,
+  "send_email_alert": 1,
+  "workflow_state_field": "workflow_status",
+  "states": [
+   {
+    "state": "Draft",
+    "doc_status": "0",
+    "allow_edit": "Technical Engineer",
+    "is_optional_state": 0,
+    "next_action_email_template": null,
+    "message": null
+   },
+   {
+    "state": "Submitted",
+    "doc_status": "1", 
+    "allow_edit": "Technical Engineer",
+    "is_optional_state": 0,
+    "next_action_email_template": null,
+    "message": "Technical Questionnaire has been submitted and is ready for operations sync."
+   },
+   {
+    "state": "Synced to Operations",
+    "doc_status": "1",
+    "allow_edit": null,
+    "is_optional_state": 0,
+    "next_action_email_template": null,
+    "message": "Technical Questionnaire has been synced to operations site."
+   }
+  ],
+  "transitions": [
+   {
+    "state": "Draft",
+    "action": "Submit",
+    "next_state": "Submitted",
+    "allowed": "Technical Engineer",
+    "allow_self_approval": 1,
+    "condition": null
+   },
+   {
+    "state": "Submitted", 
+    "action": "Sync to Operations Site",
+    "next_state": "Synced to Operations",
+    "allowed": "Technical Engineer",
+    "allow_self_approval": 1,
+    "condition": null
+   }
+  ]
+ }
+],
+ {
+
+  "doctype": "Workflow State",
+  "name": "Draft",
+  "workflow_state_name": "Draft",
+  "style": "Info"
+ },
+ {
+  "doctype": "Workflow State", 
+  "name": "Submitted",
+  "workflow_state_name": "Submitted",
+  "style": "Success"
+ },
+ {
+  "doctype": "Workflow State",
+  "name": "Synced to Operations", 
+  "workflow_state_name": "Synced to Operations",
+  "style": "Primary"
+ }
+],
+ {
+
+  "doctype": "Workflow Action Master",
+  "name": "Submit",
+  "workflow_action_name": "Submit"
+ },
+ {
+  "doctype": "Workflow Action Master",
+  "name": "Sync to Operations Site",
+  "workflow_action_name": "Sync to Operations Site"
+ },
+ {
+  "doctype": "Workflow",
+  "name": "Site Visit Request Workflow",
+  "document_type": "Site Visit Request",
+  "workflow_name": "Site Visit Request Workflow",
+  "is_active": 1,
+  "send_email_alert": 1,
+  "workflow_state_field": "status",
+  "states": [
+   {
+    "state": "Open",
+    "doc_status": "0",
+    "allow_edit": "Site Manager",
+    "is_optional_state": 0,
+    "next_action_email_template": null,
+    "message": null
+   },
+   {
+    "state": "Scheduled",
+    "doc_status": "1",
+    "allow_edit": "Site Manager",
+    "is_optional_state": 0,
+    "next_action_email_template": null,
+    "message": "Site visit has been scheduled."
+   },
+   {
+    "state": "In Progress",
+    "doc_status": "1",
+    "allow_edit": "Site Manager",
+    "is_optional_state": 0,
+    "next_action_email_template": null,
+    "message": "Site visit is currently in progress."
+   },
+   {
+    "state": "Completed",
+    "doc_status": "1",
+    "allow_edit": null,
+    "is_optional_state": 0,
+    "next_action_email_template": null,
+    "message": "Site visit has been completed successfully."
+   }
+  ],
+  "transitions": [
+   {
+    "state": "Open",
+    "action": "Schedule",
+    "next_state": "Scheduled",
+    "allowed": "Site Manager",
+    "allow_self_approval": 1,
+    "condition": null
+   },
+   {
+    "state": "Scheduled",
+    "action": "Start Visit",
+    "next_state": "In Progress",
+    "allowed": "Site Manager",
+    "allow_self_approval": 1,
+    "condition": null
+   },
+   {
+    "state": "In Progress",
+    "action": "Complete Visit",
+    "next_state": "Completed",
+    "allowed": "Site Manager",
+    "allow_self_approval": 1,
+    "condition": null
+   }
+  ]
+ },
+ {
+  "doctype": "Workflow State",
+  "name": "Open",
+  "workflow_state_name": "Open",
+  "style": "Info"
+ },
+ {
+  "doctype": "Workflow State",
+  "name": "Scheduled",
+  "workflow_state_name": "Scheduled",
+  "style": "Warning"
+ },
+ {
+  "doctype": "Workflow State",
+  "name": "In Progress",
+  "workflow_state_name": "In Progress",
+  "style": "Primary"
+ },
+ {
+  "doctype": "Workflow State",
+  "name": "Completed",
+  "workflow_state_name": "Completed",
+  "style": "Success"
+ },
+ {
+  "doctype": "Workflow Action Master",
+  "name": "Schedule",
+  "workflow_action_name": "Schedule"
+ },
+ {
+  "doctype": "Workflow Action Master",
+  "name": "Start Visit",
+  "workflow_action_name": "Start Visit"
+ },
+ {
+  "doctype": "Workflow Action Master",
+  "name": "Complete Visit",
+  "workflow_action_name": "Complete Visit"
+ },
+ {
+  "doctype": "Workflow",
+  "name": "Site Visit Workflow",
+  "document_type": "Site Visit",
+  "workflow_name": "Site Visit Workflow",
+  "is_active": 1,
+  "send_email_alert": 1,
+  "workflow_state_field": "completion_status",
+  "states": [
+   {
+    "state": "Draft",
+    "doc_status": "0",
+    "allow_edit": "Site Manager",
+    "is_optional_state": 0,
+    "next_action_email_template": null,
+    "message": null
+   },
+   {
+    "state": "Scheduled",
+    "doc_status": "1",
+    "allow_edit": "Site Manager",
+    "is_optional_state": 0,
+    "next_action_email_template": null,
+    "message": "Site visit has been scheduled."
+   },
+   {
+    "state": "Conducted",
+    "doc_status": "1",
+    "allow_edit": "Site Manager",
+    "is_optional_state": 0,
+    "next_action_email_template": null,
+    "message": "Site visit has been conducted."
+   },
+   {
+    "state": "Reported",
+    "doc_status": "1",
+    "allow_edit": null,
+    "is_optional_state": 0,
+    "next_action_email_template": null,
+    "message": "Site visit report has been completed."
+   }
+  ],
+  "transitions": [
+   {
+    "state": "Draft",
+    "action": "Schedule Visit",
+    "next_state": "Scheduled",
+    "allowed": "Site Manager",
+    "allow_self_approval": 1,
+    "condition": null
+   },
+   {
+    "state": "Scheduled",
+    "action": "Conduct Visit",
+    "next_state": "Conducted",
+    "allowed": "Site Manager",
+    "allow_self_approval": 1,
+    "condition": null
+   },
+   {
+    "state": "Conducted",
+    "action": "Complete Report",
+    "next_state": "Reported",
+    "allowed": "Site Manager",
+    "allow_self_approval": 1,
+    "condition": null
+   }
+  ]
+ },
+ {
+  "doctype": "Workflow State",
+  "name": "Conducted",
+  "workflow_state_name": "Conducted",
+  "style": "Warning"
+ },
+ {
+  "doctype": "Workflow State",
+  "name": "Reported",
+  "workflow_state_name": "Reported",
+  "style": "Success"
+ },
+ {
+  "doctype": "Workflow Action Master",
+  "name": "Schedule Visit",
+  "workflow_action_name": "Schedule Visit"
+ },
+ {
+  "doctype": "Workflow Action Master",
+  "name": "Conduct Visit",
+  "workflow_action_name": "Conduct Visit"
+ },
+ {
+  "doctype": "Workflow Action Master",
+  "name": "Complete Report",
+  "workflow_action_name": "Complete Report"
+ },
+ {
+  "doctype": "Workflow",
+  "name": "Water Sample Workflow",
+  "document_type": "Water Sample",
+  "workflow_name": "Water Sample Workflow",
+  "is_active": 1,
+  "send_email_alert": 1,
+  "workflow_state_field": "sample_status",
+  "states": [
+   {
+    "state": "Collected",
+    "doc_status": "0",
+    "allow_edit": "Site Manager",
+    "is_optional_state": 0,
+    "next_action_email_template": null,
+    "message": null
+   },
+   {
+    "state": "In Transit",
+    "doc_status": "1",
+    "allow_edit": "Site Manager",
+    "is_optional_state": 0,
+    "next_action_email_template": null,
+    "message": "Sample is in transit to laboratory."
+   },
+   {
+    "state": "In Lab",
+    "doc_status": "1",
+    "allow_edit": "Lab Technician",
+    "is_optional_state": 0,
+    "next_action_email_template": null,
+    "message": "Sample has been received at laboratory."
+   },
+   {
+    "state": "Analyzed",
+    "doc_status": "1",
+    "allow_edit": "Lab Technician",
+    "is_optional_state": 0,
+    "next_action_email_template": null,
+    "message": "Sample analysis has been completed."
+   },
+   {
+    "state": "Results Available",
+    "doc_status": "1",
+    "allow_edit": null,
+    "is_optional_state": 0,
+    "next_action_email_template": null,
+    "message": "Analysis results are available."
+   }
+  ],
+  "transitions": [
+   {
+    "state": "Collected",
+    "action": "Send to Lab",
+    "next_state": "In Transit",
+    "allowed": "Site Manager",
+    "allow_self_approval": 1,
+    "condition": null
+   },
+   {
+    "state": "In Transit",
+    "action": "Receive at Lab",
+    "next_state": "In Lab",
+    "allowed": "Lab Technician",
+    "allow_self_approval": 1,
+    "condition": null
+   },
+   {
+    "state": "In Lab",
+    "action": "Complete Analysis",
+    "next_state": "Analyzed",
+    "allowed": "Lab Technician",
+    "allow_self_approval": 1,
+    "condition": null
+   },
+   {
+    "state": "Analyzed",
+    "action": "Publish Results",
+    "next_state": "Results Available",
+    "allowed": "Lab Technician",
+    "allow_self_approval": 1,
+    "condition": null
+   }
+  ]
+ },
+ {
+  "doctype": "Workflow",
+  "name": "Lab Test Result Workflow",
+  "document_type": "Lab Test Result",
+  "workflow_name": "Lab Test Result Workflow",
+  "is_active": 1,
+  "send_email_alert": 1,
+  "workflow_state_field": "compliance_status",
+  "states": [
+   {
+    "state": "Draft",
+    "doc_status": "0",
+    "allow_edit": "Lab Technician",
+    "is_optional_state": 0,
+    "next_action_email_template": null,
+    "message": null
+   },
+   {
+    "state": "In Progress",
+    "doc_status": "1",
+    "allow_edit": "Lab Technician",
+    "is_optional_state": 0,
+    "next_action_email_template": null,
+    "message": "Lab test is in progress."
+   },
+   {
+    "state": "Reviewed",
+    "doc_status": "1",
+    "allow_edit": "Lab Technician",
+    "is_optional_state": 0,
+    "next_action_email_template": null,
+    "message": "Lab test results have been reviewed."
+   },
+   {
+    "state": "Approved",
+    "doc_status": "1",
+    "allow_edit": null,
+    "is_optional_state": 0,
+    "next_action_email_template": null,
+    "message": "Lab test results have been approved."
+   }
+  ],
+  "transitions": [
+   {
+    "state": "Draft",
+    "action": "Start Analysis",
+    "next_state": "In Progress",
+    "allowed": "Lab Technician",
+    "allow_self_approval": 1,
+    "condition": null
+   },
+   {
+    "state": "In Progress",
+    "action": "Submit for Review",
+    "next_state": "Reviewed",
+    "allowed": "Lab Technician",
+    "allow_self_approval": 1,
+    "condition": null
+   },
+   {
+    "state": "Reviewed",
+    "action": "Approve Results",
+    "next_state": "Approved",
+    "allowed": "Lab Technician",
+    "allow_self_approval": 1,
+    "condition": null
+   }
+  ]
+ },
+ {
+  "doctype": "Workflow State",
+  "name": "In Transit",
+  "workflow_state_name": "In Transit",
+  "style": "Warning"
+ },
+ {
+  "doctype": "Workflow State",
+  "name": "In Lab",
+  "workflow_state_name": "In Lab",
+  "style": "Primary"
+ },
+ {
+  "doctype": "Workflow State",
+  "name": "Analyzed",
+  "workflow_state_name": "Analyzed",
+  "style": "Success"
+ },
+ {
+  "doctype": "Workflow State",
+  "name": "Results Available",
+  "workflow_state_name": "Results Available",
+  "style": "Success"
+ },
+ {
+  "doctype": "Workflow State",
+  "name": "In Progress",
+  "workflow_state_name": "In Progress",
+  "style": "Primary"
+ },
+ {
+  "doctype": "Workflow State",
+  "name": "Reviewed",
+  "workflow_state_name": "Reviewed",
+  "style": "Warning"
+ },
+ {
+  "doctype": "Workflow State",
+  "name": "Approved",
+  "workflow_state_name": "Approved",
+  "style": "Success"
+ },
+ {
+  "doctype": "Workflow Action Master",
+  "name": "Send to Lab",
+  "workflow_action_name": "Send to Lab"
+ },
+ {
+  "doctype": "Workflow Action Master",
+  "name": "Receive at Lab",
+  "workflow_action_name": "Receive at Lab"
+ },
+ {
+  "doctype": "Workflow Action Master",
+  "name": "Complete Analysis",
+  "workflow_action_name": "Complete Analysis"
+ },
+ {
+  "doctype": "Workflow Action Master",
+  "name": "Publish Results",
+  "workflow_action_name": "Publish Results"
+ },
+ {
+  "doctype": "Workflow Action Master",
+  "name": "Start Analysis",
+  "workflow_action_name": "Start Analysis"
+ },
+ {
+  "doctype": "Workflow Action Master",
+  "name": "Submit for Review",
+  "workflow_action_name": "Submit for Review"
+ },
+ {
+  "doctype": "Workflow Action Master",
+  "name": "Approve Results",
+  "workflow_action_name": "Approve Results"
+ },
+ {
+  "doctype": "Workflow",
+  "name": "WWTP Technical Proposal Workflow",
+  "document_type": "WWTP Technical Proposal",
+  "workflow_name": "WWTP Technical Proposal Workflow",
+  "is_active": 1,
+  "send_email_alert": 1,
+  "workflow_state_field": "workflow_status",
+  "states": [
+   {
+    "state": "Draft",
+    "doc_status": "0",
+    "allow_edit": "Technical Engineer",
+    "is_optional_state": 0,
+    "next_action_email_template": null,
+    "message": null
+   },
+   {
+    "state": "Under Review",
+    "doc_status": "1",
+    "allow_edit": "Technical Engineer",
+    "is_optional_state": 0,
+    "next_action_email_template": null,
+    "message": "Technical proposal is under review."
+   },
+   {
+    "state": "Approved",
+    "doc_status": "1",
+    "allow_edit": "Technical Engineer",
+    "is_optional_state": 0,
+    "next_action_email_template": null,
+    "message": "Technical proposal has been approved."
+   },
+   {
+    "state": "Synced to Sales",
+    "doc_status": "1",
+    "allow_edit": null,
+    "is_optional_state": 0,
+    "next_action_email_template": null,
+    "message": "Technical proposal has been synced to sales site."
+   }
+  ],
+  "transitions": [
+   {
+    "state": "Draft",
+    "action": "Submit for Review",
+    "next_state": "Under Review",
+    "allowed": "Technical Engineer",
+    "allow_self_approval": 1,
+    "condition": null
+   },
+   {
+    "state": "Under Review",
+    "action": "Approve Proposal",
+    "next_state": "Approved",
+    "allowed": "Technical Engineer",
+    "allow_self_approval": 1,
+    "condition": null
+   },
+   {
+    "state": "Approved",
+    "action": "Sync to Sales Site",
+    "next_state": "Synced to Sales",
+    "allowed": "Technical Engineer",
+    "allow_self_approval": 1,
+    "condition": null
+   }
+  ]
+ },
+ {
+  "doctype": "Workflow",
+  "name": "Customer Proposal Workflow",
+  "document_type": "Customer Proposal",
+  "workflow_name": "Customer Proposal Workflow",
+  "is_active": 1,
+  "send_email_alert": 1,
+  "workflow_state_field": "workflow_status",
+  "states": [
+   {
+    "state": "Draft",
+    "doc_status": "0",
+    "allow_edit": "Sales Manager",
+    "is_optional_state": 0,
+    "next_action_email_template": null,
+    "message": null
+   },
+   {
+    "state": "Under Review",
+    "doc_status": "1",
+    "allow_edit": "Sales Manager",
+    "is_optional_state": 0,
+    "next_action_email_template": null,
+    "message": "Customer proposal is under review."
+   },
+   {
+    "state": "Approved",
+    "doc_status": "1",
+    "allow_edit": "Sales Manager",
+    "is_optional_state": 0,
+    "next_action_email_template": null,
+    "message": "Customer proposal has been approved."
+   },
+   {
+    "state": "Sent to Customer",
+    "doc_status": "1",
+    "allow_edit": null,
+    "is_optional_state": 0,
+    "next_action_email_template": null,
+    "message": "Customer proposal has been sent to customer."
+   }
+  ],
+  "transitions": [
+   {
+    "state": "Draft",
+    "action": "Submit for Review",
+    "next_state": "Under Review",
+    "allowed": "Sales Manager",
+    "allow_self_approval": 1,
+    "condition": null
+   },
+   {
+    "state": "Under Review",
+    "action": "Approve Proposal",
+    "next_state": "Approved",
+    "allowed": "Sales Manager",
+    "allow_self_approval": 1,
+    "condition": null
+   },
+   {
+    "state": "Approved",
+    "action": "Send to Customer",
+    "next_state": "Sent to Customer",
+    "allowed": "Sales Manager",
+    "allow_self_approval": 1,
+    "condition": null
+   }
+  ]
+ },
+ {
+  "doctype": "Workflow State",
+  "name": "Under Review",
+  "workflow_state_name": "Under Review",
+  "style": "Warning"
+ },
+ {
+  "doctype": "Workflow State",
+  "name": "Synced to Sales",
+  "workflow_state_name": "Synced to Sales",
+  "style": "Success"
+ },
+ {
+  "doctype": "Workflow State",
+  "name": "Sent to Customer",
+  "workflow_state_name": "Sent to Customer",
+  "style": "Success"
+ },
+ {
+  "doctype": "Workflow Action Master",
+  "name": "Approve Proposal",
+  "workflow_action_name": "Approve Proposal"
+ },
+ {
+  "doctype": "Workflow Action Master",
+  "name": "Sync to Sales Site",
+  "workflow_action_name": "Sync to Sales Site"
+ },
+ {
+  "doctype": "Workflow Action Master",
+  "name": "Send to Customer",
+  "workflow_action_name": "Send to Customer"
+ }
+]

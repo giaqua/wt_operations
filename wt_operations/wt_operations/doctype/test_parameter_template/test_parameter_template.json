@@ -1,0 +1,61 @@
+{
+ "actions": [],
+ "creation": "2025-10-27 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "parameter_name",
+  "unit_of_measurement",
+  "expected_range_min",
+  "expected_range_max",
+  "is_required",
+  "analysis_method"
+ ],
+ "fields": [
+  {
+   "fieldname": "parameter_name",
+   "fieldtype": "Data",
+   "label": "Parameter Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "unit_of_measurement",
+   "fieldtype": "Data",
+   "label": "Unit of Measurement"
+  },
+  {
+   "fieldname": "expected_range_min",
+   "fieldtype": "Float",
+   "label": "Expected Range Min"
+  },
+  {
+   "fieldname": "expected_range_max",
+   "fieldtype": "Float",
+   "label": "Expected Range Max"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_required",
+   "fieldtype": "Check",
+   "label": "Is Required"
+  },
+  {
+   "fieldname": "analysis_method",
+   "fieldtype": "Data",
+   "label": "Analysis Method"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-10-27 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "WT Operations",
+ "name": "Test Parameter Template",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

@@ -1,0 +1,111 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-10-27 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "document_type",
+  "default_deadline_days",
+  "business_days_only",
+  "column_break_3",
+  "is_active",
+  "description",
+  "escalation_section",
+  "escalation_rules",
+  "notification_section",
+  "notification_schedule"
+ ],
+ "fields": [
+  {
+   "fieldname": "document_type",
+   "fieldtype": "Select",
+   "label": "Document Type",
+   "options": "WWTP Technical Questionnaire\nSite Visit Request\nSite Visit\nWater Sample\nLab Test Result\nWWTP Technical Proposal\nCustomer Proposal",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "default_deadline_days",
+   "fieldtype": "Int",
+   "label": "Default Deadline (Days)",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "business_days_only",
+   "fieldtype": "Check",
+   "label": "Business Days Only"
+  },
+  {
+   "fieldname": "column_break_3",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "label": "Is Active"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "Description"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "escalation_section",
+   "fieldtype": "Section Break",
+   "label": "Escalation Rules"
+  },
+  {
+   "fieldname": "escalation_rules",
+   "fieldtype": "Table",
+   "label": "Escalation Rules",
+   "options": "Escalation Rule"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "notification_section",
+   "fieldtype": "Section Break",
+   "label": "Notification Schedule"
+  },
+  {
+   "fieldname": "notification_schedule",
+   "fieldtype": "Table",
+   "label": "Notification Schedule",
+   "options": "Notification Schedule"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-10-27 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "WT Operations",
+ "name": "Deadline Configuration",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Operations Manager",
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

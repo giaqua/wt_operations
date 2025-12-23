@@ -1,0 +1,52 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-06-20 20:00:02.633105",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "tank_type",
+  "uom",
+  "volume_m3"
+ ],
+ "fields": [
+  {
+   "fieldname": "tank_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Tank Type",
+   "options": "Tank Type"
+  },
+  {
+   "columns": 1,
+   "fetch_from": "tank_type.level_uom",
+   "fetch_if_empty": 1,
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "UOM",
+   "options": "UOM"
+  },
+  {
+   "columns": 1,
+   "fieldname": "volume_m3",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Volume M3/m"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-06-24 00:56:11.854252",
+ "modified_by": "Administrator",
+ "module": "WT Operations",
+ "name": "Tank level Template table",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

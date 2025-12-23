@@ -1,0 +1,408 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2025-01-27 12:00:00",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "section_break_basic_info",
+  "lead",
+  "opportunity",
+  "technical_questionnaire",
+  "site_visit_date",
+  "status",
+  "column_break_source",
+  "source_document",
+  "source_doctype",
+  "notes",
+  "section_break_visit_details",
+  "visit_type",
+  "priority",
+  "assigned_to",
+  "column_break_contact",
+  "contact_person",
+  "contact_number",
+  "email",
+  "section_break_location",
+  "site_address",
+  "city",
+  "state",
+  "column_break_uiin",
+  "latitude_and_longitude",
+  "maps_location_link",
+  "section_break_requirements",
+  "visit_purpose",
+  "special_requirements",
+  "equipment_needed",
+  "column_break_schedule",
+  "estimated_duration",
+  "preferred_time_slot",
+  "section_break_follow_up",
+  "follow_up_required",
+  "follow_up_date",
+  "follow_up_notes",
+  "amended_from",
+  "section_break_site_visits",
+  "site_visits_table",
+  "section_break_external",
+  "external_site_settings",
+  "external_request_name",
+  "external_request_url",
+  "external_sync_status",
+  "external_sync_error",
+  "workflow_management_section",
+  "deadline_date",
+  "escalation_level",
+  "workflow_stage",
+  "column_break_workflow_svr",
+  "parent_technical_questionnaire"
+ ],
+ "fields": [
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Naming Series",
+   "options": "SVR-"
+  },
+  {
+   "fieldname": "section_break_basic_info",
+   "fieldtype": "Section Break",
+   "label": "Basic Information"
+  },
+  {
+   "fieldname": "lead",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Lead",
+   "options": "Lead",
+   "reqd": 1
+  },
+  {
+   "fieldname": "opportunity",
+   "fieldtype": "Link",
+   "label": "Opportunity",
+   "link_filters": "[[\"Opportunity\",\"party_name\",\"=\",\"eval:doc.lead\"]]",
+   "options": "Opportunity"
+  },
+  {
+   "fieldname": "site_visit_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Site Visit Date",
+   "reqd": 1
+  },
+  {
+   "default": "Open",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Open\nScheduled\nIn Progress\nCompleted\nCancelled",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_source",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "source_document",
+   "fieldtype": "Data",
+   "label": "Source Document",
+   "read_only": 1
+  },
+  {
+   "fieldname": "source_doctype",
+   "fieldtype": "Data",
+   "label": "Source DocType",
+   "read_only": 1
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  },
+  {
+   "fieldname": "section_break_visit_details",
+   "fieldtype": "Section Break",
+   "label": "Visit Details"
+  },
+  {
+   "fieldname": "visit_type",
+   "fieldtype": "Select",
+   "label": "Visit Type",
+   "options": "Initial Assessment\nTechnical Survey\nFollow-up Visit\nEmergency Visit\nRoutine Inspection"
+  },
+  {
+   "default": "Medium",
+   "fieldname": "priority",
+   "fieldtype": "Select",
+   "label": "Priority",
+   "options": "Low\nMedium\nHigh\nUrgent"
+  },
+  {
+   "fieldname": "assigned_to",
+   "fieldtype": "Link",
+   "label": "Assigned To",
+   "options": "User"
+  },
+  {
+   "fieldname": "column_break_contact",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "contact_person",
+   "fieldtype": "Data",
+   "label": "Contact Person"
+  },
+  {
+   "fieldname": "contact_number",
+   "fieldtype": "Data",
+   "label": "Contact Number"
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_location",
+   "fieldtype": "Section Break",
+   "label": "Site Location"
+  },
+  {
+   "fieldname": "site_address",
+   "fieldtype": "Small Text",
+   "label": "Site Address"
+  },
+  {
+   "fieldname": "city",
+   "fieldtype": "Data",
+   "label": "City"
+  },
+  {
+   "fieldname": "state",
+   "fieldtype": "Data",
+   "label": "State"
+  },
+  {
+   "fieldname": "section_break_requirements",
+   "fieldtype": "Section Break",
+   "label": "Visit Requirements"
+  },
+  {
+   "fieldname": "visit_purpose",
+   "fieldtype": "Small Text",
+   "label": "Visit Purpose"
+  },
+  {
+   "fieldname": "special_requirements",
+   "fieldtype": "Small Text",
+   "label": "Special Requirements"
+  },
+  {
+   "fieldname": "equipment_needed",
+   "fieldtype": "Small Text",
+   "label": "Equipment Needed"
+  },
+  {
+   "fieldname": "column_break_schedule",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "estimated_duration",
+   "fieldtype": "Data",
+   "label": "Estimated Duration",
+   "placeholder": "e.g., 2 hours"
+  },
+  {
+   "fieldname": "preferred_time_slot",
+   "fieldtype": "Data",
+   "label": "Preferred Time Slot",
+   "placeholder": "e.g., 9:00 AM - 11:00 AM"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_follow_up",
+   "fieldtype": "Section Break",
+   "label": "Follow-up"
+  },
+  {
+   "default": "0",
+   "fieldname": "follow_up_required",
+   "fieldtype": "Check",
+   "label": "Follow-up Required"
+  },
+  {
+   "fieldname": "follow_up_date",
+   "fieldtype": "Date",
+   "label": "Follow-up Date"
+  },
+  {
+   "fieldname": "follow_up_notes",
+   "fieldtype": "Small Text",
+   "label": "Follow-up Notes"
+  },
+  {
+   "fieldname": "latitude_and_longitude",
+   "fieldtype": "Data",
+   "label": "Latitude and Longitude"
+  },
+  {
+   "fieldname": "maps_location_link",
+   "fieldtype": "Data",
+   "label": "Maps location link"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Site Visit Request",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "column_break_uiin",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "technical_questionnaire",
+   "fieldtype": "Link",
+   "label": "Technical Questionnaire",
+   "link_filters": "[[\"WWTP Technical Questionnaire\",\"opportunity\",\"=\",\"eval:doc.opportunity\"]]",
+   "options": "WWTP Technical Questionnaire"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_external",
+   "fieldtype": "Section Break",
+   "label": "External Site Integration"
+  },
+  {
+   "fieldname": "external_site_settings",
+   "fieldtype": "Link",
+   "label": "External Site Settings",
+   "options": "External Site Settings"
+  },
+  {
+   "fieldname": "external_request_name",
+   "fieldtype": "Data",
+   "label": "External Request Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "external_request_url",
+   "fieldtype": "Data",
+   "label": "External Request URL",
+   "read_only": 1
+  },
+  {
+   "default": "Pending",
+   "fieldname": "external_sync_status",
+   "fieldtype": "Select",
+   "label": "External Sync Status",
+   "options": "Pending\nSynced\nFailed",
+   "read_only": 1
+  },
+  {
+   "fieldname": "external_sync_error",
+   "fieldtype": "Small Text",
+   "label": "External Sync Error",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_site_visits",
+   "fieldtype": "Section Break",
+   "label": "Related Site Visits"
+  },
+  {
+   "fieldname": "site_visits_table",
+   "fieldtype": "Table",
+   "label": "Site Visits",
+   "options": "Site Visit Tracking Table"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "workflow_management_section",
+   "fieldtype": "Section Break",
+   "label": "Workflow Management"
+  },
+  {
+   "fieldname": "deadline_date",
+   "fieldtype": "Date",
+   "label": "Deadline Date"
+  },
+  {
+   "default": "0",
+   "fieldname": "escalation_level",
+   "fieldtype": "Int",
+   "label": "Escalation Level",
+   "read_only": 1
+  },
+  {
+   "fieldname": "workflow_stage",
+   "fieldtype": "Data",
+   "label": "Workflow Stage",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_workflow_svr",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "parent_technical_questionnaire",
+   "fieldtype": "Link",
+   "label": "Parent Technical Questionnaire",
+   "options": "WWTP Technical Questionnaire",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2025-10-18 15:28:08.477116",
+ "modified_by": "Administrator",
+ "module": "WT Operations",
+ "name": "Site Visit Request",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Site Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "track_views": 1
+}

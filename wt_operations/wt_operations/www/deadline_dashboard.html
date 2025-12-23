@@ -1,0 +1,406 @@
+{% extends "templates/web.html" %}
+
+{% block title %}Deadline Management Dashboard{% endblock %}
+
+{% block page_content %}
+<div class="deadline-dashboard">
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-12">
+				<h1 class="page-title">Deadline Management Dashboard</h1>
+				<p class="text-muted">Monitor document deadlines, escalations, and performance metrics</p>
+			</div>
+		</div>
+
+		{% if error %}
+		<div class="row">
+			<div class="col-12">
+				<div class="alert alert-danger">
+					<strong>Error:</strong> {{ error }}
+				</div>
+			</div>
+		</div>
+		{% endif %}
+
+		<!-- Overall Statistics -->
+		<div class="row mb-4">
+			<div class="col-md-3">
+				<div class="card bg-primary text-white">
+					<div class="card-body">
+						<h5 class="card-title">Total Documents</h5>
+						<h2>{{ deadline_stats.overall.total or 0 }}</h2>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="card bg-success text-white">
+					<div class="card-body">
+						<h5 class="card-title">On Time</h5>
+						<h2>{{ deadline_stats.overall.on_time or 0 }}</h2>
+						<small>{{ "%.1f"|format(deadline_stats.overall.on_time_percentage or 0) }}%</small>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="card bg-warning text-white">
+					<div class="card-body">
+						<h5 class="card-title">Approaching</h5>
+						<h2>{{ deadline_stats.overall.approaching or 0 }}</h2>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-3">
+				<div class="card bg-danger text-white">
+					<div class="card-body">
+						<h5 class="card-title">Overdue</h5>
+						<h2>{{ deadline_stats.overall.overdue or 0 }}</h2>
+						<small>{{ "%.1f"|format(deadline_stats.overall.overdue_percentage or 0) }}%</small>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Document Type Breakdown -->
+		<div class="row mb-4">
+			<div class="col-12">
+				<div class="card">
+					<div class="card-header">
+						<h5 class="card-title">Deadline Status by Document Type</h5>
+					</div>
+					<div class="card-body">
+						<div class="table-responsive">
+							<table class="table table-striped">
+								<thead>
+									<tr>
+										<th>Document Type</th>
+										<th>Total</th>
+										<th>On Time</th>
+										<th>Approaching</th>
+										<th>Overdue</th>
+										<th>Performance</th>
+									</tr>
+								</thead>
+								<tbody>
+									{% for doctype, stats in deadline_stats.items() %}
+									{% if doctype != "overall" %}
+									<tr>
+										<td>{{ doctype }}</td>
+										<td>{{ stats.total or 0 }}</td>
+										<td>
+											<span class="badge badge-success">{{ stats.on_time or 0 }}</span>
+										</td>
+										<td>
+											<span class="badge badge-warning">{{ stats.approaching or 0 }}</span>
+										</td>
+										<td>
+											<span class="badge badge-danger">{{ stats.overdue or 0 }}</span>
+										</td>
+										<td>
+											{% set performance = ((stats.on_time or 0) / (stats.total or 1)) * 100 %}
+											<div class="progress" style="width: 100px;">
+												<div class="progress-bar 
+													{% if performance >= 80 %}bg-success
+													{% elif performance >= 60 %}bg-warning
+													{% else %}bg-danger{% endif %}" 
+													style="width: {{ performance }}%">
+													{{ "%.0f"|format(performance) }}%
+												</div>
+											</div>
+										</td>
+									</tr>
+									{% endif %}
+									{% endfor %}
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Overdue Documents -->
+		<div class="row mb-4">
+			<div class="col-md-6">
+				<div class="card">
+					<div class="card-header">
+						<h5 class="card-title">Most Overdue Documents</h5>
+					</div>
+					<div class="card-body">
+						{% if overdue_documents %}
+						<div class="table-responsive">
+							<table class="table table-sm">
+								<thead>
+									<tr>
+										<th>Document</th>
+										<th>Days Overdue</th>
+										<th>Escalation</th>
+										<th>Assigned To</th>
+									</tr>
+								</thead>
+								<tbody>
+									{% for doc in overdue_documents[:10] %}
+									<tr>
+										<td>
+											<a href="/app/{{ doc.doctype.lower().replace(' ', '-') }}/{{ doc.name }}" target="_blank">
+												{{ doc.doctype }}: {{ doc.name }}
+											</a>
+										</td>
+										<td>
+											<span class="badge badge-danger">{{ doc.days_overdue }} days</span>
+										</td>
+										<td>
+											{% if doc.escalation_level > 0 %}
+											<span class="badge badge-warning">Level {{ doc.escalation_level }}</span>
+											{% else %}
+											<span class="badge badge-secondary">None</span>
+											{% endif %}
+										</td>
+										<td>{{ doc.assigned_to or "Unassigned" }}</td>
+									</tr>
+									{% endfor %}
+								</tbody>
+							</table>
+						</div>
+						{% else %}
+						<p class="text-muted">No overdue documents found.</p>
+						{% endif %}
+					</div>
+				</div>
+			</div>
+
+			<!-- Approaching Deadlines -->
+			<div class="col-md-6">
+				<div class="card">
+					<div class="card-header">
+						<h5 class="card-title">Approaching Deadlines</h5>
+					</div>
+					<div class="card-body">
+						{% if approaching_deadlines %}
+						<div class="table-responsive">
+							<table class="table table-sm">
+								<thead>
+									<tr>
+										<th>Document</th>
+										<th>Days Left</th>
+										<th>Deadline</th>
+										<th>Assigned To</th>
+									</tr>
+								</thead>
+								<tbody>
+									{% for doc in approaching_deadlines[:10] %}
+									<tr>
+										<td>
+											<a href="/app/{{ doc.doctype.lower().replace(' ', '-') }}/{{ doc.name }}" target="_blank">
+												{{ doc.doctype }}: {{ doc.name }}
+											</a>
+										</td>
+										<td>
+											<span class="badge 
+												{% if doc.days_remaining == 0 %}badge-danger
+												{% elif doc.days_remaining <= 1 %}badge-warning
+												{% else %}badge-info{% endif %}">
+												{{ doc.days_remaining }} days
+											</span>
+										</td>
+										<td>{{ doc.deadline_date }}</td>
+										<td>{{ doc.assigned_to or "Unassigned" }}</td>
+									</tr>
+									{% endfor %}
+								</tbody>
+							</table>
+						</div>
+						{% else %}
+						<p class="text-muted">No approaching deadlines found.</p>
+						{% endif %}
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Escalation Summary -->
+		<div class="row mb-4">
+			<div class="col-12">
+				<div class="card">
+					<div class="card-header">
+						<h5 class="card-title">Escalation Summary</h5>
+					</div>
+					<div class="card-body">
+						<div class="row">
+							{% for doctype, data in escalation_data.items() %}
+							<div class="col-md-4 mb-3">
+								<div class="card border-left-warning">
+									<div class="card-body">
+										<h6 class="card-title">{{ doctype }}</h6>
+										<p class="card-text">
+											<strong>{{ data.total_escalated }}</strong> escalated documents
+										</p>
+										{% if data.level_breakdown %}
+										<small class="text-muted">
+											{% for level, count in data.level_breakdown.items() %}
+											Level {{ level }}: {{ count }}{% if not loop.last %}, {% endif %}
+											{% endfor %}
+										</small>
+										{% endif %}
+									</div>
+								</div>
+							</div>
+							{% endfor %}
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Recent Activity -->
+		<div class="row mb-4">
+			<div class="col-12">
+				<div class="card">
+					<div class="card-header">
+						<h5 class="card-title">Recent Deadline Activity</h5>
+					</div>
+					<div class="card-body">
+						{% if recent_changes %}
+						<div class="timeline">
+							{% for change in recent_changes[:10] %}
+							<div class="timeline-item">
+								<div class="timeline-marker"></div>
+								<div class="timeline-content">
+									<h6 class="timeline-title">
+										{{ change.reference_doctype }}: {{ change.reference_name }}
+									</h6>
+									<p class="timeline-text">{{ change.content }}</p>
+									<small class="text-muted">
+										{{ change.creation.strftime('%Y-%m-%d %H:%M') }} by {{ change.comment_by }}
+									</small>
+								</div>
+							</div>
+							{% endfor %}
+						</div>
+						{% else %}
+						<p class="text-muted">No recent deadline activity found.</p>
+						{% endif %}
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Actions -->
+		<div class="row">
+			<div class="col-12">
+				<div class="card">
+					<div class="card-header">
+						<h5 class="card-title">Actions</h5>
+					</div>
+					<div class="card-body">
+						<button class="btn btn-primary" onclick="refreshDeadlineData()">
+							<i class="fa fa-refresh"></i> Refresh Data
+						</button>
+						<a href="/app/deadline-configuration" class="btn btn-secondary">
+							<i class="fa fa-cog"></i> Configure Deadlines
+						</a>
+						<a href="/app/deadline-history" class="btn btn-info">
+							<i class="fa fa-history"></i> View History
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<style>
+.deadline-dashboard .card {
+	margin-bottom: 1rem;
+	box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.deadline-dashboard .badge {
+	font-size: 0.875em;
+}
+
+.deadline-dashboard .progress {
+	height: 1.5rem;
+}
+
+.deadline-dashboard .timeline {
+	position: relative;
+	padding-left: 2rem;
+}
+
+.deadline-dashboard .timeline-item {
+	position: relative;
+	margin-bottom: 1rem;
+}
+
+.deadline-dashboard .timeline-marker {
+	position: absolute;
+	left: -2rem;
+	top: 0.25rem;
+	width: 0.75rem;
+	height: 0.75rem;
+	background-color: #007bff;
+	border-radius: 50%;
+}
+
+.deadline-dashboard .timeline-content {
+	background-color: #f8f9fa;
+	padding: 1rem;
+	border-radius: 0.25rem;
+	border-left: 3px solid #007bff;
+}
+
+.deadline-dashboard .timeline-title {
+	margin-bottom: 0.5rem;
+	font-size: 1rem;
+	font-weight: 600;
+}
+
+.deadline-dashboard .timeline-text {
+	margin-bottom: 0.5rem;
+	color: #6c757d;
+}
+
+.border-left-warning {
+	border-left: 4px solid #ffc107 !important;
+}
+</style>
+
+<script>
+function refreshDeadlineData() {
+	const btn = event.target;
+	const originalText = btn.innerHTML;
+	
+	btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Refreshing...';
+	btn.disabled = true;
+	
+	frappe.call({
+		method: 'wt_operations.wt_operations.www.deadline_dashboard.refresh_deadline_data',
+		callback: function(r) {
+			if (r.message.success) {
+				frappe.show_alert({
+					message: 'Deadline data refreshed successfully',
+					indicator: 'green'
+				});
+				setTimeout(() => {
+					window.location.reload();
+				}, 1000);
+			} else {
+				frappe.show_alert({
+					message: 'Error refreshing data: ' + r.message.message,
+					indicator: 'red'
+				});
+			}
+		},
+		always: function() {
+			btn.innerHTML = originalText;
+			btn.disabled = false;
+		}
+	});
+}
+
+// Auto-refresh every 5 minutes
+setInterval(function() {
+	window.location.reload();
+}, 300000);
+</script>
+{% endblock %}

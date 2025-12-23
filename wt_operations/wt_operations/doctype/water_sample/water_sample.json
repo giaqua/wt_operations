@@ -1,0 +1,499 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2025-10-09 12:11:42.672644",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_basic_info",
+  "naming_series",
+  "wwtp_technical_questionnaire",
+  "lead",
+  "opportunity",
+  "column_break_collection",
+  "date_collected",
+  "time_collected",
+  "collected_by",
+  "related_visit",
+  "section_break_sample_details",
+  "sample_type",
+  "sample_location",
+  "sample_point",
+  "column_break_conditions",
+  "weather_conditions",
+  "temperature",
+  "flow_rate",
+  "sample_photo",
+  "image_hoft",
+  "section_break_preservation",
+  "preservation_method",
+  "preservation_chemicals",
+  "storage_temperature",
+  "column_break_transport",
+  "transport_method",
+  "transport_time",
+  "chain_of_custody",
+  "section_break_lab_details",
+  "lab_name",
+  "lab_contact",
+  "analysis_requested",
+  "column_break_parameters",
+  "ph",
+  "tss",
+  "turbidity",
+  "temperature_lab",
+  "section_break_chemical",
+  "cod",
+  "bod5",
+  "tds",
+  "oil_grease",
+  "column_break_nutrients",
+  "po4_p",
+  "tkn",
+  "nitrate",
+  "nitrite",
+  "section_break_metals",
+  "arsenic",
+  "mercury",
+  "chromium",
+  "column_break_biological",
+  "ecoli",
+  "total_coliform",
+  "fecal_coliform",
+  "section_break_results",
+  "analysis_completed",
+  "results_available",
+  "compliance_status",
+  "column_break_notes",
+  "collection_notes",
+  "lab_notes",
+  "recommendations",
+  "amended_from",
+  "workflow_management_section",
+  "deadline_date",
+  "lab_priority",
+  "expected_results_date",
+  "column_break_workflow_ws",
+  "sample_status"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_basic_info",
+   "fieldtype": "Section Break",
+   "label": "Basic Information"
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Naming Series",
+   "options": "WWS-"
+  },
+  {
+   "fieldname": "wwtp_technical_questionnaire",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "WWTP Technical Questionnaire",
+   "options": "WWTP Technical Questionnaire",
+   "reqd": 1
+  },
+  {
+   "fieldname": "lead",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Lead",
+   "options": "Lead",
+   "reqd": 1
+  },
+  {
+   "fieldname": "opportunity",
+   "fieldtype": "Link",
+   "label": "Opportunity",
+   "options": "Opportunity"
+  },
+  {
+   "fieldname": "column_break_collection",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "date_collected",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Date Collected",
+   "reqd": 1
+  },
+  {
+   "fieldname": "time_collected",
+   "fieldtype": "Time",
+   "label": "Time Collected"
+  },
+  {
+   "fieldname": "collected_by",
+   "fieldtype": "Link",
+   "label": "Collected By",
+   "options": "User"
+  },
+  {
+   "fieldname": "related_visit",
+   "fieldtype": "Link",
+   "label": "Related Visit",
+   "options": "Site Visit Request"
+  },
+  {
+   "fieldname": "section_break_sample_details",
+   "fieldtype": "Section Break",
+   "label": "Sample Details"
+  },
+  {
+   "fieldname": "sample_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Sample Type",
+   "options": "Influent\nEffluent\nProcess Water\nSludge\nComposite\nGrab Sample",
+   "reqd": 1
+  },
+  {
+   "fieldname": "sample_location",
+   "fieldtype": "Small Text",
+   "label": "Sample Location",
+   "reqd": 1
+  },
+  {
+   "fieldname": "sample_point",
+   "fieldtype": "Data",
+   "label": "Sample Point",
+   "placeholder": "e.g., Inlet, Outlet, Tank 1"
+  },
+  {
+   "fieldname": "column_break_conditions",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "weather_conditions",
+   "fieldtype": "Select",
+   "label": "Weather Conditions",
+   "options": "Sunny\nCloudy\nRainy\nStormy"
+  },
+  {
+   "fieldname": "temperature",
+   "fieldtype": "Float",
+   "label": "Ambient Temperature (\u00b0C)"
+  },
+  {
+   "fieldname": "flow_rate",
+   "fieldtype": "Float",
+   "label": "Flow Rate (m\u00b3/hr)"
+  },
+  {
+   "fieldname": "section_break_preservation",
+   "fieldtype": "Section Break",
+   "label": "Sample Preservation"
+  },
+  {
+   "fieldname": "preservation_method",
+   "fieldtype": "Select",
+   "label": "Preservation Method",
+   "options": "Refrigeration\nChemical Preservation\nNo Preservation\nIce Pack"
+  },
+  {
+   "fieldname": "preservation_chemicals",
+   "fieldtype": "Small Text",
+   "label": "Preservation Chemicals",
+   "placeholder": "e.g., H2SO4, HNO3"
+  },
+  {
+   "fieldname": "storage_temperature",
+   "fieldtype": "Float",
+   "label": "Storage Temperature (\u00b0C)"
+  },
+  {
+   "fieldname": "column_break_transport",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "transport_method",
+   "fieldtype": "Select",
+   "label": "Transport Method",
+   "options": "Courier\nPersonal Delivery\nLaboratory Pickup\nCold Chain"
+  },
+  {
+   "fieldname": "transport_time",
+   "fieldtype": "Data",
+   "label": "Transport Time",
+   "placeholder": "e.g., 2 hours"
+  },
+  {
+   "default": "0",
+   "fieldname": "chain_of_custody",
+   "fieldtype": "Check",
+   "label": "Chain of Custody Maintained"
+  },
+  {
+   "fieldname": "section_break_lab_details",
+   "fieldtype": "Section Break",
+   "label": "Laboratory Details"
+  },
+  {
+   "fieldname": "lab_name",
+   "fieldtype": "Data",
+   "label": "Laboratory Name"
+  },
+  {
+   "fieldname": "lab_contact",
+   "fieldtype": "Data",
+   "label": "Laboratory Contact"
+  },
+  {
+   "fieldname": "analysis_requested",
+   "fieldtype": "Small Text",
+   "label": "Analysis Requested"
+  },
+  {
+   "fieldname": "column_break_parameters",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ph",
+   "fieldtype": "Float",
+   "label": "pH",
+   "precision": "2"
+  },
+  {
+   "fieldname": "tss",
+   "fieldtype": "Float",
+   "label": "TSS (mg/L)"
+  },
+  {
+   "fieldname": "turbidity",
+   "fieldtype": "Float",
+   "label": "Turbidity (NTU)"
+  },
+  {
+   "fieldname": "temperature_lab",
+   "fieldtype": "Float",
+   "label": "Temperature (\u00b0C)"
+  },
+  {
+   "fieldname": "section_break_chemical",
+   "fieldtype": "Section Break",
+   "hidden": 1,
+   "label": "Chemical Parameters"
+  },
+  {
+   "fieldname": "cod",
+   "fieldtype": "Float",
+   "label": "COD (mg/L)"
+  },
+  {
+   "fieldname": "bod5",
+   "fieldtype": "Float",
+   "label": "BOD5 (mg/L)"
+  },
+  {
+   "fieldname": "tds",
+   "fieldtype": "Float",
+   "label": "TDS (mg/L)"
+  },
+  {
+   "fieldname": "oil_grease",
+   "fieldtype": "Float",
+   "label": "Oil & Grease (mg/L)"
+  },
+  {
+   "fieldname": "column_break_nutrients",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "po4_p",
+   "fieldtype": "Float",
+   "label": "PO4-P (mg/L)"
+  },
+  {
+   "fieldname": "tkn",
+   "fieldtype": "Float",
+   "label": "TKN (mg/L)"
+  },
+  {
+   "fieldname": "nitrate",
+   "fieldtype": "Float",
+   "label": "Nitrate (mg/L)"
+  },
+  {
+   "fieldname": "nitrite",
+   "fieldtype": "Float",
+   "label": "Nitrite (mg/L)"
+  },
+  {
+   "fieldname": "section_break_metals",
+   "fieldtype": "Section Break",
+   "hidden": 1,
+   "label": "Heavy Metals"
+  },
+  {
+   "fieldname": "arsenic",
+   "fieldtype": "Float",
+   "label": "Arsenic (mg/L)"
+  },
+  {
+   "fieldname": "lead",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Lead",
+   "options": "Lead",
+   "reqd": 1
+  },
+  {
+   "fieldname": "mercury",
+   "fieldtype": "Float",
+   "label": "Mercury (mg/L)"
+  },
+  {
+   "fieldname": "chromium",
+   "fieldtype": "Float",
+   "label": "Chromium (mg/L)"
+  },
+  {
+   "fieldname": "column_break_biological",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ecoli",
+   "fieldtype": "Float",
+   "label": "E.coli (CFU/100mL)"
+  },
+  {
+   "fieldname": "total_coliform",
+   "fieldtype": "Float",
+   "label": "Total Coliform (CFU/100mL)"
+  },
+  {
+   "fieldname": "fecal_coliform",
+   "fieldtype": "Float",
+   "label": "Fecal Coliform (CFU/100mL)"
+  },
+  {
+   "fieldname": "section_break_results",
+   "fieldtype": "Section Break",
+   "hidden": 1,
+   "label": "Analysis Results"
+  },
+  {
+   "fieldname": "analysis_completed",
+   "fieldtype": "Date",
+   "label": "Analysis Completed Date"
+  },
+  {
+   "default": "0",
+   "fieldname": "results_available",
+   "fieldtype": "Check",
+   "label": "Results Available"
+  },
+  {
+   "fieldname": "compliance_status",
+   "fieldtype": "Select",
+   "label": "Compliance Status",
+   "options": "Compliant\nNon-Compliant\nPending\nNot Applicable"
+  },
+  {
+   "fieldname": "column_break_notes",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "collection_notes",
+   "fieldtype": "Small Text",
+   "label": "Collection Notes"
+  },
+  {
+   "fieldname": "lab_notes",
+   "fieldtype": "Small Text",
+   "label": "Laboratory Notes"
+  },
+  {
+   "fieldname": "recommendations",
+   "fieldtype": "Small Text",
+   "label": "Recommendations"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Water Sample",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "sample_photo",
+   "fieldtype": "Attach Image",
+   "label": "Sample photo"
+  },
+  {
+   "fieldname": "image_hoft",
+   "fieldtype": "Image",
+   "options": "sample_photo"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "workflow_management_section",
+   "fieldtype": "Section Break",
+   "label": "Workflow Management"
+  },
+  {
+   "fieldname": "deadline_date",
+   "fieldtype": "Date",
+   "label": "Deadline Date"
+  },
+  {
+   "fieldname": "lab_priority",
+   "fieldtype": "Select",
+   "label": "Lab Priority",
+   "options": "Low\nMedium\nHigh\nUrgent"
+  },
+  {
+   "fieldname": "expected_results_date",
+   "fieldtype": "Date",
+   "label": "Expected Results Date"
+  },
+  {
+   "fieldname": "column_break_workflow_ws",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "sample_status",
+   "fieldtype": "Select",
+   "label": "Sample Status",
+   "options": "Collected\nIn Transit\nIn Lab\nAnalyzed\nResults Available",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2025-10-18 18:21:50.810759",
+ "modified_by": "Administrator",
+ "module": "WT Operations",
+ "name": "Water Sample",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

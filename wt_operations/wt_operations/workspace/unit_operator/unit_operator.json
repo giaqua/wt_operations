@@ -1,0 +1,72 @@
+{
+ "charts": [],
+ "content": "[{\"id\":\"9jgxN5gxAS\",\"type\":\"paragraph\",\"data\":{\"text\":\"<span class=\\\"h3\\\">Create the Daily Operation Report for today</span>\",\"col\":12}},{\"id\":\"uqfti4RLc5\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"New Daily Report\",\"col\":4}},{\"id\":\"4lDt3TuupV\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"New Issue\",\"col\":4}},{\"id\":\"90FH6QA_Gi\",\"type\":\"paragraph\",\"data\":{\"text\":\"<span class=\\\"h3\\\">View all Daily Operation Reports</span>\",\"col\":12}},{\"id\":\"ZKrqiWmf6V\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Daily Reports\",\"col\":4}},{\"id\":\"PoYykOUIXN\",\"type\":\"paragraph\",\"data\":{\"text\":\"<span class=\\\"h3\\\">Other Documents</span>\",\"col\":12}},{\"id\":\"rkQiPPqptQ\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"My Assignements\",\"col\":4}},{\"id\":\"FxkIFxp3JN\",\"type\":\"shortcut\",\"data\":{\"shortcut_name\":\"Tasks\",\"col\":4}},{\"id\":\"O-H-7Pfk-N\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\">Unit Operator</span>\",\"col\":12}}]",
+ "creation": "2025-06-17 13:26:47.805968",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "share-people",
+ "idx": 0,
+ "indicator_color": "green",
+ "is_hidden": 0,
+ "label": "Unit Operator",
+ "links": [],
+ "modified": "2025-06-18 22:18:47.570194",
+ "modified_by": "Administrator",
+ "module": "WT Operations",
+ "name": "Unit Operator",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "WT Operations",
+ "public": 1,
+ "quick_lists": [],
+ "roles": [],
+ "sequence_id": 24.0,
+ "shortcuts": [
+  {
+   "color": "Green",
+   "doc_view": "New",
+   "label": "New Daily Report",
+   "link_to": "Daily Operation Report",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Green",
+   "doc_view": "List",
+   "label": "Tasks",
+   "link_to": "Task",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Red",
+   "doc_view": "List",
+   "format": "{} Draft",
+   "label": "Daily Reports",
+   "link_to": "Daily Operation Report",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Red",
+   "doc_view": "List",
+   "format": "{} Open",
+   "label": "My Assignements",
+   "link_to": "ToDo",
+   "stats_filter": "[]",
+   "type": "DocType"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "New",
+   "label": "New Issue",
+   "link_to": "Issue",
+   "stats_filter": "[]",
+   "type": "DocType"
+  }
+ ],
+ "title": "Unit Operator"
+}

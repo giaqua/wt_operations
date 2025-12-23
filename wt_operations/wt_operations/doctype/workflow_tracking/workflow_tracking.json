@@ -1,0 +1,134 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-10-27 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "lead",
+  "current_stage",
+  "completion_percentage",
+  "estimated_completion_date",
+  "actual_start_date",
+  "column_break_5",
+  "stage_history_section",
+  "stage_history",
+  "bottlenecks_section",
+  "bottlenecks",
+  "documents_section",
+  "site_1_documents",
+  "site_2_documents"
+ ],
+ "fields": [
+  {
+   "fieldname": "lead",
+   "fieldtype": "Link",
+   "label": "Lead",
+   "options": "Lead",
+   "reqd": 1
+  },
+  {
+   "fieldname": "current_stage",
+   "fieldtype": "Data",
+   "label": "Current Stage",
+   "read_only": 1
+  },
+  {
+   "fieldname": "completion_percentage",
+   "fieldtype": "Percent",
+   "label": "Completion Percentage",
+   "read_only": 1
+  },
+  {
+   "fieldname": "estimated_completion_date",
+   "fieldtype": "Date",
+   "label": "Estimated Completion Date"
+  },
+  {
+   "fieldname": "actual_start_date",
+   "fieldtype": "Date",
+   "label": "Actual Start Date"
+  },
+  {
+   "fieldname": "column_break_5",
+   "fieldtype": "Column Break"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "stage_history_section",
+   "fieldtype": "Section Break",
+   "label": "Stage History"
+  },
+  {
+   "fieldname": "stage_history",
+   "fieldtype": "Table",
+   "label": "Stage History",
+   "options": "Stage History"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "bottlenecks_section",
+   "fieldtype": "Section Break",
+   "label": "Bottlenecks"
+  },
+  {
+   "fieldname": "bottlenecks",
+   "fieldtype": "Table",
+   "label": "Bottlenecks",
+   "options": "Workflow Bottleneck"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "documents_section",
+   "fieldtype": "Section Break",
+   "label": "Related Documents"
+  },
+  {
+   "fieldname": "site_1_documents",
+   "fieldtype": "Table",
+   "label": "Site 1 Documents",
+   "options": "Site 1 Documents"
+  },
+  {
+   "fieldname": "site_2_documents",
+   "fieldtype": "Table",
+   "label": "Site 2 Documents",
+   "options": "Site 2 Documents"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-10-27 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "WT Operations",
+ "name": "Workflow Tracking",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Operations Manager",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Sales Manager"
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

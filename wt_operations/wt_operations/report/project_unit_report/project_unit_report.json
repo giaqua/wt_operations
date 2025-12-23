@@ -1,0 +1,28 @@
+{
+ "add_total_row": 0,
+ "add_translate_data": 0,
+ "columns": [],
+ "creation": "2025-06-24 12:49:31.409134",
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "letterhead": null,
+ "modified": "2025-06-24 12:49:31.409134",
+ "modified_by": "Administrator",
+ "module": "WT Operations",
+ "name": "Project unit Report",
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "ref_doctype": "Daily Operation Report",
+ "report_name": "Project unit Report",
+ "report_type": "Script Report",
+ "roles": [
+  {
+   "role": "System Manager"
+  }
+ ],
+ "timeout": 0
+}

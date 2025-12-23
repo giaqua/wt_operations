@@ -1,5 +1,5 @@
 app_name = "wt_operations"
-app_title = "Wt Operations"
+app_title = "WT Operations"
 app_publisher = "Takamol"
 app_description = "WT Operations"
 app_email = "info@takamol.io"
@@ -15,7 +15,7 @@ app_license = "mit"
 # 	{
 # 		"name": "wt_operations",
 # 		"logo": "/assets/wt_operations/logo.png",
-# 		"title": "Wt Operations",
+# 		"title": "WT Operations",
 # 		"route": "/wt_operations",
 # 		"has_permission": "wt_operations.api.permission.has_app_permission"
 # 	}
@@ -137,34 +137,41 @@ app_license = "mit"
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
+doc_events = {
+	"WWTP Technical Questionnaire": {
+		"on_submit": "wt_operations.wt_operations.workflow_hooks.on_submit_technical_questionnaire"
+	},
+	"WWTP Technical Proposal": {
+		"on_submit": "wt_operations.wt_operations.workflow_hooks.on_submit_technical_proposal"
+	},
+	"Customer Proposal": {
+		"on_submit": "wt_operations.wt_operations.workflow_hooks.on_submit_customer_proposal"
+	},
+	"Site Visit Request": {
+		"on_submit": "wt_operations.wt_operations.workflow_hooks.on_submit_site_visit_request"
+	},
+	"Site Visit": {
+		"on_submit": "wt_operations.wt_operations.workflow_hooks.on_submit_site_visit"
+	},
+	"Water Sample": {
+		"on_submit": "wt_operations.wt_operations.workflow_hooks.on_submit_water_sample"
+	},
+	"Lab Test Result": {
+		"on_submit": "wt_operations.wt_operations.workflow_hooks.on_submit_lab_test_result"
+	}
+}
 
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"wt_operations.tasks.all"
-# 	],
-# 	"daily": [
-# 		"wt_operations.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"wt_operations.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"wt_operations.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"wt_operations.tasks.monthly"
-# 	],
-# }
+scheduler_events = {
+	"hourly": [
+		"wt_operations.wt_operations.sync_manager.auto_sync_pending_documents"
+	],
+	"daily": [
+		"wt_operations.wt_operations.workflow_hooks.check_overdue_documents"
+	]
+}
 
 # Testing
 # -------
@@ -242,8 +249,22 @@ app_license = "mit"
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
 
-# Translation
-# ------------
-# List of apps whose translatable strings should be excluded from this app's translations.
-# ignore_translatable_strings_from = []
+doctype_js = {
+    "Daily Operation Report": "public/js/daily_operation_report.js"
+}
 
+
+# fixtures = [
+#     {"dt": "Tank Type"},
+#     {"dt": "Treatment parameter"},
+#     {
+#         "doctype": "Role",
+#         "filters": [
+#             ["name", "in", ["Operations Technician", "Operations Manager"]]
+#         ]
+#     },
+# ]
+
+
+# app_include_css = "/assets/wt_operations/wt_operations/css/datatables.fixedcolumns.min.css"
+# app_include_js = "/assets/wt_operations/wt_operations/js/datatables.fixedcolumns.min.js"

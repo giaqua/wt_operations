@@ -1,0 +1,177 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-10-09 11:27:17.828947",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "site_name",
+  "site_url",
+  "api_key",
+  "api_secret",
+  "enabled",
+  "column_break_5",
+  "test_connection",
+  "connection_status",
+  "workflow_configuration_section",
+  "sync_technical_questionnaires",
+  "sync_technical_proposals",
+  "sync_customer_proposals",
+  "column_break_sync",
+  "auto_sync_enabled",
+  "sync_retry_attempts",
+  "sync_timeout_seconds",
+  "sync_status_tracking_section",
+  "last_sync_date",
+  "sync_error_log",
+  "sync_statistics"
+ ],
+ "fields": [
+  {
+   "fieldname": "site_name",
+   "fieldtype": "Data",
+   "label": "Site Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "site_url",
+   "fieldtype": "Data",
+   "label": "Site URL",
+   "reqd": 1,
+   "placeholder": "https://example.erpnext.com"
+  },
+  {
+   "fieldname": "api_key",
+   "fieldtype": "Password",
+   "label": "API Key",
+   "reqd": 1
+  },
+  {
+   "fieldname": "api_secret",
+   "fieldtype": "Password",
+   "label": "API Secret",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled"
+  },
+  {
+   "fieldname": "column_break_5",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "test_connection",
+   "fieldtype": "Button",
+   "label": "Test Connection"
+  },
+  {
+   "fieldname": "connection_status",
+   "fieldtype": "Data",
+   "label": "Connection Status",
+   "read_only": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "workflow_configuration_section",
+   "fieldtype": "Section Break",
+   "label": "Workflow Configuration"
+  },
+  {
+   "default": "1",
+   "fieldname": "sync_technical_questionnaires",
+   "fieldtype": "Check",
+   "label": "Sync Technical Questionnaires"
+  },
+  {
+   "default": "1",
+   "fieldname": "sync_technical_proposals",
+   "fieldtype": "Check",
+   "label": "Sync Technical Proposals"
+  },
+  {
+   "default": "1",
+   "fieldname": "sync_customer_proposals",
+   "fieldtype": "Check",
+   "label": "Sync Customer Proposals"
+  },
+  {
+   "fieldname": "column_break_sync",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "auto_sync_enabled",
+   "fieldtype": "Check",
+   "label": "Auto Sync Enabled"
+  },
+  {
+   "default": "3",
+   "fieldname": "sync_retry_attempts",
+   "fieldtype": "Int",
+   "label": "Sync Retry Attempts"
+  },
+  {
+   "default": "30",
+   "fieldname": "sync_timeout_seconds",
+   "fieldtype": "Int",
+   "label": "Sync Timeout (Seconds)"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "sync_status_tracking_section",
+   "fieldtype": "Section Break",
+   "label": "Sync Status Tracking"
+  },
+  {
+   "fieldname": "last_sync_date",
+   "fieldtype": "Datetime",
+   "label": "Last Sync Date",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sync_error_log",
+   "fieldtype": "Text",
+   "label": "Sync Error Log",
+   "read_only": 1
+  },
+  {
+   "fieldname": "sync_statistics",
+   "fieldtype": "Small Text",
+   "label": "Sync Statistics",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-10-09 11:27:38.780713",
+ "modified_by": "Administrator",
+ "module": "WT Operations",
+ "name": "External Site Settings",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1,
+ "track_views": 1
+}

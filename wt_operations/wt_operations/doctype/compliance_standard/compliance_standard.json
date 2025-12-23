@@ -1,0 +1,49 @@
+{
+ "actions": [],
+ "creation": "2025-10-27 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "standard_name",
+  "regulatory_body",
+  "parameter_limits",
+  "compliance_level"
+ ],
+ "fields": [
+  {
+   "fieldname": "standard_name",
+   "fieldtype": "Data",
+   "label": "Standard Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "regulatory_body",
+   "fieldtype": "Data",
+   "label": "Regulatory Body"
+  },
+  {
+   "fieldname": "parameter_limits",
+   "fieldtype": "Small Text",
+   "label": "Parameter Limits"
+  },
+  {
+   "fieldname": "compliance_level",
+   "fieldtype": "Select",
+   "label": "Compliance Level",
+   "options": "Mandatory\nRecommended\nOptional"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-10-27 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "WT Operations",
+ "name": "Compliance Standard",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

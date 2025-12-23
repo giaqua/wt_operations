@@ -1,0 +1,682 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2025-10-02 13:28:46.120185",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_basic_info",
+  "naming_series",
+  "lead",
+  "wwtp_technical_questionnaire",
+  "related_site_visit_request",
+  "column_break_visit_details",
+  "date",
+  "visit_by",
+  "visit_duration",
+  "weather_conditions",
+  "section_break_site_info",
+  "site_name",
+  "site_address",
+  "city",
+  "state",
+  "pincode",
+  "latitude_and_longitude",
+  "maps_location_link",
+  "geolocation",
+  "column_break_contact",
+  "contact_person",
+  "contact_number",
+  "email",
+  "designation",
+  "section_break_facility_assessment",
+  "facility_type",
+  "existing_treatment",
+  "treatment_capacity",
+  "current_flow_rate",
+  "column_break_technical",
+  "wastewater_source",
+  "wastewater_characteristics",
+  "discharge_point",
+  "effluent_standards",
+  "section_break_site_conditions",
+  "site_accessibility",
+  "power_availability",
+  "water_source",
+  "column_break_environmental",
+  "environmental_impact",
+  "nearby_sensitive_areas",
+  "noise_levels",
+  "odor_issues",
+  "section_break_measurements",
+  "site_dimensions",
+  "available_area",
+  "elevation",
+  "ground_conditions",
+  "column_break_utilities",
+  "sewer_connection",
+  "storm_drainage",
+  "fire_safety",
+  "security_requirements",
+  "section_break_sampling",
+  "samples_collected",
+  "samples_table",
+  "sampling_points",
+  "sampling_method",
+  "column_break_observations",
+  "site_observations",
+  "technical_observations",
+  "recommendations",
+  "section_break_documentation",
+  "photos_taken",
+  "sketches_made",
+  "measurements_recorded",
+  "column_break_follow_up",
+  "follow_up_required",
+  "follow_up_date",
+  "next_steps",
+  "section_break_team",
+  "visit_team",
+  "external_consultants",
+  "client_representatives",
+  "column_break_equipment",
+  "equipment_used",
+  "safety_equipment",
+  "measurement_tools",
+  "section_break_compliance",
+  "regulatory_requirements",
+  "permits_required",
+  "environmental_clearance",
+  "column_break_costs",
+  "estimated_project_cost",
+  "site_preparation_cost",
+  "utility_connection_cost",
+  "section_break_risks",
+  "identified_risks",
+  "mitigation_measures",
+  "risk_level",
+  "column_break_notes",
+  "visit_notes",
+  "technical_notes",
+  "client_feedback",
+  "amended_from",
+  "workflow_management_section",
+  "deadline_date",
+  "completion_status",
+  "quality_score",
+  "column_break_workflow_sv",
+  "follow_up_required_date"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_basic_info",
+   "fieldtype": "Section Break",
+   "label": "Basic Information"
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "hidden": 1,
+   "label": "Naming Series",
+   "options": "STP-SV-"
+  },
+  {
+   "fieldname": "lead",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Lead",
+   "options": "Lead",
+   "reqd": 1
+  },
+  {
+   "fieldname": "related_site_visit_request",
+   "fieldtype": "Link",
+   "label": "Related Site Visit Request",
+   "link_filters": "[[\"Site Visit Request\",\"lead\",\"=\",\"eval: doc.lead\"]]",
+   "options": "Site Visit Request"
+  },
+  {
+   "fieldname": "column_break_visit_details",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Today",
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Visit Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "visit_by",
+   "fieldtype": "Link",
+   "label": "Visit By",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "visit_duration",
+   "fieldtype": "Data",
+   "label": "Visit Duration",
+   "placeholder": "e.g., 3 hours"
+  },
+  {
+   "fieldname": "weather_conditions",
+   "fieldtype": "Select",
+   "label": "Weather Conditions",
+   "options": "Sunny\nCloudy\nRainy\nStormy\nFoggy"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_site_info",
+   "fieldtype": "Section Break",
+   "label": "Site Information"
+  },
+  {
+   "fieldname": "site_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Site Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "site_address",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "Site Address",
+   "reqd": 1
+  },
+  {
+   "fieldname": "city",
+   "fieldtype": "Data",
+   "label": "City"
+  },
+  {
+   "fieldname": "state",
+   "fieldtype": "Data",
+   "label": "State"
+  },
+  {
+   "fieldname": "pincode",
+   "fieldtype": "Data",
+   "label": "Pincode"
+  },
+  {
+   "fieldname": "geolocation",
+   "fieldtype": "Geolocation",
+   "label": "Geolocation"
+  },
+  {
+   "fieldname": "column_break_contact",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "contact_person",
+   "fieldtype": "Data",
+   "label": "Contact Person"
+  },
+  {
+   "fieldname": "contact_number",
+   "fieldtype": "Data",
+   "label": "Contact Number"
+  },
+  {
+   "fieldname": "email",
+   "fieldtype": "Data",
+   "label": "Email"
+  },
+  {
+   "fieldname": "designation",
+   "fieldtype": "Data",
+   "label": "Designation"
+  },
+  {
+   "fieldname": "section_break_facility_assessment",
+   "fieldtype": "Section Break",
+   "label": "Facility Assessment"
+  },
+  {
+   "fieldname": "facility_type",
+   "fieldtype": "Select",
+   "label": "Facility Type",
+   "options": "Residential\nCommercial\nIndustrial\nMunicipal\nHealthcare\nEducational\nMixed Use"
+  },
+  {
+   "default": "0",
+   "fieldname": "existing_treatment",
+   "fieldtype": "Check",
+   "label": "Existing Treatment Facility"
+  },
+  {
+   "fieldname": "treatment_capacity",
+   "fieldtype": "Float",
+   "label": "Current Treatment Capacity (m\u00b3/day)"
+  },
+  {
+   "fieldname": "current_flow_rate",
+   "fieldtype": "Float",
+   "label": "Current Flow Rate (m\u00b3/day)"
+  },
+  {
+   "fieldname": "column_break_technical",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "wastewater_source",
+   "fieldtype": "Small Text",
+   "label": "Wastewater Source"
+  },
+  {
+   "fieldname": "wastewater_characteristics",
+   "fieldtype": "Small Text",
+   "label": "Wastewater Characteristics"
+  },
+  {
+   "fieldname": "discharge_point",
+   "fieldtype": "Small Text",
+   "label": "Discharge Point"
+  },
+  {
+   "fieldname": "effluent_standards",
+   "fieldtype": "Small Text",
+   "label": "Effluent Standards Required"
+  },
+  {
+   "fieldname": "section_break_site_conditions",
+   "fieldtype": "Section Break",
+   "label": "Site Conditions"
+  },
+  {
+   "fieldname": "site_accessibility",
+   "fieldtype": "Select",
+   "label": "Site Accessibility",
+   "options": "Excellent\nGood\nFair\nPoor\nVery Poor"
+  },
+  {
+   "fieldname": "power_availability",
+   "fieldtype": "Select",
+   "label": "Power Availability",
+   "options": "Available\nLimited\nNot Available\nNeeds Assessment"
+  },
+  {
+   "fieldname": "water_source",
+   "fieldtype": "Small Text",
+   "label": "Water Source"
+  },
+  {
+   "fieldname": "column_break_environmental",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "environmental_impact",
+   "fieldtype": "Small Text",
+   "label": "Environmental Impact Assessment"
+  },
+  {
+   "fieldname": "nearby_sensitive_areas",
+   "fieldtype": "Small Text",
+   "label": "Nearby Sensitive Areas"
+  },
+  {
+   "fieldname": "noise_levels",
+   "fieldtype": "Select",
+   "label": "Noise Levels",
+   "options": "Low\nModerate\nHigh\nVery High"
+  },
+  {
+   "fieldname": "odor_issues",
+   "fieldtype": "Select",
+   "label": "Odor Issues",
+   "options": "None\nMinimal\nModerate\nSignificant"
+  },
+  {
+   "fieldname": "section_break_measurements",
+   "fieldtype": "Section Break",
+   "label": "Site Measurements"
+  },
+  {
+   "fieldname": "site_dimensions",
+   "fieldtype": "Small Text",
+   "label": "Site Dimensions"
+  },
+  {
+   "fieldname": "available_area",
+   "fieldtype": "Float",
+   "label": "Available Area (sqm)"
+  },
+  {
+   "fieldname": "elevation",
+   "fieldtype": "Float",
+   "label": "Site Elevation (m)"
+  },
+  {
+   "fieldname": "ground_conditions",
+   "fieldtype": "Select",
+   "label": "Ground Conditions",
+   "options": "Rocky\nSandy\nClay\nMixed\nSoft\nHard"
+  },
+  {
+   "fieldname": "column_break_utilities",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "sewer_connection",
+   "fieldtype": "Select",
+   "label": "Sewer Connection",
+   "options": "Available\nNearby\nNot Available\nNeeds Assessment"
+  },
+  {
+   "fieldname": "storm_drainage",
+   "fieldtype": "Select",
+   "label": "Storm Drainage",
+   "options": "Available\nAdequate\nInadequate\nNot Available"
+  },
+  {
+   "fieldname": "fire_safety",
+   "fieldtype": "Select",
+   "label": "Fire Safety",
+   "options": "Adequate\nNeeds Improvement\nInadequate\nNot Assessed"
+  },
+  {
+   "fieldname": "security_requirements",
+   "fieldtype": "Small Text",
+   "label": "Security Requirements"
+  },
+  {
+   "fieldname": "section_break_sampling",
+   "fieldtype": "Section Break",
+   "label": "Sampling Information"
+  },
+  {
+   "default": "0",
+   "fieldname": "samples_collected",
+   "fieldtype": "Check",
+   "label": "Samples Collected"
+  },
+  {
+   "fieldname": "sampling_points",
+   "fieldtype": "Small Text",
+   "label": "Sampling Points"
+  },
+  {
+   "fieldname": "sampling_method",
+   "fieldtype": "Small Text",
+   "label": "Sampling Method"
+  },
+  {
+   "fieldname": "column_break_observations",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "site_observations",
+   "fieldtype": "Text",
+   "label": "Site Observations"
+  },
+  {
+   "fieldname": "technical_observations",
+   "fieldtype": "Text",
+   "label": "Technical Observations"
+  },
+  {
+   "fieldname": "recommendations",
+   "fieldtype": "Text",
+   "label": "Recommendations"
+  },
+  {
+   "fieldname": "section_break_documentation",
+   "fieldtype": "Section Break",
+   "label": "Documentation"
+  },
+  {
+   "default": "0",
+   "fieldname": "photos_taken",
+   "fieldtype": "Check",
+   "label": "Photos Taken"
+  },
+  {
+   "default": "0",
+   "fieldname": "sketches_made",
+   "fieldtype": "Check",
+   "label": "Sketches Made"
+  },
+  {
+   "default": "0",
+   "fieldname": "measurements_recorded",
+   "fieldtype": "Check",
+   "label": "Measurements Recorded"
+  },
+  {
+   "fieldname": "column_break_follow_up",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "follow_up_required",
+   "fieldtype": "Check",
+   "label": "Follow-up Required"
+  },
+  {
+   "fieldname": "follow_up_date",
+   "fieldtype": "Date",
+   "label": "Follow-up Date"
+  },
+  {
+   "fieldname": "next_steps",
+   "fieldtype": "Small Text",
+   "label": "Next Steps"
+  },
+  {
+   "fieldname": "section_break_team",
+   "fieldtype": "Section Break",
+   "label": "Visit Team"
+  },
+  {
+   "fieldname": "visit_team",
+   "fieldtype": "Small Text",
+   "label": "Visit Team Members"
+  },
+  {
+   "fieldname": "external_consultants",
+   "fieldtype": "Small Text",
+   "label": "External Consultants"
+  },
+  {
+   "fieldname": "client_representatives",
+   "fieldtype": "Small Text",
+   "label": "Client Representatives"
+  },
+  {
+   "fieldname": "column_break_equipment",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "equipment_used",
+   "fieldtype": "Small Text",
+   "label": "Equipment Used"
+  },
+  {
+   "fieldname": "safety_equipment",
+   "fieldtype": "Small Text",
+   "label": "Safety Equipment"
+  },
+  {
+   "fieldname": "measurement_tools",
+   "fieldtype": "Small Text",
+   "label": "Measurement Tools"
+  },
+  {
+   "fieldname": "section_break_compliance",
+   "fieldtype": "Section Break",
+   "label": "Regulatory Compliance"
+  },
+  {
+   "fieldname": "regulatory_requirements",
+   "fieldtype": "Small Text",
+   "label": "Regulatory Requirements"
+  },
+  {
+   "fieldname": "permits_required",
+   "fieldtype": "Small Text",
+   "label": "Permits Required"
+  },
+  {
+   "fieldname": "environmental_clearance",
+   "fieldtype": "Select",
+   "label": "Environmental Clearance",
+   "options": "Required\nNot Required\nObtained\nPending"
+  },
+  {
+   "fieldname": "column_break_costs",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "estimated_project_cost",
+   "fieldtype": "Currency",
+   "label": "Estimated Project Cost"
+  },
+  {
+   "fieldname": "site_preparation_cost",
+   "fieldtype": "Currency",
+   "label": "Site Preparation Cost"
+  },
+  {
+   "fieldname": "utility_connection_cost",
+   "fieldtype": "Currency",
+   "label": "Utility Connection Cost"
+  },
+  {
+   "fieldname": "section_break_risks",
+   "fieldtype": "Section Break",
+   "label": "Risk Assessment"
+  },
+  {
+   "fieldname": "identified_risks",
+   "fieldtype": "Small Text",
+   "label": "Identified Risks"
+  },
+  {
+   "fieldname": "mitigation_measures",
+   "fieldtype": "Small Text",
+   "label": "Mitigation Measures"
+  },
+  {
+   "fieldname": "risk_level",
+   "fieldtype": "Select",
+   "label": "Risk Level",
+   "options": "Low\nMedium\nHigh\nVery High"
+  },
+  {
+   "fieldname": "column_break_notes",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "visit_notes",
+   "fieldtype": "Text",
+   "label": "Visit Notes"
+  },
+  {
+   "fieldname": "technical_notes",
+   "fieldtype": "Text",
+   "label": "Technical Notes"
+  },
+  {
+   "fieldname": "client_feedback",
+   "fieldtype": "Small Text",
+   "label": "Client Feedback"
+  },
+  {
+   "depends_on": "eval: doc.samples_collected==1",
+   "fieldname": "samples_table",
+   "fieldtype": "Table",
+   "label": "Samples Table",
+   "options": "Samples Table"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Site Visit",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "latitude_and_longitude",
+   "fieldtype": "Data",
+   "label": "Latitude and Longitude"
+  },
+  {
+   "fieldname": "maps_location_link",
+   "fieldtype": "Data",
+   "label": "Maps location link"
+  },
+  {
+   "fieldname": "wwtp_technical_questionnaire",
+   "fieldtype": "Link",
+   "label": "WWTP Technical Questionnaire",
+   "link_filters": "[]",
+   "options": "WWTP Technical Questionnaire"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "workflow_management_section",
+   "fieldtype": "Section Break",
+   "label": "Workflow Management"
+  },
+  {
+   "fieldname": "deadline_date",
+   "fieldtype": "Date",
+   "label": "Deadline Date"
+  },
+  {
+   "fieldname": "completion_status",
+   "fieldtype": "Select",
+   "label": "Completion Status",
+   "options": "Scheduled\nIn Progress\nCompleted\nOverdue",
+   "read_only": 1
+  },
+  {
+   "fieldname": "quality_score",
+   "fieldtype": "Rating",
+   "label": "Quality Score"
+  },
+  {
+   "fieldname": "column_break_workflow_sv",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "follow_up_required_date",
+   "fieldtype": "Date",
+   "label": "Follow-up Required Date"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2025-10-18 17:29:26.403742",
+ "modified_by": "Administrator",
+ "module": "WT Operations",
+ "name": "Site Visit",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

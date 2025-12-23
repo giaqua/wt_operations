@@ -1,0 +1,111 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-10-28 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "document_type",
+  "tracking_date",
+  "column_break_2",
+  "total_documents",
+  "section_break_4",
+  "on_time_count",
+  "approaching_deadline_count",
+  "overdue_count",
+  "column_break_8",
+  "average_days_to_deadline",
+  "performance_score"
+ ],
+ "fields": [
+  {
+   "fieldname": "document_type",
+   "fieldtype": "Select",
+   "label": "Document Type",
+   "options": "WWTP Technical Questionnaire\nSite Visit Request\nSite Visit\nWater Sample\nLab Test Result\nWWTP Technical Proposal\nCustomer Proposal",
+   "reqd": 1
+  },
+  {
+   "fieldname": "tracking_date",
+   "fieldtype": "Date",
+   "label": "Tracking Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_2",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_documents",
+   "fieldtype": "Int",
+   "label": "Total Documents"
+  },
+  {
+   "fieldname": "section_break_4",
+   "fieldtype": "Section Break",
+   "label": "Deadline Status Breakdown"
+  },
+  {
+   "fieldname": "on_time_count",
+   "fieldtype": "Int",
+   "label": "On Time Count"
+  },
+  {
+   "fieldname": "approaching_deadline_count",
+   "fieldtype": "Int",
+   "label": "Approaching Deadline Count"
+  },
+  {
+   "fieldname": "overdue_count",
+   "fieldtype": "Int",
+   "label": "Overdue Count"
+  },
+  {
+   "fieldname": "column_break_8",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "average_days_to_deadline",
+   "fieldtype": "Float",
+   "label": "Average Days to Deadline",
+   "precision": "2"
+  },
+  {
+   "fieldname": "performance_score",
+   "fieldtype": "Percent",
+   "label": "Performance Score"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-10-28 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "WT Operations",
+ "name": "Deadline History",
+ "naming_rule": "Expression",
+ "naming_rule_expression": "{document_type}-{tracking_date}",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Operations Manager",
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

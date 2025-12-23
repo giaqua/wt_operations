@@ -1,0 +1,129 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-10-09 01:10:30.911267",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_mlbw",
+  "amended_from",
+  "section_break_qcmr",
+  "supplier",
+  "lead",
+  "opportunity",
+  "opportunity_date",
+  "column_break_jbhu",
+  "rfp_date",
+  "proposal_due_date",
+  "technical_questionnaire",
+  "technical_questionnaire_date"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_mlbw",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Request For Proposal",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "section_break_qcmr",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "lead",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Lead",
+   "options": "Lead",
+   "reqd": 1
+  },
+  {
+   "fieldname": "opportunity",
+   "fieldtype": "Link",
+   "label": "Opportunity",
+   "link_filters": "[[\"Opportunity\",\"party_name\",\"=\",\"eval: doc.lead\"]]",
+   "options": "Opportunity"
+  },
+  {
+   "fieldname": "technical_questionnaire",
+   "fieldtype": "Link",
+   "label": "Technical Questionnaire",
+   "link_filters": "[[\"STP TECHNICAL QUESTIONNAIRE\",\"docstatus\",\"=\",\"1\"],[\"STP TECHNICAL QUESTIONNAIRE\",\"lead\",\"=\",\"eval: doc.lead\"]]",
+   "options": "WWTP Technical Questionnaire"
+  },
+  {
+   "fetch_from": "opportunity.transaction_date",
+   "fetch_if_empty": 1,
+   "fieldname": "opportunity_date",
+   "fieldtype": "Date",
+   "label": "Opportunity Date"
+  },
+  {
+   "fieldname": "proposal_due_date",
+   "fieldtype": "Date",
+   "label": "Proposal Due date"
+  },
+  {
+   "fieldname": "supplier",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Supplier",
+   "options": "Supplier",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_jbhu",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Today",
+   "fieldname": "rfp_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "RFP Date",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "technical_questionnaire.date",
+   "fetch_if_empty": 1,
+   "fieldname": "technical_questionnaire_date",
+   "fieldtype": "Date",
+   "label": "Technical Questionnaire date"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2025-10-15 11:01:22.418155",
+ "modified_by": "Administrator",
+ "module": "WT Operations",
+ "name": "Request For Proposal",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

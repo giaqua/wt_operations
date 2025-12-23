@@ -1,0 +1,146 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-10-15 18:19:02.214261",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "parameter",
+  "ph",
+  "tss",
+  "turbidity",
+  "temperature",
+  "cod",
+  "bod5",
+  "tds",
+  "column_break_dvbb",
+  "total_chlorinates_hydrocarbons",
+  "oil_grease",
+  "phenol",
+  "arsenic",
+  "po4_p",
+  "sulphate",
+  "tkn"
+ ],
+ "fields": [
+  {
+   "fieldname": "parameter",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Stream No",
+   "reqd": 1
+  },
+  {
+   "fieldname": "ph",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "pH"
+  },
+  {
+   "description": "mg/lit",
+   "fieldname": "tss",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "TSS"
+  },
+  {
+   "description": "mg/lit",
+   "fieldname": "turbidity",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Turbidity"
+  },
+  {
+   "description": "Celsius (Max 60C-Min 20C)",
+   "fieldname": "temperature",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Temperature",
+   "non_negative": 1
+  },
+  {
+   "description": "mg/lit",
+   "fieldname": "cod",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "COD"
+  },
+  {
+   "description": "mg/lit",
+   "fieldname": "bod5",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "BOD5"
+  },
+  {
+   "description": "mg/lit",
+   "fieldname": "tds",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "TDS"
+  },
+  {
+   "description": "mg/lit",
+   "fieldname": "total_chlorinates_hydrocarbons",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Total Chlorinates Hydrocarbon's"
+  },
+  {
+   "description": "mg/lit",
+   "fieldname": "oil_grease",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Oil & Grease"
+  },
+  {
+   "description": "mg/L",
+   "fieldname": "phenol",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Phenol"
+  },
+  {
+   "description": "mg/L",
+   "fieldname": "arsenic",
+   "fieldtype": "Float",
+   "label": "Arsenic"
+  },
+  {
+   "description": "mg/lit",
+   "fieldname": "po4_p",
+   "fieldtype": "Float",
+   "label": "PO4-P"
+  },
+  {
+   "description": "mg/lit",
+   "fieldname": "sulphate",
+   "fieldtype": "Float",
+   "label": "Sulphate"
+  },
+  {
+   "description": "mg/lit",
+   "fieldname": "tkn",
+   "fieldtype": "Float",
+   "label": "TKN"
+  },
+  {
+   "fieldname": "column_break_dvbb",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-10-15 18:34:29.500119",
+ "modified_by": "Administrator",
+ "module": "WT Operations",
+ "name": "TQ Influent Stream",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

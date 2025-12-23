@@ -1,0 +1,70 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-10-15 16:06:30.668056",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "wastewater_generator_type",
+  "project_type",
+  "capacity_m3day",
+  "wwtp_available_footprint",
+  "location",
+  "available_equipment"
+ ],
+ "fields": [
+  {
+   "fieldname": "wastewater_generator_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Wastewater Generator (type)",
+   "options": "Wastewater Generator Type",
+   "reqd": 1
+  },
+  {
+   "fieldname": "project_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Project Type",
+   "options": "New WWT Plant\nWWT Plant Upgrade"
+  },
+  {
+   "fieldname": "capacity_m3day",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Capacity (m3/day)"
+  },
+  {
+   "fieldname": "wwtp_available_footprint",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "WWTP available footprint"
+  },
+  {
+   "fieldname": "location",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Location"
+  },
+  {
+   "fieldname": "available_equipment",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Available equipment"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-10-15 18:07:52.442784",
+ "modified_by": "Administrator",
+ "module": "WT Operations",
+ "name": "WWTP TQ generator table",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

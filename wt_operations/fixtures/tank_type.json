@@ -1,0 +1,34 @@
+[
+ {
+  "docstatus": 0,
+  "doctype": "Tank Type",
+  "level_uom": null,
+  "modified": "2025-05-08 10:08:49.949139",
+  "name": "Waste Water Tank",
+  "tank_type_name": "Waste Water Tank"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Tank Type",
+  "level_uom": null,
+  "modified": "2025-05-08 10:08:59.991837",
+  "name": "Equalization Tank",
+  "tank_type_name": "Equalization Tank"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Tank Type",
+  "level_uom": null,
+  "modified": "2025-05-08 10:09:08.264041",
+  "name": "Product Tank",
+  "tank_type_name": "Product Tank"
+ },
+ {
+  "docstatus": 0,
+  "doctype": "Tank Type",
+  "level_uom": null,
+  "modified": "2025-05-08 10:09:15.152454",
+  "name": "Sludge Tank",
+  "tank_type_name": "Sludge Tank"
+ }
+]

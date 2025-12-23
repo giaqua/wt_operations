@@ -1,0 +1,87 @@
+{
+ "_comments": "[{\"comment\": \"<div class=\\\"ql-editor read-mode\\\"><p>shits are levels and calculate volume</p></div>\", \"by\": \"Administrator\", \"name\": \"epaff2tqor\"}, {\"comment\": \"<div class=\\\"ql-editor read-mode\\\"><p>add tank types table to the project so it can be fetched in t...\", \"by\": \"Administrator\", \"name\": \"he6laval9r\"}]",
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-05-08 09:33:20.259059",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "tank_type",
+  "uom",
+  "beginning_shift",
+  "end_of_shift",
+  "volume_m3",
+  "volume_end_of_shift",
+  "comment"
+ ],
+ "fields": [
+  {
+   "fieldname": "tank_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Tank Type",
+   "options": "Tank Type"
+  },
+  {
+   "columns": 1,
+   "fetch_from": "tank_type.level_uom",
+   "fetch_if_empty": 1,
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "UOM",
+   "options": "UOM"
+  },
+  {
+   "columns": 2,
+   "fieldname": "beginning_shift",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Beginning Shift",
+   "reqd": 1
+  },
+  {
+   "columns": 1,
+   "fieldname": "end_of_shift",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "End of shift",
+   "reqd": 1
+  },
+  {
+   "columns": 2,
+   "fieldname": "volume_end_of_shift",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Volume end of shift",
+   "read_only": 1
+  },
+  {
+   "fieldname": "comment",
+   "fieldtype": "Small Text",
+   "label": "Comment"
+  },
+  {
+   "columns": 1,
+   "fieldname": "volume_m3",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Volume M3/m",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-06-24 00:55:55.950123",
+ "modified_by": "Administrator",
+ "module": "WT Operations",
+ "name": "Tank Level Table",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

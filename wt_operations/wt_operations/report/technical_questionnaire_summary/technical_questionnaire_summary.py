@@ -6,7 +6,102 @@ import frappe
 
 def execute(filters=None):
 	columns, data = get_columns(filters), get_data(filters)
-	return columns, data
+	report_summary,primitive_summary = get_summary_data(data, "pending_with")
+	# chart = get_chart_data(data)
+	message = None
+	chart = None
+	# frappe.local.response.chart = chart
+	return columns, data,message, chart,report_summary,primitive_summary
+
+def get_chart_data(data):
+	labels = []
+	datasets = [
+		{
+			"name": "Achieved Operations",
+			"values": [],
+		},
+		{
+			"name": "Pending Operations",
+			"values": [],
+		},
+	]
+
+	for row in data:
+		# print(row,"=========================",data)
+		labels.append(row.technical_questionnaire)
+		datasets[0]["values"].append(row.achieved_operations)
+		datasets[1]["values"].append(row.pending_operations)
+
+	chart = {
+		"data": {
+			"labels": labels,
+			"datasets": datasets,
+		},
+		"type": "bar",
+		"colors": ["#4caf50", "#f44336"],
+	}
+	return chart
+# def get_chart_data(data):
+# 	labels = []
+# 	datasets = [
+# 		{
+# 			"name": "Achieved Operations",
+# 			"values": [],
+# 		},
+# 		{
+# 			"name": "Pending Operations",
+# 			"values": [],
+# 		},
+# 	]
+
+# 	for key, values in summary.items():
+# 		labels.append(key)
+# 		datasets[0]["values"].append(values["achieved_operations"] / values["count"])
+# 		datasets[1]["values"].append(values["pending_operations"] / values["count"])
+
+# 	chart = {
+# 		"data": {
+# 			"labels": labels,
+# 			"datasets": datasets,
+# 		},
+# 		"type": "bar",
+# 		"colors": ["#4caf50", "#f44336"],
+# 	}
+# 	return chart
+
+def get_summary_data(data, group_by):
+	summary = {}
+	# print(data,"=================data==================")
+	total_count = len(data)
+	for row in data:
+		key = row.get(group_by)
+		if key not in summary:
+			summary[key] = {
+				"achieved_operations": 0,
+				"pending_operations": 0,
+				"count": 0
+			}
+		summary[key]["achieved_operations"] += row.get("achieved_operations", 0)
+		summary[key]["pending_operations"] += row.get("pending_operations", 0)
+		summary[key]["count"] += 1
+	all_summary = []
+	for key, values in summary.items():
+		all_summary.append({
+			"value": values["count"],
+			"label": key,
+			"indicator": "green" if key == "Completed" else "Black",
+			"datatype": "float",
+		}
+	)
+	all_summary.append({
+			"value": total_count,
+			"label": "Total",
+			"datatype": "float",
+			"indicator": "Blue"
+		}
+	)
+	# print(all_summary,"=================summary==================")
+	return all_summary,(total_count)
 
 
 def get_columns(filters):
@@ -110,6 +205,8 @@ def get_data(filters):
 		Select
 			ld.company_name as lead_name,
 			wtq.name as technical_questionnaire,
+			wtq.site_visit_required as site_visit_required,
+			wtq.sample_collection_required as sample_collection_required,
 			wtq.opportunity as opportunity,
 			count(svr.name) as visit_request,
 			count(sv.name) as site_visit,
@@ -157,21 +254,39 @@ def get_data(filters):
 	print(data)
 
 	for row in data:
-		if row.visit_request == 0:
-			row.pending_with = "Sales"
-		elif row.site_visit == 0 and row.site_visit == 0:
-			row.pending_with = "Sales"
-		elif row.water_sample == 0 and row.water_sample == 0:
-			row.pending_with = "Sales"
-		elif row.lab_test_result == 0 and row.lab_test_result == 0:
-			row.pending_with = "Lab"
-		elif row.technical_proposal == 0:
-			row.pending_with = "Technical"
-		elif row.customer_proposal == 0 and row.customer_proposal == 0:
-			row.pending_with = "Sales"
+		print(row.site_visit_required,"========row.site_visit_required=========",row)
+		if row.site_visit_required and row.sample_collection_required:
+			print("========if=========")
+			if row.visit_request == 0:
+				row.pending_with = "Sales"
+			elif row.site_visit == 0 and row.site_visit == 0:
+				row.pending_with = "Sales"
+			elif row.water_sample == 0 and row.water_sample == 0:
+				row.pending_with = "Sales"
+			elif row.lab_test_result == 0 and row.lab_test_result == 0:
+				row.pending_with = "Lab"
+			elif row.technical_proposal == 0:
+				row.pending_with = "Technical"
+			elif row.customer_proposal == 0 and row.customer_proposal == 0:
+				row.pending_with = "Sales"
+		
+		else:
+			if row.technical_proposal == 0:
+				row.pending_with = "Technical"
+			elif row.customer_proposal == 0 and row.customer_proposal == 0:
+				row.pending_with = "Sales"
 
 		if row.achieved_operations == 100:
 			row.pending_with = "Completed"
 			row["__color"] = "#4caf50"
+
+		# department = filters.get("department")
+		# if department:
+		# 	if department == "Sales" and row.pending_with not in ["Sales"]:
+		# 		data.remove(row)
+		# 	elif department == "Technical" and row.pending_with not in ["Technical"]:
+		# 		data.remove(row)
+		# 	elif department == "Lab" and row.pending_with not in ["Lab"]:
+		# 		data.remove(row)
 	
 	return data

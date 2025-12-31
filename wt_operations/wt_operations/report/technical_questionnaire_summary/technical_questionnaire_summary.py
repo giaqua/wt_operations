@@ -7,39 +7,26 @@ import frappe
 def execute(filters=None):
 	columns, data = get_columns(filters), get_data(filters)
 	report_summary,primitive_summary = get_summary_data(data, "pending_with")
-	# chart = get_chart_data(data)
+	# print(report_summary,"=================report_summary==================")
+	# chart = get_chart_data(report_summary)
 	message = None
 	chart = None
 	# frappe.local.response.chart = chart
 	return columns, data,message, chart,report_summary,primitive_summary
 
-def get_chart_data(data):
-	labels = []
-	datasets = [
-		{
-			"name": "Achieved Operations",
-			"values": [],
-		},
-		{
-			"name": "Pending Operations",
-			"values": [],
-		},
-	]
-
-	for row in data:
-		# print(row,"=========================",data)
-		labels.append(row.technical_questionnaire)
-		datasets[0]["values"].append(row.achieved_operations)
-		datasets[1]["values"].append(row.pending_operations)
-
+def get_chart_data(report_summary):
 	chart = {
-		"data": {
-			"labels": labels,
-			"datasets": datasets,
-		},
-		"type": "bar",
-		"colors": ["#4caf50", "#f44336"],
-	}
+        "data": {
+            "labels": [d["label"] for d in report_summary if d["label"] != "Total" and d["label"] != "Completed"],
+            "datasets": [{
+                "name": "Sales Distribution",
+                "values": [d["value"] for d in report_summary]
+            }]
+        },
+        "type": "pie",
+        "height": 300,
+        "colors": ["#7cd6fd", "#743ee2", "#ffa00a"]  # Optional custom colors
+    }
 	return chart
 # def get_chart_data(data):
 # 	labels = []
@@ -244,22 +231,39 @@ def get_data(filters):
 	
 	sql = sql + " group by wtq.name"
 
-	if hide_completed_operations:
-		sql += " HAVING  ((count(svr.name)+count(sv.name)+count(ws.name)+count(ltr.name)+count(wtp.name)+count(rfp.name)+count(cp.name))/7*100) < '100'"
+	# if hide_completed_operations:
+	# 	sql += " HAVING  ((count(svr.name)+count(sv.name)+count(ws.name)+count(ltr.name)+count(wtp.name)+count(rfp.name)+count(cp.name))/7*100) < '100'"
 	data = frappe.db.sql(sql,
 			{"technical_questionnaire": technical_questionnaire, "lead": lead},
 			as_dict=1,
 		)
 
-	print(data)
+	# print(data)
+
+	if len(data) > 0:
+		for row in data:
+			
+			achieved_operations = count_achieved_operations(row)
+			if row.site_visit_required == 1 and row.sample_collection_required == 1:
+				row.achieved_operations = round(achieved_operations / 5 * 100,2)
+			else:
+				row.achieved_operations = round(achieved_operations / 2 * 100,2)
+			
+			print(row,"========row.technical_questionnaire=========") if row.technical_questionnaire =="WWT-TQ-00014" else None
+			row.pending_operations = 100 - row.achieved_operations
+			# print(row,"========row.achieved_operations=========")
+			# if hide_completed_operations and row.achieved_operations == 100:
+			# 	print(row,"========row.technical_questionnaire2222222=========") if row.technical_questionnaire =="WWT-TQ-00014" else None
+			# 	data.remove(row)
+		
 
 	for row in data:
-		print(row.site_visit_required,"========row.site_visit_required=========",row)
+		# print(row.site_visit_required,"========row.site_visit_required=========",row)
 		if row.site_visit_required and row.sample_collection_required:
-			print("========if=========")
-			if row.visit_request == 0:
-				row.pending_with = "Sales"
-			elif row.site_visit == 0 and row.site_visit == 0:
+			# print("========if=========")
+			# if row.visit_request == 0:
+			# 	row.pending_with = "Sales"
+			if row.site_visit == 0 and row.site_visit == 0:
 				row.pending_with = "Sales"
 			elif row.water_sample == 0 and row.water_sample == 0:
 				row.pending_with = "Sales"
@@ -278,15 +282,47 @@ def get_data(filters):
 
 		if row.achieved_operations == 100:
 			row.pending_with = "Completed"
-			row["__color"] = "#4caf50"
-
-		# department = filters.get("department")
-		# if department:
-		# 	if department == "Sales" and row.pending_with not in ["Sales"]:
-		# 		data.remove(row)
-		# 	elif department == "Technical" and row.pending_with not in ["Technical"]:
-		# 		data.remove(row)
-		# 	elif department == "Lab" and row.pending_with not in ["Lab"]:
-		# 		data.remove(row)
+			# row["__color"] = "#4caf50"
 	
+
+	department = filters.get("department")
+	if department:
+		filtered_data = []
+		for wtq in data:
+			if department == "Sales" and wtq.pending_with == "Sales":
+				# data.remove(wtq)
+				filtered_data.append(wtq)
+			elif department == "Technical" and wtq.pending_with == "Technical":
+				filtered_data.append(wtq)
+			elif department == "Lab" and wtq.pending_with == "Lab":
+				filtered_data.append(wtq)
+		data = filtered_data
+
+
+	if hide_completed_operations:
+		data_copy = data.copy()
+		for row in data:
+			if row.pending_with == "Completed":
+				data_copy.remove(row)
+		data = data_copy
 	return data
+
+def count_achieved_operations(row):
+	count = 0
+	# if row.visit_request:
+	# 	count += 
+	if row.site_visit_required == 1 and row.sample_collection_required == 1:
+		if row.site_visit:
+			count += 1
+		if row.water_sample:
+			count += 1
+		if row.lab_test_result:
+			count += 1
+	if row.technical_proposal:
+		count += 1
+	if row.customer_proposal:
+		count += 1
+	# if row.request_for_proposal:
+	# 	count += 1
+	
+	return count

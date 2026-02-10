@@ -1,0 +1,65 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-02-02 16:47:45.283335",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "issue",
+  "time",
+  "duration",
+  "action_taken",
+  "details"
+ ],
+ "fields": [
+  {
+   "columns": 3,
+   "fieldname": "issue",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Issue\t"
+  },
+  {
+   "columns": 2,
+   "fieldname": "time",
+   "fieldtype": "Time",
+   "in_list_view": 1,
+   "label": "Time"
+  },
+  {
+   "columns": 1,
+   "fieldname": "duration",
+   "fieldtype": "Duration",
+   "in_list_view": 1,
+   "label": "Duration"
+  },
+  {
+   "columns": 4,
+   "fieldname": "action_taken",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Action Taken"
+  },
+  {
+   "fieldname": "details",
+   "fieldtype": "Small Text",
+   "label": "Details"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-02-02 16:50:55.463320",
+ "modified_by": "Administrator",
+ "module": "WT Operations",
+ "name": "Daily Operation Report Maintenance",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

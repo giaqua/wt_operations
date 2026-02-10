@@ -1,0 +1,55 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-02-10 13:27:57.968160",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "daily_operation_report",
+  "date",
+  "waste_water_treated_volume"
+ ],
+ "fields": [
+  {
+   "fieldname": "daily_operation_report",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Daily Operation Report",
+   "options": "Daily Operation Report",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "daily_operation_report.date",
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Date",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fetch_from": "daily_operation_report.waste_water_treated_volume",
+   "fieldname": "waste_water_treated_volume",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Waste Water Treated Volume",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-02-10 14:22:06.005164",
+ "modified_by": "Administrator",
+ "module": "WT Operations",
+ "name": "Daily Operation Report References",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

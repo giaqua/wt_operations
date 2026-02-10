@@ -1,0 +1,191 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:DOMC-{#}",
+ "creation": "2026-02-10 13:13:16.554966",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_qsbr",
+  "amended_from",
+  "project",
+  "column_break_jbyk",
+  "project_unit",
+  "start_date",
+  "column_break_hixk",
+  "project_unit_assignment",
+  "end_date",
+  "section_break_fccc",
+  "operation_manpower_costing_details",
+  "section_break_ifjm",
+  "total_man_power_cost",
+  "edit_total_man_power_cost",
+  "column_break_igvg",
+  "waste_water_treated_volume",
+  "edit_waste_water_treated_volume",
+  "column_break_ljoh",
+  "manpower_cost_per_day",
+  "manpower_cost_per_m3",
+  "section_break_piha",
+  "daily_operation_report_references"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_qsbr",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Operation Manpower Costing",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Project",
+   "options": "Project",
+   "reqd": 1
+  },
+  {
+   "fieldname": "project_unit",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Project Unit",
+   "options": "Project Unit",
+   "reqd": 1
+  },
+  {
+   "fieldname": "project_unit_assignment",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Project Unit Assignment",
+   "options": "Project Unit Assignment",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_jbyk",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "start_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Start Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_hixk",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "end_date",
+   "fieldtype": "Date",
+   "label": "End Date",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_fccc",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "section_break_ifjm",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "total_man_power_cost",
+   "fieldtype": "Currency",
+   "label": "Total Man Power Cost",
+   "read_only_depends_on": "eval:!doc.edit_total_man_power_cost"
+  },
+  {
+   "fieldname": "manpower_cost_per_day",
+   "fieldtype": "Currency",
+   "label": "Manpower Cost Per Day",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_igvg",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "waste_water_treated_volume",
+   "fieldtype": "Float",
+   "label": "Waste Water Treated Volume",
+   "read_only_depends_on": "eval:!doc.edit_waste_water_treated_volume"
+  },
+  {
+   "default": "0",
+   "fieldname": "edit_waste_water_treated_volume",
+   "fieldtype": "Check",
+   "label": "Edit Waste Water Treated Volume"
+  },
+  {
+   "fieldname": "column_break_ljoh",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "manpower_cost_per_m3",
+   "fieldtype": "Currency",
+   "label": "Manpower Cost Per M3",
+   "read_only": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "edit_total_man_power_cost",
+   "fieldtype": "Check",
+   "label": "Edit Total Man Power Cost"
+  },
+  {
+   "fieldname": "section_break_piha",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "daily_operation_report_references",
+   "fieldtype": "Table",
+   "label": "Daily Operation Report References",
+   "options": "Daily Operation Report References"
+  },
+  {
+   "fieldname": "operation_manpower_costing_details",
+   "fieldtype": "Table",
+   "label": "Operation Manpower Costing Details",
+   "options": "Operation Manpower Costing Details"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2026-02-10 13:39:24.200410",
+ "modified_by": "Administrator",
+ "module": "WT Operations",
+ "name": "Operation Manpower Costing",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

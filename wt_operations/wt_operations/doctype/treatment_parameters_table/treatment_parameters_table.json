@@ -9,11 +9,14 @@
   "treatment_parameter",
   "uom",
   "target",
+  "flow_meter_shift_start",
+  "flow_meter_shift_end",
   "actual",
   "comments"
  ],
  "fields": [
   {
+   "columns": 2,
    "fieldname": "treatment_parameter",
    "fieldtype": "Link",
    "in_list_view": 1,
@@ -21,6 +24,7 @@
    "options": "Treatment parameter"
   },
   {
+   "columns": 1,
    "fetch_from": "treatment_parameter.parameter_uom",
    "fetch_if_empty": 1,
    "fieldname": "uom",
@@ -30,6 +34,7 @@
    "options": "UOM"
   },
   {
+   "columns": 1,
    "fieldname": "target",
    "fieldtype": "Float",
    "in_list_view": 1,
@@ -37,29 +42,47 @@
    "read_only": 1
   },
   {
+   "columns": 1,
    "fieldname": "actual",
    "fieldtype": "Float",
    "in_list_view": 1,
    "label": "Actual",
-   "reqd": 1
+   "read_only_depends_on": "eval:doc.flow_meter_shift_start&&doc.flow_meter_shift_end"
   },
   {
+   "columns": 1,
    "fieldname": "comments",
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Comments"
+  },
+  {
+   "columns": 2,
+   "fieldname": "flow_meter_shift_start",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Flow Meter Shift Start "
+  },
+  {
+   "columns": 2,
+   "fieldname": "flow_meter_shift_end",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Flow Meter Shift End"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-06-23 21:38:48.232468",
+ "modified": "2026-02-03 10:13:44.796495",
  "modified_by": "Administrator",
  "module": "WT Operations",
  "name": "Treatment parameters table",
  "owner": "Administrator",
  "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": []

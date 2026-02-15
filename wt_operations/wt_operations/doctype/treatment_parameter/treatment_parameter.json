@@ -10,7 +10,9 @@
   "parameter_name",
   "parameter_uom",
   "column_break_gbul",
-  "parameter_type"
+  "parameter_type",
+  "section_break_nxqg",
+  "treatment_parameter_purpose"
  ],
  "fields": [
   {
@@ -38,12 +40,22 @@
   {
    "fieldname": "column_break_gbul",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_nxqg",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "treatment_parameter_purpose",
+   "fieldtype": "Select",
+   "label": "Treatment Parameter Purpose",
+   "options": "\nAverage Flow Rate\nPower Consumed\nPower Consumption\nWaste Water Treated Volume\nRunning Hours"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-06-30 09:33:35.043356",
+ "modified": "2026-02-03 10:44:23.734337",
  "modified_by": "Administrator",
  "module": "WT Operations",
  "name": "Treatment parameter",
@@ -88,6 +100,8 @@
   }
  ],
  "quick_entry": 1,
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],

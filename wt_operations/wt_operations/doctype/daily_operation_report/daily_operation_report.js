@@ -320,9 +320,9 @@ frappe.ui.form.on('Daily Operation Report', {
     treatment_parameters_table_remove: function(frm) {
         set_calculations(frm);
     },
-    refresh: function(frm) {
-        set_calculations(frm);
-    }
+    // refresh: function(frm) {
+    //     set_calculations(frm);
+    // }
 });
 
 // Helper function that does the calculations
@@ -426,8 +426,12 @@ frappe.ui.form.on('Treatment parameters table', {
 // Validation on submit
 function validate_comments(frm) {
     (frm.doc.treatment_parameters_table || []).forEach(row => {
-        if (row.actual !== row.target && !row.comments) {
-            frappe.throw(__('Comments are required when Actual value does not match Target for treatment parameter: {0}', [row.treatment_parameter]));
+        if ((row.actual < row.target) && !row.comments) {
+            console.log(row.actual, row.target);
+            
+            // if(row.actual <= row.target){
+                frappe.throw(__('Comments are required when Actual value does not match Target for treatment parameter: {0}', [row.treatment_parameter]));
+            // }
         }
     });
 }
@@ -451,7 +455,7 @@ function update_comment_style(frm, cdt, cdn) {
     let $input = $cell.find("textarea");
     const requiredText = "⚠ Required when Actual ≠ Target";
 
-    if (row.actual !== row.target && !row.comments) {
+    if (row.actual <row.target && !row.comments) {
         // Red background and placeholder
         $cell.css("background-color", "#ffe6e6");
         if ($input.length && !$input.attr("placeholder")) {

@@ -10,7 +10,7 @@ class DailyOperationReport(Document):
     def validate_comments(self):
         if hasattr(self, "treatment_parameters_table"):
             for row in self.treatment_parameters_table:
-                if row.actual != row.target and not row.comments:
+                if row.actual and row.target and row.actual < row.target and not row.comments:
                     frappe.throw(
                         f"Comments are required when Actual value does not match Target for treatment parameter: {row.treatment_parameter}"
                     )

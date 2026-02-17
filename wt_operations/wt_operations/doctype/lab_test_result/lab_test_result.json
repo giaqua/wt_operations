@@ -12,6 +12,7 @@
   "sample_tag",
   "site_visit",
   "site_visit_date",
+  "water_sample",
   "column_break_ltzh",
   "date_sample_received",
   "report_date",
@@ -159,7 +160,7 @@
    "fieldname": "compliance_status",
    "fieldtype": "Select",
    "label": "Compliance Status",
-   "options": "Compliant\nNon-Compliant\nPending Review"
+   "options": "Compliant\nNon-Compliant\nPending Review\nDraft"
   },
   {
    "fieldname": "regulatory_standard",
@@ -188,13 +189,19 @@
    "fieldname": "review_notes",
    "fieldtype": "Text Editor",
    "label": "Review Notes"
+  },
+  {
+   "fieldname": "water_sample",
+   "fieldtype": "Table MultiSelect",
+   "label": "Water Sample",
+   "options": "Lab Test Result Item"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-10-02 13:50:21.521704",
+ "modified": "2026-01-29 10:18:03.307971",
  "modified_by": "Administrator",
  "module": "WT Operations",
  "name": "Lab Test Result",
@@ -215,6 +222,8 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],

@@ -9,7 +9,7 @@
   "section_break_basic_info",
   "naming_series",
   "wwtp_technical_questionnaire",
-  "lead",
+  "lead_name",
   "opportunity",
   "column_break_collection",
   "date_collected",
@@ -75,7 +75,8 @@
   "lab_priority",
   "expected_results_date",
   "column_break_workflow_ws",
-  "sample_status"
+  "sample_status",
+  "lead"
  ],
  "fields": [
   {
@@ -107,6 +108,8 @@
    "reqd": 1
   },
   {
+   "fetch_from": "wwtp_technical_questionnaire.opportunity",
+   "fetch_if_empty": 1,
    "fieldname": "opportunity",
    "fieldtype": "Link",
    "label": "Opportunity",
@@ -466,13 +469,23 @@
    "label": "Sample Status",
    "options": "Collected\nIn Transit\nIn Lab\nAnalyzed\nResults Available",
    "read_only": 1
+  },
+  {
+   "fetch_from": "wwtp_technical_questionnaire.lead",
+   "fetch_if_empty": 1,
+   "fieldname": "lead_name",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Lead",
+   "options": "Lead",
+   "reqd": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-10-18 18:21:50.810759",
+ "modified": "2025-12-29 14:19:17.084634",
  "modified_by": "Administrator",
  "module": "WT Operations",
  "name": "Water Sample",
@@ -493,6 +506,8 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": []

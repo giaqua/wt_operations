@@ -114,7 +114,7 @@ function populate_test_parameters(frm) {
 	if (!frm.doc.test_template) return;
 	
 	frappe.call({
-		method: 'wt_operations.wt_operations.api.get_test_template_parameters',
+		method: 'wt_operations.wt_operations.api3.get_test_template_parameters',
 		args: {
 			template_name: frm.doc.test_template
 		},

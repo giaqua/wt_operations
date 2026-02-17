@@ -84,7 +84,7 @@ frappe.ui.form.on('Water Sample', {
 
 function create_lab_test_result(frm) {
 	frappe.call({
-		method: 'wt_operations.wt_operations.api.create_lab_test_result_from_sample',
+		method: 'wt_operations.wt_operations.api3.create_lab_test_result_from_sample',
 		args: {
 			water_sample: frm.doc.name
 		},

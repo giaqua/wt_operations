@@ -17,6 +17,7 @@
   "column_break_mvth",
   "date",
   "by",
+  "by_name",
   "amended_from",
   "landscape_and_facility_section",
   "number_of_streams",
@@ -25,11 +26,13 @@
   "capacity",
   "is_it_new_wwtp_or_an_upgrade",
   "the_available_footprint_dedicated_for_stp_in_sm",
+  "available_equipment",
   "column_break_amzw",
   "location_of_the_wwtp_needed",
   "available_equipment__tanks_pumpsect",
   "design_of_the_site_condition",
   "design_of_the_site_condition_attach",
+  "design_of_the_site_condition_attaches",
   "design_parameters_section",
   "daily_flow",
   "operation_hours",
@@ -244,6 +247,7 @@
    "fieldname": "by",
    "fieldtype": "Link",
    "label": "by",
+   "no_copy": 1,
    "options": "User"
   },
   {
@@ -313,8 +317,9 @@
   },
   {
    "fieldname": "is_it_new_wwtp_or_an_upgrade",
-   "fieldtype": "Data",
+   "fieldtype": "Select",
    "label": "Is it new WWTP or an upgrade?",
+   "options": "\nNew\nUpgrade",
    "reqd": 1
   },
   {
@@ -426,18 +431,37 @@
    "fieldtype": "Column Break"
   },
   {
+   "depends_on": "eval:doc.is_synced_from_sales == 1",
    "fieldname": "synced_from_site",
    "fieldtype": "Data",
    "label": "Synced From Site",
-   "read_only": 1,
-   "depends_on": "eval:doc.is_synced_from_sales == 1"
+   "read_only": 1
+  },
+  {
+   "fetch_from": "by.first_name",
+   "fieldname": "by_name",
+   "fieldtype": "Data",
+   "label": "By Name",
+   "read_only": 1
+  },
+  {
+   "fieldname": "design_of_the_site_condition_attaches",
+   "fieldtype": "Table",
+   "label": "Design of the site condition attaches",
+   "options": "Operations Attachments"
+  },
+  {
+   "fieldname": "available_equipment",
+   "fieldtype": "Table",
+   "label": "Available Equipment",
+   "options": "Available Equipment"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-10-18 15:41:25.717920",
+ "modified": "2026-01-04 09:18:58.089515",
  "modified_by": "Administrator",
  "module": "WT Operations",
  "name": "WWTP Technical Questionnaire",
@@ -458,6 +482,8 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],

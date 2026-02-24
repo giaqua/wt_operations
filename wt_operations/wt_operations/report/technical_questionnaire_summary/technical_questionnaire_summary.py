@@ -1060,7 +1060,7 @@ def get_data(filters):
 			LEFT JOIN `tabWWTP Technical Proposal` wtp
 			On wtq.name = wtp.wwtp_technical_questionnaire and wtp.docstatus = 1
 			LEFT JOIN `tabCustomer Proposal` cp
-			On  wtp.name = cp.wwtp_technical_proposal
+			On  wtp.name = cp.wwtp_technical_proposal and cp.docstatus = 1
 			LEFT JOIN `tabRequest For Proposal` rfp
 			On  wtq.name = rfp.technical_questionnaire and rfp.docstatus = 1
 		Where

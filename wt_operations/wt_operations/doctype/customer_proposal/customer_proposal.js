@@ -90,7 +90,7 @@ frappe.ui.form.on('Quotation Item', {
 
 function populate_from_technical_proposal(frm) {
 	frappe.call({
-		method: 'wt_operations.wt_operations.api.populate_customer_proposal_from_technical',
+		method: 'wt_operations.wt_operations.api4.populate_customer_proposal_from_technical',
 		args: {
 			customer_proposal: frm.doc.name,
 			technical_proposal: frm.doc.wwtp_technical_proposal

@@ -22,7 +22,7 @@ frappe.query_reports["Daily Operation Summary Report"] = {
             fieldname: "unit",
             label: "Unit",
             fieldtype: "Link",
-            options: "Asset"
+            options: "Project Unit"
         },
         {
             fieldname: "unit_assignment_record",

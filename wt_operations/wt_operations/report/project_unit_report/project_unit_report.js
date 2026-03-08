@@ -11,7 +11,7 @@ frappe.query_reports["Project unit Report"] = {
             fieldname: "unit",
             label: __("Unit"),
             fieldtype: "Link",
-            options: "Asset",
+            options: "Project Unit",
             
         },
         {

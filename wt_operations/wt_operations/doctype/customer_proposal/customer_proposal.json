@@ -23,6 +23,8 @@
   "account_manager",
   "prepared_by",
   "technical_manager",
+  "customer_proposal_rejection_reason",
+  "rejection_reason_details",
   "tab_project_summary",
   "project_title",
   "project_description",
@@ -772,13 +774,27 @@
    "fieldtype": "Table",
    "label": "Option Three BOOT Items Copy",
    "options": "Customer Proposal Items"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "customer_proposal_rejection_reason",
+   "fieldtype": "Link",
+   "label": "Customer Proposal Rejection Reason",
+   "options": "Customer Proposal Rejection Reason"
+  },
+  {
+   "allow_on_submit": 1,
+   "depends_on": "eval:doc.customer_proposal_rejection_reason",
+   "fieldname": "rejection_reason_details",
+   "fieldtype": "Small Text",
+   "label": "Rejection Reason Details"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-03-04 14:14:40.780811",
+ "modified": "2026-03-08 15:19:55.413394",
  "modified_by": "Administrator",
  "module": "WT Operations",
  "name": "Customer Proposal",

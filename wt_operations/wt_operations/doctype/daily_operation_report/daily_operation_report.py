@@ -1,7 +1,14 @@
 import frappe
 from frappe.model.document import Document
+import operator
 
 class DailyOperationReport(Document):
+    # def before_save(self):
+    #     text = "ABD12+DESD-OOCS*400-700/2"
+    #     result = calculate_expression(text)
+    #     print(f"{text} = {result}","============================")  # Output: 100+200-300*400 = -119700.0
+
+
     def validate(self):
         self.validate_comments()
         self.validate_physical_parameter_comments()
@@ -40,3 +47,51 @@ class DailyOperationReport(Document):
                     frappe.throw(
                         f'Please add a comment for Effluent Parameter "{row.parameter}" where Actual Value ({row.actual_value}) exceeds Limit ({row.limit}).'
                     )
+
+
+def calculate_expression(expression):
+# Define operators and their precedence
+    ops = {
+        '+': operator.add,
+        '-': operator.sub,
+        '*': operator.mul,
+        '/': operator.truediv
+    }
+    
+    # Simple tokenization (for basic expressions)
+    import re
+    # tokens = re.findall(r'\d+|[+\-*/]', expression)
+      # Pattern breakdown:
+    # [A-Za-z]+\d*  : letters followed by optional digits (for operands like ABD12, DESD)
+    # |             : OR
+    # \d+           : digits only (for pure numbers like 400, 700, 2)
+    # |             : OR
+    # [+\-*/]       : operators
+    pattern = r'\d+|[A-Za-z]+\d*|[+\-*/]'
+    tokens = re.findall(pattern, expression)
+
+    # tokens = re.findall(r'[a-zA-Z]*\d+[a-zA-Z]*|[+\-*/]', expression)
+    print(f"Tokens: {tokens}")
+    # First pass: handle * and / (higher precedence)
+    i = 1
+    while i < len(tokens) - 1:
+        if tokens[i] in ('*', '/'):
+            left = float(tokens[i-1])
+            right = float(tokens[i+1])
+            result = ops[tokens[i]](left, right)
+            print(str(tokens) + " operator found. Calculating: " + str(left) + " " + tokens[i] + " " + str(right) + " = " + str(result),"======================")
+            print(f"Calculating {left} {tokens[i]} {right} = {result}")
+            tokens[i-1:i+2] = [str(result)]
+        else:
+            i += 1
+    
+    # Second pass: handle + and -
+    result = float(tokens[0])
+    for i in range(1, len(tokens), 2):
+        op = tokens[i]
+        num = float(tokens[i+1])
+        print(f"Applying operator {op} to {result} and {num}")
+        result = ops[op](result, num)
+    
+    return result
+

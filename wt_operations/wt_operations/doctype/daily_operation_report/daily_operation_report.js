@@ -188,8 +188,24 @@ function auto_fetch_pua_record(frm) {
 // This will fetch the PUA data and populate the relevant tables
 
 frappe.ui.form.on('Daily Operation Report', {
-    unit_assignment_record: function(frm) {
+    unit_assignment_record: function(frm) { 
         fetch_and_populate_pua_data(frm);
+    },
+    clear_all_tables: function(frm) {
+        if (frm.doc.is_operational == 0) {
+            frm.clear_table('tank_level_table');
+            frm.clear_table('treatment_parameters_table');
+            frm.clear_table('chemical_dilution_table');
+            frm.clear_table('chemical_usage_table');
+            frm.clear_table('influent_parameters_table');
+            frm.clear_table('effluent_parameters_table');
+            frm.refresh_field('tank_level_table');
+            frm.refresh_field('treatment_parameters_table');
+            frm.refresh_field('chemical_dilution_table');
+            frm.refresh_field('chemical_usage_table');
+            frm.refresh_field('influent_parameters_table');
+            frm.refresh_field('effluent_parameters_table');
+        }
     }
 });
 

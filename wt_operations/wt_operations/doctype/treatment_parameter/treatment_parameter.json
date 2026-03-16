@@ -11,8 +11,10 @@
   "parameter_uom",
   "column_break_gbul",
   "parameter_type",
+  "shortcut",
   "section_break_nxqg",
-  "treatment_parameter_purpose"
+  "treatment_parameter_purpose",
+  "formula"
  ],
  "fields": [
   {
@@ -50,12 +52,23 @@
    "fieldtype": "Select",
    "label": "Treatment Parameter Purpose",
    "options": "\nAverage Flow Rate\nPower Consumed\nPower Consumption\nWaste Water Treated Volume\nRunning Hours"
+  },
+  {
+   "fieldname": "shortcut",
+   "fieldtype": "Data",
+   "label": "Shortcut",
+   "unique": 1
+  },
+  {
+   "fieldname": "formula",
+   "fieldtype": "Code",
+   "label": "Formula"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-02-03 10:44:23.734337",
+ "modified": "2026-03-16 10:31:35.465982",
  "modified_by": "Administrator",
  "module": "WT Operations",
  "name": "Treatment parameter",

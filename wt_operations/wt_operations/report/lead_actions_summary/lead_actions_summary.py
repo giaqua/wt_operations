@@ -6,22 +6,37 @@ import frappe
 
 def execute(filters=None):
 	columns, data = get_columns(filters), get_data(filters)
-	return columns, data
+	return columns, data, 
 
 
 def get_columns(filters):
-	columns = [
-		{"label": "Lead", "fieldname": "lead_name", "fieldtype": "Link", "options": "Lead", "width": 200},
-		{"label": "No", "fieldname": "no", "fieldtype": "Int", "width": 50},
-		{"label": "Due Date", "fieldname": "due_date", "fieldtype": "Date", "width": 120},
-		{"label": "Action", "fieldname": "action", "fieldtype": "Data", "width": 150},
-		{"label": "Sales Person", "fieldname": "sales_person", "fieldtype": "Link", "options": "Employee", "width": 150},
-		{"label": "Status", "fieldname": "status", "fieldtype": "Link", "options": "Lead Action Status", "width": 100},
-		{"label": "Feedback Status", "fieldname": "feedback_status", "fieldtype": "Data", "width": 120},
-		{"label": "Priority", "fieldname": "priority", "fieldtype": "Data", "width": 80},
-		{"label": "Feedback", "fieldname": "feedback", "fieldtype": "Data", "width": 200},
+	if filters.get("show_Lead_Id"):
+		columns = [
+			{"label": "Lead Id", "fieldname": "lead_id", "fieldtype": "Link", "options": "Lead", "width": 100},
+			{"label": "Lead", "fieldname": "lead_name", "fieldtype": "Link", "options": "Lead", "width": 200},
+			{"label": "No", "fieldname": "no", "fieldtype": "Int", "width": 50},
+			{"label": "Due Date", "fieldname": "due_date", "fieldtype": "Date", "width": 120},
+			{"label": "Action", "fieldname": "action", "fieldtype": "Data", "width": 150},
+			{"label": "Sales Person", "fieldname": "sales_person", "fieldtype": "Link", "options": "Employee", "width": 150},
+			{"label": "Status", "fieldname": "status", "fieldtype": "Link", "options": "Lead Action Status", "width": 100},
+			{"label": "Feedback Status", "fieldname": "feedback_status", "fieldtype": "Data", "width": 120},
+			{"label": "Priority", "fieldname": "priority", "fieldtype": "Data", "width": 80},
+			{"label": "Feedback", "fieldname": "feedback", "fieldtype": "Data", "width": 200},
 
-	]
+		]
+	else:
+		columns = [
+			{"label": "Lead", "fieldname": "lead_name", "fieldtype": "Link", "options": "Lead", "width": 200},
+			{"label": "No", "fieldname": "no", "fieldtype": "Int", "width": 50},
+			{"label": "Due Date", "fieldname": "due_date", "fieldtype": "Date", "width": 120},
+			{"label": "Action", "fieldname": "action", "fieldtype": "Data", "width": 150},
+			{"label": "Sales Person", "fieldname": "sales_person", "fieldtype": "Link", "options": "Employee", "width": 150},
+			{"label": "Status", "fieldname": "status", "fieldtype": "Link", "options": "Lead Action Status", "width": 100},
+			{"label": "Feedback Status", "fieldname": "feedback_status", "fieldtype": "Data", "width": 120},
+			{"label": "Priority", "fieldname": "priority", "fieldtype": "Data", "width": 80},
+			{"label": "Feedback", "fieldname": "feedback", "fieldtype": "Data", "width": 200},
+
+		]
 	if filters.get("show_details"):
 		columns.append({"label": "Action Details", "fieldname": "action_details", "fieldtype": "Text Editor", "width": 200})
 	# if filters.get("include_feedback_details"):
@@ -34,6 +49,7 @@ def get_data(filters):
 	conditions = get_conditions(filters)
 	sql = """SELECT
 		leads.company_name AS lead_name,
+		leads.name AS lead_id,
 		actions.action,
 		actions.due_date,
 		actions.idx AS no,

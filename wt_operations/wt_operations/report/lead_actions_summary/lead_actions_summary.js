@@ -56,6 +56,12 @@ frappe.query_reports["Lead Actions Summary"] = {
 			"fieldname": "show_details",
 			"label": __("Show Details"),
 			"fieldtype": "Check"
+		},
+		{
+			"fieldname": "show_Lead_Id",
+			"label": __("Show Lead Id"),
+			"fieldtype": "Check",
+			"default": 1
 		}
 	]
 };

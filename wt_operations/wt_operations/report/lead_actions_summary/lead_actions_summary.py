@@ -56,19 +56,26 @@ def get_data(filters):
 
 
 def get_conditions(filters):
+	from_date = filters.get("from_date")
+	to_date = filters.get("to_date")
+	sales_person = filters.get("sales_person")
+	lead = filters.get("lead")
+	feedback_status = filters.get("feedback_status")
+	status = filters.get("status")
+	priority = filters.get("priority")
 	conditions = ""
 	if filters.get("from_date"):
-		conditions += " AND actions.due_date >= %(from_date)s"
+		conditions += " AND actions.due_date >= " + "'" + from_date + "'"
 	if filters.get("to_date"):
-		conditions += " AND actions.due_date <= %(to_date)s"
+		conditions += " AND actions.due_date <= " + "'" + to_date + "'"
 	if filters.get("sales_person"):
-		conditions += " AND actions.sales_person = %(sales_person)s"
+		conditions += " AND actions.sales_person = " + "'" + sales_person + "'"
 	if filters.get("lead"):
-		conditions += " AND actions.parent = %(lead)s"
+		conditions += " AND actions.parent = " + "'" + lead + "'"
 	if filters.get("feedback_status"):
-		conditions += " AND actions.feedback_status = %(feedback_status)s"
+		conditions += " AND actions.feedback_status = " + "'" + feedback_status + "'"
 	if filters.get("status"):
-		conditions += " AND actions.status = %(status)s"
+		conditions += " AND actions.status = " + "'" + status + "'"
 	if filters.get("priority"):
-		conditions += " AND actions.priority = %(priority)s"
+		conditions += " AND actions.priority = " + "'" + priority + "'"
 	return conditions

@@ -45,43 +45,86 @@ def get_data(filters):
     if not dor_list:
         return []
 
-    child_tables = {
-        "Treatment Parameters Table": {
+    child_tables = {}
+    if filters.get("treatment_parameters"):
+        child_tables["Treatment Parameters Table"] = {
             "doctype": "Treatment parameters table",
             "fields": ["treatment_parameter", "uom", "actual"],
             "label_field": "treatment_parameter",
             "unit_field": "uom",
             "value_field": "actual"
-        },
-        "Chemical Dilution Table": {
+        }
+    if filters.get("chemical_dilution"):
+        child_tables["Chemical Dilution Table"] = {
             "doctype": "Chemical Dilution Table",
             "fields": ["chemical", "uom", "quantity_of_chemical", "volume_of_water", "dilution_rate"],
             "label_field": "chemical",
             "unit_field": "uom",
             "value_fields": ["quantity_of_chemical", "volume_of_water", "dilution_rate"]
-        },
-        "Chemical Usage Table": {
+        }
+    if filters.get("chemical_usage"):
+        child_tables["Chemical Usage Table"] = {
             "doctype": "Chemical Usage Table",
             "fields": ["chemical", "uom", "volume_consumed_l", "chemical_quantity_used_kg"],
             "label_field": "chemical",
             "unit_field": "uom",
             "value_fields": ["volume_consumed_l", "chemical_quantity_used_kg"]
-        },
-        "Influent Parameters Table": {
+        }
+    if filters.get("influent_parameters"):
+        child_tables["Influent Parameters Table"] = {
             "doctype": "Influent Parameters Table",
             "fields": ["parameter", "actual_value"],
             "label_field": "parameter",
             "unit_field": "",
             "value_field": "actual_value"
-        },
-        "Effluent Parameters Table": {
+        }
+    if filters.get("effluent_parameters"):
+        child_tables["Effluent Parameters Table"] = {
             "doctype": "Effluent Parameters Table",
             "fields": ["parameter", "actual_value"],
             "label_field": "parameter",
             "unit_field": "",
             "value_field": "actual_value"
         }
-    }
+
+
+    # child_tables = {
+    #     "Treatment Parameters Table": {
+    #         "doctype": "Treatment parameters table",
+    #         "fields": ["treatment_parameter", "uom", "actual"],
+    #         "label_field": "treatment_parameter",
+    #         "unit_field": "uom",
+    #         "value_field": "actual"
+    #     },
+    #     "Chemical Dilution Table": {
+    #         "doctype": "Chemical Dilution Table",
+    #         "fields": ["chemical", "uom", "quantity_of_chemical", "volume_of_water", "dilution_rate"],
+    #         "label_field": "chemical",
+    #         "unit_field": "uom",
+    #         "value_fields": ["quantity_of_chemical", "volume_of_water", "dilution_rate"]
+    #     },
+    #     "Chemical Usage Table": {
+    #         "doctype": "Chemical Usage Table",
+    #         "fields": ["chemical", "uom", "volume_consumed_l", "chemical_quantity_used_kg"],
+    #         "label_field": "chemical",
+    #         "unit_field": "uom",
+    #         "value_fields": ["volume_consumed_l", "chemical_quantity_used_kg"]
+    #     },
+    #     "Influent Parameters Table": {
+    #         "doctype": "Influent Parameters Table",
+    #         "fields": ["parameter", "actual_value"],
+    #         "label_field": "parameter",
+    #         "unit_field": "",
+    #         "value_field": "actual_value"
+    #     },
+    #     "Effluent Parameters Table": {
+    #         "doctype": "Effluent Parameters Table",
+    #         "fields": ["parameter", "actual_value"],
+    #         "label_field": "parameter",
+    #         "unit_field": "",
+    #         "value_field": "actual_value"
+    #     }
+    # }
 
     grouped_data = {}
 
@@ -89,11 +132,13 @@ def get_data(filters):
     for section_name in child_tables.keys():
         grouped_data[section_name] = {}
 
-    # Initialize calculated fields under Treatment Parameters Table
-    calculated_fields = [
-        ("average_flow_rate", "Average Flow Rate", "m³/h"),
-        ("energy_consumtion", "Energy Consumption", "kWh/m³")
-    ]
+    calculated_fields = []
+    if filters.get("treatment_parameters"):
+        # Initialize calculated fields under Treatment Parameters Table
+        calculated_fields = [
+            ("average_flow_rate", "Average Flow Rate", "m³/h"),
+            ("energy_consumtion", "Energy Consumption", "kWh/m³")
+        ]
     for key, label, unit in calculated_fields:
         if "Treatment Parameters Table" not in grouped_data:
             grouped_data["Treatment Parameters Table"] = {}

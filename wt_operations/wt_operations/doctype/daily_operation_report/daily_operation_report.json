@@ -18,6 +18,7 @@
   "prepared_by",
   "date",
   "reason_for_non_operational",
+  "clear_all_tables",
   "team_section",
   "shift_supervisor",
   "operator",
@@ -296,13 +297,18 @@
   {
    "fieldname": "section_break_hdwo",
    "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "clear_all_tables",
+   "fieldtype": "Button",
+   "label": "Clear All Tables"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-02-03 14:59:48.021151",
+ "modified": "2026-03-16 10:39:09.834611",
  "modified_by": "Administrator",
  "module": "WT Operations",
  "name": "Daily Operation Report",

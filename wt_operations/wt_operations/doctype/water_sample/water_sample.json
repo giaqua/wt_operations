@@ -100,14 +100,6 @@
    "reqd": 1
   },
   {
-   "fieldname": "lead",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Lead",
-   "options": "Lead",
-   "reqd": 1
-  },
-  {
    "fetch_from": "wwtp_technical_questionnaire.opportunity",
    "fetch_if_empty": 1,
    "fieldname": "opportunity",
@@ -485,7 +477,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-02-18 10:46:18.452223",
+ "modified": "2026-04-06 14:53:24.454852",
  "modified_by": "Administrator",
  "module": "WT Operations",
  "name": "Water Sample",

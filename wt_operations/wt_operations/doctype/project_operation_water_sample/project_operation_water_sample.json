@@ -1,0 +1,301 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:PWS-{#}",
+ "creation": "2026-04-09 11:01:14.606243",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_mkca",
+  "amended_from",
+  "sampling_date",
+  "responsible",
+  "column_break_vbcw",
+  "site",
+  "sample_process_location",
+  "daily_operation_report",
+  "status",
+  "column_break_mrdq",
+  "sample_type",
+  "reason",
+  "handover_for_delivery_to",
+  "section_break_llqc",
+  "parameters_required",
+  "project_operation_water_sample_details",
+  "lab_test_result_tab",
+  "lab_receiving_date",
+  "lab_receiving_time",
+  "column_break_lamq",
+  "result_shared_date",
+  "fetch_required_parameters",
+  "section_break_sxwy",
+  "sample_collection_details",
+  "section_break_hzvu",
+  "test_result_details"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_mkca",
+   "fieldtype": "Section Break",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Project Operation Water Sample",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "daily_operation_report",
+   "fieldtype": "Link",
+   "label": "Daily Operation Report",
+   "options": "Daily Operation Report",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "project_operation_water_sample_details",
+   "fieldtype": "Table",
+   "label": "Project Operation Water Sample Details",
+   "options": "Project Operation Water Sample Details",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "column_break_mrdq",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_llqc",
+   "fieldtype": "Section Break",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "Status",
+   "options": "Draft\nAwaiting Receiving\nReceived\nIn Testing\nCompleted",
+   "read_only": 1
+  },
+  {
+   "description": "The sample was analyzed at GI Aqua Tech Laboratory in the Kingdom of Saudi Arabia, in accordance with the applicable standards and regulations in force.",
+   "fieldname": "lab_test_result_tab",
+   "fieldtype": "Tab Break",
+   "label": "Lab Test Result",
+   "permlevel": 2
+  },
+  {
+   "fieldname": "test_result_details",
+   "fieldtype": "Text Editor",
+   "label": "Test Result Details",
+   "permlevel": 2
+  },
+  {
+   "fieldname": "site",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Site",
+   "options": "Project",
+   "permlevel": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "sampling_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "Sampling Date ",
+   "permlevel": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "sample_process_location",
+   "fieldtype": "Data",
+   "label": "Sample Process Location",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "responsible",
+   "fieldtype": "Link",
+   "label": "Responsible",
+   "options": "User",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "column_break_vbcw",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "sample_type",
+   "fieldtype": "Select",
+   "label": "Sample type",
+   "options": "\nDomestic\nIndustrial\nPoultry\nConcrete\nSlaughterhouses",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "reason",
+   "fieldtype": "Data",
+   "label": "Reason",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "handover_for_delivery_to",
+   "fieldtype": "Link",
+   "label": "Handover For Delivery To ",
+   "options": "User",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "lab_receiving_date",
+   "fieldtype": "Date",
+   "label": "Lab Receiving date",
+   "permlevel": 2
+  },
+  {
+   "fieldname": "column_break_lamq",
+   "fieldtype": "Column Break",
+   "permlevel": 2
+  },
+  {
+   "fieldname": "lab_receiving_time",
+   "fieldtype": "Time",
+   "label": "Lab Receiving Time",
+   "permlevel": 2
+  },
+  {
+   "fieldname": "section_break_hzvu",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "result_shared_date",
+   "fieldtype": "Date",
+   "label": "Result Shared Date ",
+   "permlevel": 2
+  },
+  {
+   "fieldname": "section_break_sxwy",
+   "fieldtype": "Section Break",
+   "permlevel": 2
+  },
+  {
+   "description": "The sample was analyzed at GI Aqua Tech Laboratory in the Kingdom of Saudi Arabia, in accordance with the applicable standards and regulations in force.",
+   "fieldname": "sample_collection_details",
+   "fieldtype": "Table",
+   "label": "Sample Collection Details",
+   "options": "Sample Collection Details",
+   "permlevel": 2
+  },
+  {
+   "columns": 1,
+   "fieldname": "parameters_required",
+   "fieldtype": "Table MultiSelect",
+   "label": "Parameters Required",
+   "options": "Parameters Required",
+   "permlevel": 1
+  },
+  {
+   "fieldname": "fetch_required_parameters",
+   "fieldtype": "Button",
+   "label": "Fetch Required Parameters",
+   "permlevel": 2
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-04-12 11:33:23.019410",
+ "modified_by": "Administrator",
+ "module": "WT Operations",
+ "name": "Project Operation Water Sample",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Lab Technician",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Operations Technician",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "email": 1,
+   "export": 1,
+   "permlevel": 2,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Lab Technician",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "permlevel": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Lab Technician",
+   "share": 1
+  },
+  {
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "permlevel": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Operations Technician",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "permlevel": 2,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Operations Technician",
+   "share": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

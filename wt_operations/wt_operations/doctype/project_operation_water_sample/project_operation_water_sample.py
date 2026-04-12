@@ -5,5 +5,5 @@
 from frappe.model.document import Document
 
 
-class CustomerProposalRejectionReason(Document):
+class ProjectOperationWaterSample(Document):
 	pass

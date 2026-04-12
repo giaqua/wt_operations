@@ -1,0 +1,57 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-04-12 10:03:24.487367",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "parameter",
+  "unit",
+  "inlet",
+  "contract_inlet"
+ ],
+ "fields": [
+  {
+   "fieldname": "parameter",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Parameter",
+   "options": "Treatment parameter"
+  },
+  {
+   "fieldname": "unit",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Unit",
+   "options": "UOM"
+  },
+  {
+   "fieldname": "inlet",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Inlet (Equalization Tank)"
+  },
+  {
+   "fieldname": "contract_inlet",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Contract Inlet"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-04-12 10:05:30.279786",
+ "modified_by": "Administrator",
+ "module": "WT Operations",
+ "name": "Sample Collection Details",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

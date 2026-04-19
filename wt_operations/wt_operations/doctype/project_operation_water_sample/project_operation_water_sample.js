@@ -3,7 +3,13 @@
 
 frappe.ui.form.on("Project Operation Water Sample", {
 	refresh(frm) {
-
+        frm.set_query("daily_operation_report", function(doc) {
+            return {
+                filters: {
+                    "project": frm.doc.site,
+                }
+            };
+        });
 	},
     fetch_required_parameters(frm) {
         console.log("fetch_required_parameters");

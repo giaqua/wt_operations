@@ -9,7 +9,8 @@
   "chemical_item_name",
   "uom",
   "stock_item",
-  "valuation_rate"
+  "valuation_rate",
+  "density"
  ],
  "fields": [
   {
@@ -38,12 +39,17 @@
    "fieldname": "valuation_rate",
    "fieldtype": "Currency",
    "label": "Valuation Rate"
+  },
+  {
+   "fieldname": "density",
+   "fieldtype": "Float",
+   "label": "Density"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-02-03 15:13:58.223148",
+ "modified": "2026-04-20 10:32:36.862801",
  "modified_by": "Administrator",
  "module": "WT Operations",
  "name": "Chemical Item",

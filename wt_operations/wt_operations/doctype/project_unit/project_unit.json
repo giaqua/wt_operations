@@ -6,7 +6,8 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "project_unit"
+  "project_unit",
+  "warehouse"
  ],
  "fields": [
   {
@@ -14,12 +15,18 @@
    "fieldtype": "Data",
    "label": "Project Unit",
    "unique": 1
+  },
+  {
+   "fieldname": "warehouse",
+   "fieldtype": "Link",
+   "label": "Warehouse",
+   "options": "Warehouse"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-01-20 14:19:44.278276",
+ "modified": "2026-04-20 10:31:54.851026",
  "modified_by": "Administrator",
  "module": "WT Operations",
  "name": "Project Unit",

@@ -33,24 +33,27 @@
   {
    "fieldname": "budget_qty_per_m3",
    "fieldtype": "Float",
-   "label": "Budget Qty Per M3"
+   "label": "Budget Qty Per M3",
+   "precision": "5"
   },
   {
    "fieldname": "budget_rate",
    "fieldtype": "Currency",
-   "label": "Budget Rate"
+   "label": "Budget Rate",
+   "precision": "5"
   },
   {
    "fieldname": "budget_rate_per_m3",
    "fieldtype": "Currency",
-   "label": "Budget Rate Per M3"
+   "label": "Budget Rate Per M3",
+   "precision": "5"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-04-20 13:02:56.043587",
+ "modified": "2026-04-20 13:34:04.749173",
  "modified_by": "Administrator",
  "module": "WT Operations",
  "name": "Chemical Usage Template Table",

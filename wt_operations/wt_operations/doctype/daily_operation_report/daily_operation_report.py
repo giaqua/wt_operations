@@ -116,7 +116,7 @@ class DailyOperationReport(Document):
         
         # Update each chemical entry
         for chemical_row in self.chemical_usage_table:
-            if not chemical_row.chemical:
+            if not chemical_row.chemical or chemical_row.chemical_quantity_used_kg == 0:
                 continue
             
             item_code = frappe.get_value("Chemical Item", chemical_row.chemical, "stock_item")

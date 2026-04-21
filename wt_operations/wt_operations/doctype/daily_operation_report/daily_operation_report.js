@@ -276,6 +276,9 @@ function fetch_and_populate_pua_data(frm) {
                             let dor_row = frm.add_child('chemical_usage_table');
                             dor_row.chemical = pua_row.chemical;
                             dor_row.uom = pua_row.uom;
+                            dor_row.budget_qty_per_m3 = pua_row.budget_qty_per_m3;
+                            dor_row.budget_rate = pua_row.budget_rate;
+                            dor_row.budget_rate_per_m3 = pua_row.budget_rate_per_m3; 
                         }
                     });
                     frm.refresh_field('chemical_usage_table');

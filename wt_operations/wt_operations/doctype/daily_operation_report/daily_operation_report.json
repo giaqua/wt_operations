@@ -30,8 +30,11 @@
   "treatment_parameters_section",
   "column_break_dkxp",
   "treatment_parameters_table",
-  "average_flow_rate",
+  "section_break_vyer",
   "energy_consumtion",
+  "running_hours",
+  "column_break_opxa",
+  "average_flow_rate",
   "waste_water_treated_volume",
   "chemical_consumption_section",
   "chemical_dilution_table",
@@ -236,12 +239,14 @@
    "label": "Safety"
   },
   {
+   "allow_on_submit": 1,
    "fieldname": "average_flow_rate",
    "fieldtype": "Float",
    "label": "Average flow rate",
    "read_only": 1
   },
   {
+   "allow_on_submit": 1,
    "fieldname": "energy_consumtion",
    "fieldtype": "Float",
    "label": "Energy consumtion",
@@ -302,13 +307,28 @@
    "fieldname": "clear_all_tables",
    "fieldtype": "Button",
    "label": "Clear All Tables"
+  },
+  {
+   "fieldname": "section_break_vyer",
+   "fieldtype": "Section Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "running_hours",
+   "fieldtype": "Float",
+   "label": "Running Hours",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_opxa",
+   "fieldtype": "Column Break"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-03-16 10:39:09.834611",
+ "modified": "2026-04-23 14:03:29.988507",
  "modified_by": "Administrator",
  "module": "WT Operations",
  "name": "Daily Operation Report",

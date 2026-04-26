@@ -51,7 +51,12 @@
   "section_break_ybeh",
   "noncompliant",
   "safety",
-  "physical_parameters_tab"
+  "section_break_dzvz",
+  "manpower_cost_per_treated_water",
+  "manpower_cost_per_m3",
+  "column_break_cwvf",
+  "spare_part_cost_per_treated_water",
+  "spare_parts_cost_per_m3"
  ],
  "fields": [
   {
@@ -213,11 +218,6 @@
    "options": "influent_picture"
   },
   {
-   "fieldname": "physical_parameters_tab",
-   "fieldtype": "Tab Break",
-   "label": "Physical Parameters"
-  },
-  {
    "fieldname": "effluent_picture_view",
    "fieldtype": "Image",
    "label": "effluent picture view",
@@ -243,6 +243,7 @@
    "fieldname": "average_flow_rate",
    "fieldtype": "Float",
    "label": "Average flow rate",
+   "no_copy": 1,
    "read_only": 1
   },
   {
@@ -250,6 +251,7 @@
    "fieldname": "energy_consumtion",
    "fieldtype": "Float",
    "label": "Energy consumtion",
+   "no_copy": 1,
    "precision": "2",
    "read_only": 1
   },
@@ -291,6 +293,7 @@
    "fieldname": "waste_water_treated_volume",
    "fieldtype": "Float",
    "label": "Waste Water Treated Volume",
+   "no_copy": 1,
    "read_only": 1
   },
   {
@@ -317,18 +320,59 @@
    "fieldname": "running_hours",
    "fieldtype": "Float",
    "label": "Running Hours",
+   "no_copy": 1,
    "read_only": 1
   },
   {
    "fieldname": "column_break_opxa",
    "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_dzvz",
+   "fieldtype": "Section Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "manpower_cost_per_treated_water",
+   "fieldtype": "Currency",
+   "label": "Manpower Cost Per Treated Water",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "manpower_cost_per_m3",
+   "fieldtype": "Currency",
+   "label": "Manpower Cost Per M3",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "spare_part_cost_per_treated_water",
+   "fieldtype": "Currency",
+   "label": "Spare Parts Cost Per Treated Water",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_cwvf",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "spare_parts_cost_per_m3",
+   "fieldtype": "Currency",
+   "label": "Spare Parts Cost Per M3",
+   "no_copy": 1,
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-04-23 14:03:29.988507",
+ "modified": "2026-04-26 16:18:04.348116",
  "modified_by": "Administrator",
  "module": "WT Operations",
  "name": "Daily Operation Report",

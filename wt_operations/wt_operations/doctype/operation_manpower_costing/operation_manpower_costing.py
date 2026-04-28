@@ -13,8 +13,39 @@ class OperationManpowerCosting(Document):
 	def validate(self):
 		check_between_dates(self)
 
+	@frappe.whitelist()
+	def update_costs_on_reports(self):
+		print("Updating costs on linked Daily Operation Reports...")
+		# This function can be called to update costs on linked Daily Operation Reports if needed
+		update_daily_operation_report_costs(self)
+
 
 	pass
+
+
+def update_daily_operation_report_costs(self):
+	try:
+		if self.daily_operation_report_references:
+			for reference in self.daily_operation_report_references:
+				daily_report = frappe.get_doc('Daily Operation Report', reference.daily_operation_report)
+				daily_report.manpower_cost_per_m3 = self.manpower_cost_per_m3
+				daily_report.manpower_cost_per_treated_water = self.manpower_cost_per_m3 * reference.waste_water_treated_volume
+				daily_report.save()
+				daily_report.submit()
+
+		return {
+			"status": "success",
+			"message": "Costs updated on linked Daily Operation Reports successfully."
+		}
+
+	except Exception as e:
+		frappe.log_error(f"Error in process_data: {str(e)}", "Backend Process")
+		return {
+			"status": "error",
+			"message": str(e)
+		}
+
+
 def check_between_dates(self):
 	if self.start_date and self.end_date:
 		if self.start_date > self.end_date:

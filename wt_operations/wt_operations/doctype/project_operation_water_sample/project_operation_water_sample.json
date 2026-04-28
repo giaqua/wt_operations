@@ -28,6 +28,8 @@
   "column_break_lamq",
   "result_shared_date",
   "fetch_required_parameters",
+  "column_break_nbvm",
+  "sample_process_location_lab",
   "section_break_sxwy",
   "sample_collection_details",
   "section_break_hzvu",
@@ -199,12 +201,24 @@
    "fieldtype": "Button",
    "label": "Fetch Required Parameters",
    "permlevel": 2
+  },
+  {
+   "fieldname": "column_break_nbvm",
+   "fieldtype": "Column Break"
+  },
+  {
+   "bold": 1,
+   "fieldname": "sample_process_location_lab",
+   "fieldtype": "Data",
+   "label": "Sample Process Location",
+   "no_copy": 1,
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-04-12 11:33:23.019410",
+ "modified": "2026-04-28 09:25:51.624025",
  "modified_by": "Administrator",
  "module": "WT Operations",
  "name": "Project Operation Water Sample",

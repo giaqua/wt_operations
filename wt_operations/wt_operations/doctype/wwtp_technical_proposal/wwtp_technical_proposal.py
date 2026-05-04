@@ -9,7 +9,11 @@ class WWTPTechnicalProposal(Document):
 		self.validate_dates()
 		self.calculate_totals()
 		self.validate_capacity()
-	
+		
+	# def before_save(self):
+	# 	"""Actions before saving the document"""
+	# 	self.calculate_totals()
+
 	def validate_required_fields(self):
 		"""Validate required fields"""
 		if not self.lead:

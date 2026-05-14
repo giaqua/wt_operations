@@ -1,7 +1,7 @@
 // Copyright (c) 2026, Takamol and contributors
 // For license information, please see license.txt
 
-// frappe.ui.form.on("Technical Template", {
+// frappe.ui.form.on("Effluent Quality Parameters Template", {
 // 	refresh(frm) {
 
 // 	},

@@ -1,36 +1,37 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "field:template_name",
- "creation": "2026-05-03 13:24:10.717659",
+ "autoname": "field:effluent_quality_parameters_template_name",
+ "creation": "2026-05-13 16:05:14.454133",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "template_name",
-  "template_details"
+  "effluent_quality_parameters_template_name",
+  "effluent_quality"
  ],
  "fields": [
   {
-   "fieldname": "template_name",
+   "fieldname": "effluent_quality_parameters_template_name",
    "fieldtype": "Data",
-   "label": "Template Name",
+   "label": "Effluent Quality Parameters Template Name",
    "unique": 1
   },
   {
-   "fieldname": "template_details",
-   "fieldtype": "Text Editor",
-   "label": "Template Details"
+   "fieldname": "effluent_quality",
+   "fieldtype": "Table",
+   "label": "Effluent Quality",
+   "options": "WWTP Effluent Quality Table"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-05-04 11:23:23.438139",
+ "modified": "2026-05-13 16:06:10.237286",
  "modified_by": "Administrator",
  "module": "WT Operations",
- "name": "Technical Template",
+ "name": "Effluent Quality Parameters Template",
  "naming_rule": "By fieldname",
- "owner": "h.baset@giaquatech.sa",
+ "owner": "Administrator",
  "permissions": [
   {
    "create": 1,

@@ -1,36 +1,37 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "field:template_name",
- "creation": "2026-05-03 13:24:10.717659",
+ "autoname": "field:technical_specifications_template_name",
+ "creation": "2026-05-13 16:00:19.846616",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "template_name",
-  "template_details"
+  "technical_specifications_template_name",
+  "technical_specifications"
  ],
  "fields": [
   {
-   "fieldname": "template_name",
+   "fieldname": "technical_specifications_template_name",
    "fieldtype": "Data",
-   "label": "Template Name",
+   "label": "Technical Specifications Template Name",
    "unique": 1
   },
   {
-   "fieldname": "template_details",
-   "fieldtype": "Text Editor",
-   "label": "Template Details"
+   "fieldname": "technical_specifications",
+   "fieldtype": "Table",
+   "label": "Technical Specifications",
+   "options": "WWTP Technical Specifications Table"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-05-04 11:23:23.438139",
+ "modified": "2026-05-13 16:02:07.781727",
  "modified_by": "Administrator",
  "module": "WT Operations",
- "name": "Technical Template",
+ "name": "Technical Specifications Template",
  "naming_rule": "By fieldname",
- "owner": "h.baset@giaquatech.sa",
+ "owner": "Administrator",
  "permissions": [
   {
    "create": 1,

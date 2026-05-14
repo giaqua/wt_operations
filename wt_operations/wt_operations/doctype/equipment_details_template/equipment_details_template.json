@@ -1,36 +1,37 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "field:template_name",
- "creation": "2026-05-03 13:24:10.717659",
+ "autoname": "field:equipment_details_name",
+ "creation": "2026-05-13 16:03:06.522416",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "template_name",
-  "template_details"
+  "equipment_details_name",
+  "equipment_details"
  ],
  "fields": [
   {
-   "fieldname": "template_name",
+   "fieldname": "equipment_details_name",
    "fieldtype": "Data",
-   "label": "Template Name",
+   "label": "Equipment Details Name",
    "unique": 1
   },
   {
-   "fieldname": "template_details",
-   "fieldtype": "Text Editor",
-   "label": "Template Details"
+   "fieldname": "equipment_details",
+   "fieldtype": "Table",
+   "label": "Equipment Details",
+   "options": "WWTP Equipment Details Table"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-05-04 11:23:23.438139",
+ "modified": "2026-05-13 16:03:56.653069",
  "modified_by": "Administrator",
  "module": "WT Operations",
- "name": "Technical Template",
+ "name": "Equipment Details Template",
  "naming_rule": "By fieldname",
- "owner": "h.baset@giaquatech.sa",
+ "owner": "Administrator",
  "permissions": [
   {
    "create": 1,

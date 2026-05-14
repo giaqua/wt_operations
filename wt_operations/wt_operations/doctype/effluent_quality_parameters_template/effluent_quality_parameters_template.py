@@ -5,5 +5,5 @@
 from frappe.model.document import Document
 
 
-class TechnicalTemplate(Document):
+class EffluentQualityParametersTemplate(Document):
 	pass

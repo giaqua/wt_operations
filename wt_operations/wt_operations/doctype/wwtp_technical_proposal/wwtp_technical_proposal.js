@@ -33,7 +33,7 @@ frappe.ui.form.on('WWTP Technical Proposal', {
 		
 		// Calculate total costs
 		calculate_total_costs(frm);
-		calculate_total_implementation_time(frm);
+		// calculate_total_implementation_time(frm);
 	},
 	
 	onload: function(frm) {
@@ -114,6 +114,60 @@ frappe.ui.form.on('WWTP Technical Proposal', {
 	
 	commissioning_period: function(frm) {
 		calculate_total_implementation_time(frm);
+	},
+	technical_specifications_template: async function(frm) {
+		if (frm.doc.technical_specifications_template) {
+			let technical_specifications_template =  await frappe.db.get_doc('Technical Specifications Template', frm.doc.technical_specifications_template);
+			$.each(technical_specifications_template.technical_specifications, function(index, source_row) {
+                let new_row = frm.add_child('technical_specifications_table'); // 'items' is your target child table fieldname
+                new_row.specification_type = source_row.specification_type;
+                new_row.parameter = source_row.parameter;
+                new_row.value = source_row.value;
+                new_row.unit = source_row.unit;
+				new_row.description = source_row.description;
+                // Map other fields as needed
+            });
+			 frm.refresh_field('technical_specifications_table');
+            
+		}
+	},
+	equipment_details_template: async function(frm) {
+		if (frm.doc.equipment_details_template) {
+			let equipment_details_template =  await frappe.db.get_doc('Equipment Details Template', frm.doc.equipment_details_template);
+			$.each(equipment_details_template.equipment_details, function(index, source_row) {
+                let new_row = frm.add_child('equipment_details_table'); // 'items' is your target child table fieldname
+                new_row.specification_type = source_row.specification_type;
+                new_row.equipment_name = source_row.equipment_name;
+                new_row.equipment_type = source_row.equipment_type;
+                new_row.quantity = source_row.quantity;
+				new_row.capacity = source_row.capacity;
+				new_row.unit = source_row.unit;
+				new_row.power_consumption = source_row.power_consumption;
+				new_row.manufacturer = source_row.manufacturer;
+				new_row.model = source_row.model;
+				new_row.description = source_row.description;
+                // Map other fields as needed
+            });
+			 frm.refresh_field('equipment_details_table');
+            
+		}
+	},
+	effluent_quality_parameters_template: async function(frm) {
+		if (frm.doc.effluent_quality_parameters_template) {
+			let effluent_quality_parameters_template =  await frappe.db.get_doc('Effluent Quality Parameters Template', frm.doc.effluent_quality_parameters_template);
+			$.each(effluent_quality_parameters_template.effluent_quality, function(index, source_row) {
+                let new_row = frm.add_child('effluent_quality_table'); // 'items' is your target child table fieldname
+				new_row.parameter = source_row.parameter;
+                new_row.unit = source_row.unit;
+                new_row.target_value = source_row.target_value;
+                new_row.guaranteed_value = source_row.guaranteed_value;
+				new_row.test_method = source_row.test_method;
+				new_row.frequency = source_row.frequency;
+                // Map other fields as needed
+            });
+			 frm.refresh_field('effluent_quality_table');
+            
+		}
 	}
 });
 

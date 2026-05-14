@@ -91,6 +91,7 @@
   "technical_recommendations",
   "next_steps",
   "follow_up_required",
+  "fetch_scope_of_work",
   "roles_and_responsibilities_table",
   "external_site_settings",
   "external_proposal_name",
@@ -750,13 +751,18 @@
    "fieldtype": "Link",
    "label": "Effluent Quality Parameters Template",
    "options": "Effluent Quality Parameters Template"
+  },
+  {
+   "fieldname": "fetch_scope_of_work",
+   "fieldtype": "Button",
+   "label": "Fetch Scope Of Work"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-05-13 16:06:32.893946",
+ "modified": "2026-05-14 11:38:57.457313",
  "modified_by": "Administrator",
  "module": "WT Operations",
  "name": "WWTP Technical Proposal",

@@ -168,6 +168,24 @@ frappe.ui.form.on('WWTP Technical Proposal', {
 			 frm.refresh_field('effluent_quality_table');
             
 		}
+	},
+	fetch_scope_of_work: async function(frm) {
+		await frappe.call({
+			method: "frappe.client.get_list",
+			args: {
+				doctype: 'Scope Of Work',
+				fields: ['name', 'scope_of_work_details']
+			},
+			callback: function(response) {
+				let list = response.message;
+				list.forEach(item => {
+					console.log(item);
+					let new_row = frm.add_child('roles_and_responsibilities_table');
+					new_row.scope_of_work = item.name;
+				});
+				frm.refresh_field('roles_and_responsibilities_table');
+			}
+		});
 	}
 });
 

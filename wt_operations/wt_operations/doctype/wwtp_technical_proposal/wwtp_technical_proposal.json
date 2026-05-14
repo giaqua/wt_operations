@@ -43,8 +43,11 @@
   "process_description",
   "treatment_stages_template",
   "treatment_stages",
+  "technical_specifications_template",
   "technical_specifications_table",
+  "equipment_details_template",
   "equipment_details_table",
+  "effluent_quality_parameters_template",
   "effluent_quality_table",
   "tab_site_conditions",
   "site_conditions_summary",
@@ -729,14 +732,32 @@
    "fieldtype": "Link",
    "label": "Treatment Stages Template",
    "options": "Technical Template"
+  },
+  {
+   "fieldname": "technical_specifications_template",
+   "fieldtype": "Link",
+   "label": "Technical Specifications Template",
+   "options": "Technical Specifications Template"
+  },
+  {
+   "fieldname": "equipment_details_template",
+   "fieldtype": "Link",
+   "label": "Equipment Details Template",
+   "options": "Equipment Details Template"
+  },
+  {
+   "fieldname": "effluent_quality_parameters_template",
+   "fieldtype": "Link",
+   "label": "Effluent Quality Parameters Template",
+   "options": "Effluent Quality Parameters Template"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-05-03 13:41:11.047068",
- "modified_by": "h.baset@giaquatech.sa",
+ "modified": "2026-05-13 16:06:32.893946",
+ "modified_by": "Administrator",
  "module": "WT Operations",
  "name": "WWTP Technical Proposal",
  "naming_rule": "By \"Naming Series\" field",

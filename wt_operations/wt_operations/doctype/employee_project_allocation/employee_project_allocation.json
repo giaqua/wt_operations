@@ -1,0 +1,98 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:EPA-{#}",
+ "creation": "2026-05-20 10:14:05.856455",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "employee_project_allocation_tool",
+  "employee",
+  "employee_name",
+  "column_break_ycmp",
+  "from_date",
+  "to_date",
+  "total_percentage",
+  "section_break_vqwe",
+  "employee_project_allocation_details"
+ ],
+ "fields": [
+  {
+   "fetch_from": "employee_project_allocation_tool.from_date",
+   "fieldname": "from_date",
+   "fieldtype": "Date",
+   "label": "From Date"
+  },
+  {
+   "fetch_from": "employee_project_allocation_tool.to_date",
+   "fieldname": "to_date",
+   "fieldtype": "Date",
+   "label": "To Date"
+  },
+  {
+   "fieldname": "employee_project_allocation_tool",
+   "fieldtype": "Link",
+   "label": "Employee Project Allocation Tool",
+   "options": "Employee Project Allocation Tool"
+  },
+  {
+   "fieldname": "column_break_ycmp",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_vqwe",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "employee_project_allocation_details",
+   "fieldtype": "Table",
+   "label": "Employee Project Allocation Details",
+   "options": "Employee Project Allocation Details"
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "label": "Employee",
+   "options": "Employee"
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Employee Name"
+  },
+  {
+   "fieldname": "total_percentage",
+   "fieldtype": "Percent",
+   "label": "Total Percentage"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-05-20 13:40:47.585413",
+ "modified_by": "Administrator",
+ "module": "WT Operations",
+ "name": "Employee Project Allocation",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

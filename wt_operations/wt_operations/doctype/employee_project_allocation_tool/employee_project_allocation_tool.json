@@ -1,0 +1,91 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-05-20 10:16:18.009781",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "from_date",
+  "column_break_anhc",
+  "to_date",
+  "column_break_urks",
+  "department",
+  "section_break_dhal",
+  "allocation_template",
+  "allocation_details"
+ ],
+ "fields": [
+  {
+   "fieldname": "from_date",
+   "fieldtype": "Date",
+   "label": "From Date"
+  },
+  {
+   "fieldname": "to_date",
+   "fieldtype": "Date",
+   "label": "To Date"
+  },
+  {
+   "fieldname": "column_break_urks",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "department",
+   "fieldtype": "Link",
+   "label": "Department",
+   "options": "Department"
+  },
+  {
+   "fieldname": "section_break_dhal",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "allocation_details",
+   "fieldtype": "HTML",
+   "label": "Allocation Details"
+  },
+  {
+   "fieldname": "allocation_template",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Allocation Template",
+   "options": "Custom HTML Block"
+  },
+  {
+   "fieldname": "column_break_anhc",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [
+  {
+   "link_doctype": "Employee Project Allocation",
+   "link_fieldname": "employee_project_allocation_tool"
+  }
+ ],
+ "modified": "2026-05-20 14:06:33.793665",
+ "modified_by": "Administrator",
+ "module": "WT Operations",
+ "name": "Employee Project Allocation Tool",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

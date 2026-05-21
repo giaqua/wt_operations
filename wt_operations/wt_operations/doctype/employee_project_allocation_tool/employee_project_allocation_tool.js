@@ -1,9 +1,9 @@
 // client_script.js for Employee Allocation Dashboard DocType
 
 frappe.ui.form.on('Employee Project Allocation Tool', {
-    refresh: function(frm) {
-        frm.trigger('load_all_employee_allocations');
-    },
+    // refresh: function(frm) {
+    //     frm.trigger('load_all_employee_allocations');
+    // },
     
     load_all_employee_allocations: function(frm) {
         let wrapper = frm.get_field('allocation_details').$wrapper;

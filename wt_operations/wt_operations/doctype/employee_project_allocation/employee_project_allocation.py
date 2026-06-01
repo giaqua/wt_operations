@@ -6,9 +6,9 @@ from frappe.model.document import Document
 
 
 class EmployeeProjectAllocation(Document):
-	# def before_save(self):
-	# 	calculate_total_percentage(self)
-	pass
+	def before_save(self):
+		calculate_total_percentage(self)
+
 
 
 def calculate_total_percentage(self):

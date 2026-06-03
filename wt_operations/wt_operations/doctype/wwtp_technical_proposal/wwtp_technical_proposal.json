@@ -22,6 +22,21 @@
   "prepared_by",
   "technical_manager",
   "account_manager",
+  "column_break_owqx",
+  "number_of_the_units",
+  "capacity_per_day",
+  "ro",
+  "ro_reject_percentage",
+  "sludge_details",
+  "sludge_volume_",
+  "column_break_vajr",
+  "any_other_internal_system",
+  "gnano_type",
+  "dosage_rate_per_m3",
+  "any_other_special_chemicals",
+  "off_gassing",
+  "off_gassing_rate",
+  "off_gassing_type",
   "tab_technical_solution",
   "project_title",
   "project_description_template",
@@ -756,13 +771,93 @@
    "fieldname": "fetch_scope_of_work",
    "fieldtype": "Button",
    "label": "Fetch Scope Of Work"
+  },
+  {
+   "fieldname": "column_break_owqx",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "number_of_the_units",
+   "fieldtype": "Int",
+   "label": "Number of The Units"
+  },
+  {
+   "fieldname": "capacity_per_day",
+   "fieldtype": "Float",
+   "label": "Capacity (Per Day)"
+  },
+  {
+   "default": "0",
+   "fieldname": "ro",
+   "fieldtype": "Check",
+   "label": "RO"
+  },
+  {
+   "fieldname": "ro_reject_percentage",
+   "fieldtype": "Percent",
+   "label": "RO Reject Percentage"
+  },
+  {
+   "fieldname": "sludge_details",
+   "fieldtype": "Small Text",
+   "label": "Sludge Details"
+  },
+  {
+   "description": "Sludge volume (%) Before Dewatering",
+   "fieldname": "sludge_volume_",
+   "fieldtype": "Percent",
+   "label": "Sludge volume (%)"
+  },
+  {
+   "fieldname": "any_other_internal_system",
+   "fieldtype": "Select",
+   "label": "Any Other Internal System",
+   "options": "\nUV\nUF\nPolishers\nMedia"
+  },
+  {
+   "fieldname": "gnano_type",
+   "fieldtype": "Select",
+   "label": "G.NANO Type",
+   "options": "\nIndustrial\nSpent Caustic\nDomestic\nConcrete"
+  },
+  {
+   "fieldname": "dosage_rate_per_m3",
+   "fieldtype": "Float",
+   "label": "Dosage Rate Per M3"
+  },
+  {
+   "fieldname": "any_other_special_chemicals",
+   "fieldtype": "Small Text",
+   "label": "Any Other Special Chemicals"
+  },
+  {
+   "fieldname": "column_break_vajr",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "off_gassing",
+   "fieldtype": "Select",
+   "label": "Off Gassing",
+   "options": "\nYes\nNo"
+  },
+  {
+   "depends_on": "eval:doc.off_gassing==\"Yes\"",
+   "fieldname": "off_gassing_rate",
+   "fieldtype": "Currency",
+   "label": "Off Gassing rate"
+  },
+  {
+   "depends_on": "eval:doc.off_gassing==\"Yes\"",
+   "fieldname": "off_gassing_type",
+   "fieldtype": "Data",
+   "label": "Off Gassing Type"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-05-14 11:38:57.457313",
+ "modified": "2026-06-03 13:33:02.280767",
  "modified_by": "Administrator",
  "module": "WT Operations",
  "name": "WWTP Technical Proposal",

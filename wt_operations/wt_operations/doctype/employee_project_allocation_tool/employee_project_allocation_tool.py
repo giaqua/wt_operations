@@ -13,7 +13,163 @@ import json
 
 
 class EmployeeProjectAllocationTool(Document):
-	pass
+    @frappe.whitelist()
+    def process_salary_allocation(self):
+        """Process all employee allocations and create consolidated entries"""
+        if not self.to_date:
+            frappe.throw(_("Please set Target Date first"))
+        
+        if not self.department:
+            frappe.throw(_("Please select Department first"))
+        
+        # Clear existing allocations
+        self.set('employee_project_allocation_amounts', [])
+        
+        # Get all employee allocations for this tool
+        employee_allocations = frappe.get_all(
+            'Employee Project Allocation',
+            filters={
+                'employee_project_allocation_tool': self.name,
+                'docstatus': 0
+            },
+            fields=['name', 'employee', 'employee_name', 'from_date', 'to_date']
+        )
+        
+        if not employee_allocations:
+            frappe.throw(_("No employee allocations found for this tool"))
+        
+        # Process each employee
+        all_project_allocations = {}  # Structure: {project: {salary_component: total_amount}}
+        
+        for emp_alloc in employee_allocations:
+            # Get last salary slip before or on target date
+            salary_slip = self.get_last_salary_slip(emp_alloc.employee, self.to_date)
+            
+            if not salary_slip:
+                frappe.msgprint(_("No salary slip found for employee {0} before {1}").format(
+                    emp_alloc.employee_name, self.to_date
+                ), alert=True)
+                continue
+            
+            # Get employee's allocation percentages
+            employee_percentages = self.get_employee_allocation_percentages(emp_alloc.name)
+            
+            if not employee_percentages:
+                continue
+            
+            # Get salary components from the slip
+            components = self.get_salary_components_from_slip(salary_slip.name)
+            
+            # Calculate allocated amounts for each project
+            for component in components:
+                for project_percentage in employee_percentages:
+                    project = project_percentage['project']
+                    percentage = project_percentage['percentage']
+                    allocated_amount = (component['amount'] * percentage) / 100
+                    
+                    if allocated_amount > 0:
+                        key = f"{project}_{component['salary_component']}"
+                        if key not in all_project_allocations:
+                            all_project_allocations[key] = {
+                                'project': project,
+                                'salary_component': component['salary_component'],
+                                'account': component.get('account'),
+                                'total_amount': 0,
+                                'employee_count': 0,
+                                'details': []
+                            }
+                        
+                        all_project_allocations[key]['total_amount'] += allocated_amount
+                        all_project_allocations[key]['employee_count'] += 1
+                        all_project_allocations[key]['details'].append({
+                            'employee': emp_alloc.employee,
+                            'employee_name': emp_alloc.employee_name,
+                            'percentage': percentage,
+                            'component_amount': component['amount'],
+                            'allocated_amount': allocated_amount
+                        })
+        
+        # Add to child table
+        for key, data in all_project_allocations.items():
+            self.append('employee_project_allocation_amounts', {
+                'project': data['project'],
+                'salary_component': data['salary_component'],
+                'account': data['account'],
+                'amount': data['total_amount'],
+                'employee_count': data['employee_count'],
+                'allocation_details': frappe.as_json(data['details'])
+            })
+        
+        self.save()
+        return {
+            'status': 'success',
+            'message': f"Processed {len(all_project_allocations)} allocation entries"
+        }
+    
+    def get_last_salary_slip(self, employee, to_date):
+        """Get the last salary slip before or on target date"""
+        last_slip = frappe.db.get_value(
+            'Salary Slip',
+            {
+                'employee': employee,
+                'docstatus': 1,
+                'start_date': ['<=', to_date]
+            },
+            ['name', 'start_date', 'end_date', 'gross_pay', 'net_pay'],
+            order_by='start_date desc'
+        )
+        
+        if last_slip:
+            return frappe.get_doc('Salary Slip', last_slip[0] if isinstance(last_slip, tuple) else last_slip)
+        return None
+    
+    def get_employee_allocation_percentages(self, allocation_name):
+        """Get project allocation percentages for an employee"""
+        allocation = frappe.get_doc('Employee Project Allocation', allocation_name)
+        percentages = []
+        
+        for detail in allocation.employee_project_allocation_details:
+            if detail.percentage and detail.percentage > 0:
+                percentages.append({
+                    'project': detail.project,
+                    'activity': detail.activity,
+                    'percentage': detail.percentage
+                })
+        
+        return percentages
+    
+    def get_salary_components_from_slip(self, salary_slip_name):
+        """Get all earning components from salary slip with their accounts"""
+        salary_slip = frappe.get_doc('Salary Slip', salary_slip_name)
+        components = []
+        
+        # Get earnings
+        for earning in salary_slip.earnings:
+            if earning.amount and earning.amount > 0:
+                # Get the account from salary component
+                account = frappe.db.get_all('Salary Component Account', {'parent': earning.salary_component}, 'account')[0].account
+                
+                components.append({
+                    'salary_component': earning.salary_component,
+                    'amount': earning.amount,
+                    'type': 'Earning',
+                    'account': account
+                })
+        
+        # Optionally include deductions (with negative sign)
+        for deduction in salary_slip.deductions:
+            if deduction.amount and deduction.amount > 0:
+                account = frappe.db.get_all('Salary Component Account', {'parent': deduction.salary_component}, 'account')[0].account
+                
+                components.append({
+                    'salary_component': deduction.salary_component,
+                    'amount': -deduction.amount,  # Negative for deductions
+                    'type': 'Deduction',
+                    'account': account
+                })
+        
+        return components
+
 
 
 @frappe.whitelist()
@@ -207,6 +363,9 @@ def download_allocation_template(department, tool_name):
     except Exception as e:
         frappe.log_error(f"Error generating template: {str(e)}", "Template Generation Error")
         frappe.throw(str(e))
+
+    
+
 
 @frappe.whitelist()
 def process_allocation_excel(file_url, tool_name, from_date, to_date):
@@ -714,3 +873,50 @@ def get_child_table_data(parent_doctype, child_table_fieldname):
     except Exception as e:
         frappe.log_error(f"Error getting child table data: {str(e)}", "Child Table Error")
         return []
+    
+
+
+
+
+# Standalone method for direct calling
+@frappe.whitelist()
+def process_salary_allocation_for_tool(tool_name):
+    """Process salary allocation for a specific tool"""
+    tool = frappe.get_doc('Employee Project Allocation Tool', tool_name)
+    return tool.process_salary_allocation()
+
+
+# Method to get salary component accounts
+@frappe.whitelist()
+def get_salary_component_account(component_name):
+    """Get the default account for a salary component"""
+    component = frappe.get_doc('Salary Component', component_name)
+    return component.get('account')
+
+
+# Method to test/fetch employee salary slip
+@frappe.whitelist()
+def get_employee_salary_slip_for_date(employee, to_date):
+    """Get employee's salary slip for a specific date"""
+    slip = frappe.db.get_value(
+        'Salary Slip',
+        {
+            'employee': employee,
+            'docstatus': 1,
+            'start_date': ['<=', to_date]
+        },
+        ['name', 'start_date', 'end_date', 'gross_pay', 'net_pay'],
+        order_by='start_date desc',
+        as_dict=True
+    )
+    
+    if slip:
+        # Get components
+        components = frappe.get_all(
+            'Salary Detail',
+            filters={'parent': slip.name},
+            fields=['salary_component', 'amount', 'parentfield']
+        )
+        slip['components'] = components
+    
+    return slip

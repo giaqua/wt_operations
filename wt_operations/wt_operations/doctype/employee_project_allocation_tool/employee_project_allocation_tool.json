@@ -14,7 +14,9 @@
   "allocation_template",
   "allocation_details",
   "allocations_tab",
-  "employee_project_allocation_amounts"
+  "employee_project_allocation_amounts",
+  "last_journal_entry",
+  "payroll_project"
  ],
  "fields": [
   {
@@ -66,7 +68,20 @@
    "fieldname": "employee_project_allocation_amounts",
    "fieldtype": "Table",
    "label": "Employee Project Allocation Amounts",
-   "options": "Employee Project Allocation Amounts"
+   "options": "Employee Project Allocation Amounts",
+   "read_only": 1
+  },
+  {
+   "fieldname": "last_journal_entry",
+   "fieldtype": "Link",
+   "label": "Last Journal Entry",
+   "options": "Journal Entry"
+  },
+  {
+   "fieldname": "payroll_project",
+   "fieldtype": "Link",
+   "label": "Payroll Project",
+   "options": "Project"
   }
  ],
  "grid_page_length": 50,
@@ -77,7 +92,7 @@
    "link_fieldname": "employee_project_allocation_tool"
   }
  ],
- "modified": "2026-06-03 13:51:05.376100",
+ "modified": "2026-06-04 16:12:16.086255",
  "modified_by": "Administrator",
  "module": "WT Operations",
  "name": "Employee Project Allocation Tool",

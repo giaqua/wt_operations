@@ -9,6 +9,7 @@ import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from frappe.utils import getdate, today
 import json
+from frappe.utils.data import nowdate
 
 
 
@@ -74,12 +75,12 @@ class EmployeeProjectAllocationTool(Document):
                                 'project': project,
                                 'salary_component': component['salary_component'],
                                 'account': component.get('account'),
-                                'total_amount': 0,
+                                'amount': 0,
                                 'employee_count': 0,
                                 'details': []
                             }
                         
-                        all_project_allocations[key]['total_amount'] += allocated_amount
+                        all_project_allocations[key]['amount'] += allocated_amount
                         all_project_allocations[key]['employee_count'] += 1
                         all_project_allocations[key]['details'].append({
                             'employee': emp_alloc.employee,
@@ -95,7 +96,7 @@ class EmployeeProjectAllocationTool(Document):
                 'project': data['project'],
                 'salary_component': data['salary_component'],
                 'account': data['account'],
-                'amount': data['total_amount'],
+                'amount': data['amount'],
                 'employee_count': data['employee_count'],
                 'allocation_details': frappe.as_json(data['details'])
             })
@@ -170,7 +171,129 @@ class EmployeeProjectAllocationTool(Document):
         
         return components
 
-
+    @frappe.whitelist()
+    def create_journal_entry_from_allocations(self):
+        """Create journal entry from processed salary allocations child table"""
+        if not self.employee_project_allocation_amounts:
+            frappe.throw(_("No processed salary allocations found. Please run 'Process Salary Allocation' first."))
+        
+        # Check if journal entry already exists
+        if self.last_journal_entry:
+            frappe.msgprint(_("Journal Entry {0} already created. Create a new one?").format(self.last_journal_entry))
+        
+        # Create Journal Entry
+        je = frappe.get_doc({
+            "doctype": "Journal Entry",
+            "voucher_type": "Journal Entry",
+            "posting_date": getdate(nowdate()),
+            "company": frappe.defaults.get_user_default("company") or frappe.db.get_single_value("Global Defaults", "default_company"),
+            "user_remark": f"Salary allocation for {self.department} department - Tool: {self.name}",
+            "accounts": []
+        })
+        
+        # Create entries from each row in employee_project_allocation_amounts
+        for alloc in self.employee_project_allocation_amounts:
+            if alloc.amount and alloc.amount > 0:
+                # Debit entry using account, amount, project, and cost center from child table
+                je.append("accounts", {
+                    "account": alloc.account,
+                    "debit_in_account_currency": alloc.amount,
+                    "credit_in_account_currency": 0,
+                    "cost_center": self.get_project_cost_center(alloc.project),
+                    "party_type": None,
+                    "party": None,
+                    "project": alloc.project,
+                    # "reference_type": self.doctype,
+                    # "reference_name": self.name,
+                    # "reference_detail": alloc.name,
+                    "user_remark": f"Debit: {alloc.salary_component} - {alloc.employee_count} employees - Project: {alloc.project}"
+                })
+                
+                # Credit entry (matching amount) with project "All-Project" and same cost center
+                je.append("accounts", {
+                    "account": alloc.account,
+                    "debit_in_account_currency": 0,
+                    "credit_in_account_currency": alloc.amount,
+                    # "cost_center": self.get_project_cost_center(alloc.project),
+                    "party_type": None,
+                    "party": None,
+                    "project": self.payroll_project,
+                    # "reference_type": self.doctype,
+                    # "reference_name": self.name,
+                    # "reference_detail": alloc.name,
+                    "user_remark": f"Credit: {alloc.salary_component} - {alloc.employee_count} employees - All-Project"
+                })
+        
+        # Validate that debits equal credits
+        je.validate()
+        
+        # Save the journal entry
+        je.save()
+        
+        # Link the journal entry to this tool
+        self.last_journal_entry = je.name
+        self.save()
+        
+        frappe.db.commit()
+        
+        return {
+            "status": "success",
+            "journal_entry": je.name,
+            "message": f"Journal Entry {je.name} created successfully",
+            "total_amount": sum([a.amount for a in self.employee_project_allocation_amounts]),
+            "entries_count": len(self.employee_project_allocation_amounts) * 2
+        }
+    
+    def get_employee_cost_center(self, employee):
+        """Get employee's cost center from payroll"""
+        cost_center = frappe.db.get_value('Employee', employee, 'payroll_cost_center')
+        
+        if not cost_center:
+            salary_structure = frappe.db.get_value(
+                'Salary Structure Assignment',
+                {'employee': employee, 'docstatus': 1},
+                'payroll_cost_center',
+                order_by='from_date desc'
+            )
+            if salary_structure:
+                cost_center = salary_structure
+        
+        if not cost_center:
+            company = frappe.defaults.get_user_default("company") or frappe.db.get_single_value("Global Defaults", "default_company")
+            cost_center = frappe.db.get_value("Company", company, "cost_center")
+        
+        return cost_center
+    
+    def get_project_cost_center(self, project_name):
+        """Get cost center for a project"""
+        if project_name:
+            project = frappe.get_doc("Project", project_name)
+            if project.cost_center:
+                return project.cost_center
+        
+        # Return default cost center
+        return frappe.db.get_single_value("Global Defaults", "cost_center")
+    
+    def get_cost_center(self):
+        """Get default cost center"""
+        return frappe.db.get_single_value("Global Defaults", "cost_center")
+    
+    def get_salary_payable_account(self):
+        """Get the salary payable account from company settings"""
+        company = frappe.defaults.get_user_default("company") or frappe.db.get_single_value("Global Defaults", "default_company")
+        
+        salary_payable_account = frappe.db.get_value("Company", company, "default_income_account")
+        
+        if not salary_payable_account:
+            # Try to find Salary Payable account by name
+            salary_payable_account = frappe.db.get_value("Account", 
+                {"account_name": "Salary Payable", "company": company, "root_type": "Liability"}, "name")
+            
+            if not salary_payable_account:
+                frappe.throw(_("Please set Salary Payable Account in Company settings or create a Salary Payable account"))
+        
+        return salary_payable_account
+    
 
 @frappe.whitelist()
 def get_child_table_data(parent_doctype, child_table_fieldname):
@@ -920,3 +1043,20 @@ def get_employee_salary_slip_for_date(employee, to_date):
         slip['components'] = components
     
     return slip
+
+
+@frappe.whitelist()
+def get_salary_payable_account(company=None):
+    """Get salary payable account"""
+    if not company:
+        company = frappe.defaults.get_user_default("company") or frappe.db.get_single_value("Global Defaults", "default_company")
+    
+    return frappe.db.get_value("Company", company, "default_income_account")
+
+
+
+@frappe.whitelist()
+def create_journal_entry_for_tool(tool_name):
+    """Create journal entry for a specific tool"""
+    tool = frappe.get_doc('Employee Project Allocation Tool', tool_name)
+    return tool.create_journal_entry_from_allocations()

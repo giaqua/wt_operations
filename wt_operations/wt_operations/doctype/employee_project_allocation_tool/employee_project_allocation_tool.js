@@ -5,80 +5,81 @@ frappe.ui.form.on('Employee Project Allocation Tool', {
     //     frm.trigger('load_all_employee_allocations');
     // },
     
-    load_all_employee_allocations: function(frm) {
-        let wrapper = frm.get_field('allocation_details').$wrapper;
-        wrapper.html('<div style="text-align: center; padding: 50px;"><i class="fa fa-spinner fa-spin"></i> Loading dashboard...</div>');
+    // load_all_employee_allocations: function(frm) {
+    //     let wrapper = frm.get_field('allocation_details').$wrapper;
+    //     wrapper.html('<div style="text-align: center; padding: 50px;"><i class="fa fa-spinner fa-spin"></i> Loading dashboard...</div>');
         
-        // Fetch all employee allocations from server
-        frappe.call({
-            method: 'frappe.client.get_list',
-            args: {
-                doctype: 'Employee Project Allocation',
-                filters: {
-                    docstatus: 0  // Submitted only
-                },
-                fields: ['name', 'employee', 'employee_name', 'from_date', 'to_date', 'total_percentage'],
-                limit_page_length: 1000
-            },
-            callback: function(r) {
-                if (r.message && r.message?.length > 0) {
-                    fetch_allocation_details(frm, r.message);
-                } else {
-                    wrapper.html('<div class="alert alert-info">No employee allocations found. Please create allocations first.</div>');
-                }
-            }
-        });
-    }
+    //     // Fetch all employee allocations from server
+    //     frappe.call({
+    //         method: 'frappe.client.get_list',
+    //         args: {
+    //             doctype: 'Employee Project Allocation',
+    //             filters: {
+    //                 docstatus: 0  // Submitted only
+    //             },
+    //             fields: ['name', 'employee', 'employee_name', 'from_date', 'to_date', 'total_percentage'],
+    //             limit_page_length: 1000
+    //         },
+    //         callback: function(r) {
+    //             if (r.message && r.message?.length > 0) {
+    //                 fetch_allocation_details(frm, r.message);
+    //                 // console.log(r.message);
+    //             } else {
+    //                 wrapper.html('<div class="alert alert-info">No employee allocations found. Please create allocations first.</div>');
+    //             }
+    //         }
+    //     });
+    // }
 });
 
-function fetch_allocation_details(frm, allocations) {
-    let employee_data = {};
-    let processed = 0;
-    let all_projects = new Set(); // Track all unique projects
-    let all_activities = new Set(); // Track all unique activities (Operation, Installation, etc.)
+// function fetch_allocation_details(frm, allocations) {
+//     let employee_data = {};
+//     let processed = 0;
+//     let all_projects = new Set(); // Track all unique projects
+//     let all_activities = new Set(); // Track all unique activities (Operation, Installation, etc.)
     
-    allocations.forEach(alloc => {
-        // Fetch employee details
-        frappe.db.get_value('Employee', alloc.employee, ['employee_name', 'department', 'designation'], (emp_data) => {
-            // Fetch child table details using the correct field name
-            frappe.db.get_list('Employee Project Allocation Details', {
-                filters: { parent: alloc.name },
-                fields: ["*"]
-            }).then(details => {
-                console.log(details);
+//     allocations.forEach(alloc => {
+//         // Fetch employee details
+//         frappe.db.get_value('Employee', alloc.employee, ['employee_name', 'department', 'designation'], (emp_data) => {
+//             // Fetch child table details using the correct field name
+//             frappe.db.get_list('Employee Project Allocation Details', {
+//                 filters: { parent: alloc.name },
+//                 fields: ["*"]
+//             }).then(details => {
+//                 console.log(details);
                 
-                if (!employee_data[alloc.employee]) {
-                    employee_data[alloc.employee] = {
-                        employee_name: alloc.employee_name || emp_data.employee_name || alloc.employee,
-                        department: emp_data.department || 'N/A',
-                        designation: emp_data.designation || 'N/A',
-                        allocations: [],
-                        total_percentage: alloc.total_percentage || 0,
-                        from_date: alloc.from_date,
-                        to_date: alloc.to_date
-                    };
-                }
+//                 if (!employee_data[alloc.employee]) {
+//                     employee_data[alloc.employee] = {
+//                         employee_name: alloc.employee_name || emp_data.employee_name || alloc.employee,
+//                         department: emp_data.department || 'N/A',
+//                         designation: emp_data.designation || 'N/A',
+//                         allocations: [],
+//                         total_percentage: alloc.total_percentage || 0,
+//                         from_date: alloc.from_date,
+//                         to_date: alloc.to_date
+//                     };
+//                 }
                 
-                details.forEach(detail => {
-                    employee_data[alloc.employee].allocations.push({
-                        project: detail.project,
-                        activity: detail.activity,  // Using 'activity' field
-                        percentage: detail.percentage
-                    });
+//                 details.forEach(detail => {
+//                     employee_data[alloc.employee].allocations.push({
+//                         project: detail.project,
+//                         activity: detail.activity,  // Using 'activity' field
+//                         percentage: detail.percentage
+//                     });
                     
-                    // Collect unique projects and activities for dynamic table headers
-                    all_projects.add(detail.project);
-                    all_activities.add(detail.activity);
-                });
+//                     // Collect unique projects and activities for dynamic table headers
+//                     all_projects.add(detail.project);
+//                     all_activities.add(detail.activity);
+//                 });
                 
-                processed++;
-                if (processed === allocations.length) {
-                    render_complete_dashboard(frm, employee_data, Array.from(all_projects), Array.from(all_activities));
-                }
-            });
-        });
-    });
-}
+//                 processed++;
+//                 if (processed === allocations.length) {
+//                     render_complete_dashboard(frm, employee_data, Array.from(all_projects), Array.from(all_activities));
+//                 }
+//             });
+//         });
+//     });
+// }
 
 function render_complete_dashboard(frm, employee_data, all_projects, all_activities) {
     let wrapper = frm.get_field('allocation_details').$wrapper;

@@ -1116,10 +1116,15 @@ def get_data(filters):
 		elif wtp_workflow_state and "Rejected By Sales" in wtp_workflow_state:
 			row.pending_with = "Technical"
 			row.delay_days = (date.today() - row.technical_proposal_date).days if row.technical_proposal_date else delay_count
+            
 
 		elif wtp_workflow_state and "Draft" in wtp_workflow_state:
 			row.pending_with = "Technical"
 			row.delay_days = (date.today() - row.technical_proposal_date).days if row.technical_proposal_date else delay_count
+		elif wtp_workflow_state and "Rejected" in wtp_workflow_state:
+			row.pending_with = "Technical"
+			row.delay_days = (date.today() - row.technical_proposal_date).days if row.technical_proposal_date else delay_count	
+        
 		
 		# Check Technical Proposal workflow state (pending with sales)
 		elif row.technical_proposal > 0:

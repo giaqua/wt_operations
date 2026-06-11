@@ -56,6 +56,8 @@
   "free_chlorine",
   "ecoli",
   "wormies",
+  "column_break_xsdx",
+  "effluent_quality_table",
   "roles_and_responsibilities_section",
   "tq_roles_and_responsibilities",
   "workflow_section",
@@ -455,13 +457,23 @@
    "fieldtype": "Table",
    "label": "Available Equipment",
    "options": "Available Equipment"
+  },
+  {
+   "fieldname": "column_break_xsdx",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "effluent_quality_table",
+   "fieldtype": "Table",
+   "label": "Effluent Quality Parameters",
+   "options": "Effluent Quality Table"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-01-04 09:18:58.089515",
+ "modified": "2026-06-11 09:31:44.026083",
  "modified_by": "Administrator",
  "module": "WT Operations",
  "name": "WWTP Technical Questionnaire",

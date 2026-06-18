@@ -1,0 +1,35 @@
+{
+ "add_total_row": 0,
+ "add_translate_data": 0,
+ "columns": [],
+ "creation": "2026-06-18 15:51:23.022037",
+ "disabled": 0,
+ "docstatus": 0,
+ "doctype": "Report",
+ "filters": [],
+ "idx": 0,
+ "is_standard": "Yes",
+ "letter_head": null,
+ "modified": "2026-06-18 15:51:23.022037",
+ "modified_by": "Administrator",
+ "module": "WT Operations",
+ "name": "Technical Questionnaire Summary V3",
+ "owner": "Administrator",
+ "prepared_report": 0,
+ "query": "Select\n    ld.company_name as \"Lead Name:Data:200\",\n    wtq.name as \"WWTP TQ:Link/WWTP Technical Questionnaire:180\",\n    wtq.workflow_status as \"WWTP TQ:Select/Status:180\",\n    wtq.opportunity as \"Opportunity:Link/Opportunity:200\",\n    count(svr.name) as \"Visit Request:Int:140\",\n    count(sv.name) as \"Site Visit:Int:140\",\n    count(ws.name) as \"Water Sample:Int:140\",\n    count(wtp.name) as \"Technical Proposal:Int:140\",\n    count(cp.name) as \"Customer Proposal:Int:140\"\nFrom\n    `tabWWTP Technical Questionnaire` wtq \nLEFT JOIN `tabLead` ld\nON wtq.lead = ld.name\nLEFT JOIN `tabSite Visit Request` svr\nON wtq.name = svr.technical_questionnaire\nLEFT JOIN `tabSite Visit` sv \nOn wtq.name = sv.wwtp_technical_questionnaire\nLEFT JOIN `tabWater Sample` ws\nOn wtq.name = ws.wwtp_technical_questionnaire\nLEFT JOIN `tabWWTP Technical Proposal` wtp\nOn wtq.name = wtp.wwtp_technical_questionnaire\nLEFT JOIN `tabCustomer Proposal` cp\nOn  wtp.name = cp.wwtp_technical_proposal\n\nGROUP BY wtq.name;",
+ "ref_doctype": "WWTP Technical Questionnaire",
+ "report_name": "Technical Questionnaire Summary V3",
+ "report_type": "Script Report",
+ "roles": [
+  {
+   "role": "System Manager"
+  },
+  {
+   "role": "Sales User"
+  },
+  {
+   "role": "Sales Manager"
+  }
+ ],
+ "timeout": 0
+}

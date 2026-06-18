@@ -80,16 +80,28 @@ def get_dashboard_html(data, report_summary):
 
     kpi_row1 = (
         kpi('#378ADD', 'Total TQs',   total,        '#185FA5', 'all questionnaires')
-        + kpi('#1D9E75', 'Completed',  completed,    '#0F6E56', str(comp_pct) + '% completion rate')
-        + kpi('#BA7517', 'In progress', in_progress, '#854F0B', 'open TQs')
-        + kpi('#E24B4A', 'Avg delay',  str(avg_delay) + 'd', '#A32D2D', 'across open TQs')
-    )
-    kpi_row2 = (
-        kpi('#378ADD', 'Pending sales',     pending_sales, '#185FA5', 'awaiting action')
+        + kpi("#D16105", 'Pending sales',     pending_sales, '#D16105', 'awaiting action')
         + kpi('#534AB7', 'Pending technical', pending_tech,  '#3C3489', 'awaiting action')
         + kpi('#D85A30', 'Pending lab',       pending_lab,   '#993C1D', 'awaiting action')
+    )
+    kpi_row2 = (
+        kpi('#1D9E75', 'Completed',  completed,    '#0F6E56', str(comp_pct) + '% completion rate')
+        + kpi('#BA7517', 'In progress', in_progress, '#854F0B', 'open TQs')
+        + kpi('#E24B4A', 'Avg delay',  str(avg_delay) + 'd', '#A32D2D', 'across open TQs')
         + kpi('#E24B4A', 'Max delay',         str(max_delay) + 'd', '#A32D2D', 'longest open case')
     )
+	# kpi_row1 = (
+    #     kpi('#378ADD', 'Total TQs',   total,        '#185FA5', 'all questionnaires')
+    #     + kpi('#1D9E75', 'Completed',  completed,    '#0F6E56', str(comp_pct) + '% completion rate')
+    #     + kpi('#BA7517', 'In progress', in_progress, '#854F0B', 'open TQs')
+    #     + kpi('#E24B4A', 'Avg delay',  str(avg_delay) + 'd', '#A32D2D', 'across open TQs')
+    # )
+    # kpi_row2 = (
+    #     kpi('#378ADD', 'Pending sales',     pending_sales, '#185FA5', 'awaiting action')
+    #     + kpi('#534AB7', 'Pending technical', pending_tech,  '#3C3489', 'awaiting action')
+    #     + kpi('#D85A30', 'Pending lab',       pending_lab,   '#993C1D', 'awaiting action')
+    #     + kpi('#E24B4A', 'Max delay',         str(max_delay) + 'd', '#A32D2D', 'longest open case')
+    # )
 
     # ── Dept chart aria label ───────────────────────────────────────────────
     dept_aria = "Horizontal bar: Sales " + str(pending_sales) + " Technical " + str(pending_tech) + " Lab " + str(pending_lab)

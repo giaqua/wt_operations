@@ -1,3 +1,5 @@
+// In your report's JavaScript file (e.g., technical_questionnaire_summary_v3.js)
+
 frappe.query_reports["Technical Questionnaire Summary V4"] = {
     "filters": [
         {
@@ -26,6 +28,13 @@ frappe.query_reports["Technical Questionnaire Summary V4"] = {
             fieldtype: "Select",
             options: "\nSales\nTechnical\nLab",
             reqd: 0
+        },
+        {
+            fieldname: "group_by_month",
+            label: __("Group by Month"),
+            fieldtype: "Check",
+            default: 0,
+            description: __("Group data by year-month")
         }
     ],
 

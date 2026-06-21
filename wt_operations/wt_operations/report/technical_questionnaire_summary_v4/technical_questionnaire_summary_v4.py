@@ -8,11 +8,82 @@ from datetime import datetime, date
 def execute(filters=None):
     columns = get_columns(filters)
     data = get_data(filters)
-    report_summary, primitive_summary = get_summary_data(data, "pending_with")
-    chart = get_chart_data(report_summary)
-    message = get_dashboard_html(data, report_summary)
-    # return columns, data, message, chart, report_summary, primitive_summary
+    
+    # Group data by year-month if requested
+    if filters and filters.get("group_by_month"):
+        grouped_data = group_by_year_month(data)
+        report_summary, primitive_summary = get_summary_data(grouped_data, "pending_with")
+        chart = get_chart_data(report_summary)
+        message = get_dashboard_html(grouped_data, report_summary)
+    else:
+        report_summary, primitive_summary = get_summary_data(data, "pending_with")
+        chart = get_chart_data(report_summary)
+        message = get_dashboard_html(data, report_summary)
+    
     return columns, data, message
+
+
+def group_by_year_month(data):
+    """
+    Groups data by year-month based on tq_date.
+    Returns data with an additional grouping key.
+    """
+    grouped_data = []
+    
+    for row in data:
+        if row.get("tq_date"):
+            # Format date as YYYY-MM
+            month_key = row["tq_date"].strftime("%Y-%m")
+            row["month_group"] = month_key
+            grouped_data.append(row)
+        else:
+            row["month_group"] = "No Date"
+            grouped_data.append(row)
+    
+    return grouped_data
+
+
+def get_monthly_summary(data):
+    """
+    Returns summary statistics grouped by year-month.
+    """
+    monthly_stats = {}
+    
+    for row in data:
+        month = row.get("month_group", "Unknown")
+        if month not in monthly_stats:
+            monthly_stats[month] = {
+                "total": 0,
+                "completed": 0,
+                "pending_sales": 0,
+                "pending_tech": 0,
+                "pending_lab": 0,
+                "avg_delay": 0,
+                "delays": []
+            }
+        
+        monthly_stats[month]["total"] += 1
+        
+        pending_with = row.get("pending_with", "")
+        if pending_with == "Completed":
+            monthly_stats[month]["completed"] += 1
+        elif pending_with == "Sales":
+            monthly_stats[month]["pending_sales"] += 1
+        elif pending_with == "Technical":
+            monthly_stats[month]["pending_tech"] += 1
+        elif pending_with == "Lab":
+            monthly_stats[month]["pending_lab"] += 1
+        
+        if pending_with != "Completed":
+            monthly_stats[month]["delays"].append(row.get("delay_days", 0))
+    
+    # Calculate averages
+    for month, stats in monthly_stats.items():
+        if stats["delays"]:
+            stats["avg_delay"] = round(sum(stats["delays"]) / len(stats["delays"]), 1)
+        stats["completion_rate"] = round((stats["completed"] / stats["total"] * 100) if stats["total"] else 0, 1)
+    
+    return monthly_stats
 
 
 def get_dashboard_html(data, report_summary):
@@ -146,6 +217,17 @@ def get_dashboard_html(data, report_summary):
 #tqdash .tq-dstat-sub{font-size:10px;color:#9CA3AF;display:block}
 #tqdash .tq-hidden{display:none!important}
 
+/* Monthly Summary Table Styles */
+.tq-monthly-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+.tq-monthly-table th{background:#F9FAFB;text-align:left;padding:8px 12px;font-weight:600;color:#6B7280;border-bottom:2px solid #E5E7EB}
+.tq-monthly-table td{padding:8px 12px;border-bottom:1px solid #F3F4F6;color:#1F2937}
+.tq-monthly-table tr:hover{background:#FAFBFC}
+.tq-monthly-table .completed{color:#0F6E56;font-weight:600}
+.tq-monthly-table .pending-sales{color:#D16105;font-weight:600}
+.tq-monthly-table .pending-tech{color:#3C3489;font-weight:600}
+.tq-monthly-table .pending-lab{color:#993C1D;font-weight:600}
+.tq-monthly-card{margin-top:16px}
+
 /* Popup Styles */
 .tq-popup-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;justify-content:center;align-items:center;animation:fadeIn .3s}
 .tq-popup-overlay.active{display:flex}
@@ -262,6 +344,17 @@ def get_dashboard_html(data, report_summary):
         </div>
       </div>
 
+      <!-- Monthly Summary Card (spans full width) -->
+      <div class="tq-card wide tq-monthly-card">
+        <div class="tq-card-hdr">
+          <span class="tq-card-ttl">Monthly Summary</span>
+          <span class="tq-card-meta">by year-month</span>
+        </div>
+        <div id="tqMonthlySummary">
+          <!-- Monthly summary table will be injected here -->
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -350,6 +443,94 @@ if(dc){
   ctx.font='700 11px -apple-system,sans-serif';
   ctx.textAlign='center';ctx.textBaseline='middle';
   ctx.fillText(compPct+'%',cx,cy);
+}
+
+// Function to render monthly summary
+function renderMonthlySummary(data) {
+    var container = document.getElementById('tqMonthlySummary');
+    if (!container) return;
+    
+    // Group data by month
+    var monthlyData = {};
+    data.forEach(function(row) {
+        if (!row.tq_date) return;
+        var date = new Date(row.tq_date);
+        var monthKey = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0');
+        
+        if (!monthlyData[monthKey]) {
+            monthlyData[monthKey] = {
+                total: 0,
+                completed: 0,
+                pending_sales: 0,
+                pending_tech: 0,
+                pending_lab: 0,
+                delays: []
+            };
+        }
+        
+        monthlyData[monthKey].total += 1;
+        if (row.pending_with === 'Completed') {
+            monthlyData[monthKey].completed += 1;
+        } else if (row.pending_with === 'Sales') {
+            monthlyData[monthKey].pending_sales += 1;
+        } else if (row.pending_with === 'Technical') {
+            monthlyData[monthKey].pending_tech += 1;
+        } else if (row.pending_with === 'Lab') {
+            monthlyData[monthKey].pending_lab += 1;
+        }
+        
+        if (row.pending_with !== 'Completed' && row.delay_days) {
+            monthlyData[monthKey].delays.push(row.delay_days);
+        }
+    });
+    
+    // Sort months
+    var sortedMonths = Object.keys(monthlyData).sort();
+    
+    if (sortedMonths.length === 0) {
+        container.innerHTML = '<p style="color:#9CA3AF;font-size:13px;padding:12px;text-align:center;">No data available for monthly summary</p>';
+        return;
+    }
+    
+    // Build HTML table
+    var html = '<div class="tq-table-wrap"><table class="tq-monthly-table">';
+    html += '<thead><tr>' +
+        '<th>Month</th>' +
+        '<th>Total</th>' +
+        '<th class="completed">Completed</th>' +
+        '<th class="pending-sales">Pending Sales</th>' +
+        '<th class="pending-tech">Pending Technical</th>' +
+        '<th class="pending-lab">Pending Lab</th>' +
+        '<th>Avg Delay</th>' +
+        '<th>Completion Rate</th>' +
+        '</tr></thead><tbody>';
+    
+    sortedMonths.forEach(function(month) {
+        var stats = monthlyData[month];
+        var avgDelay = stats.delays.length ? (stats.delays.reduce(function(a,b) { return a + b; }, 0) / stats.delays.length).toFixed(1) : '0';
+        var completionRate = stats.total ? ((stats.completed / stats.total) * 100).toFixed(1) : '0';
+        
+        // Format month display
+        var dateParts = month.split('-');
+        var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        var displayMonth = monthNames[parseInt(dateParts[1]) - 1] + ' ' + dateParts[0];
+        
+        var rateColor = completionRate >= 70 ? '#0F6E56' : completionRate >= 40 ? '#D97706' : '#E24B4A';
+        
+        html += '<tr>' +
+            '<td><strong>' + displayMonth + '</strong></td>' +
+            '<td>' + stats.total + '</td>' +
+            '<td class="completed">' + stats.completed + '</td>' +
+            '<td class="pending-sales">' + stats.pending_sales + '</td>' +
+            '<td class="pending-tech">' + stats.pending_tech + '</td>' +
+            '<td class="pending-lab">' + stats.pending_lab + '</td>' +
+            '<td>' + avgDelay + 'd</td>' +
+            '<td><span style="color:' + rateColor + ';font-weight:600;">' + completionRate + '%</span></td>' +
+            '</tr>';
+    });
+    
+    html += '</tbody></table></div>';
+    container.innerHTML = html;
 }
 
 var vis={kpis:true,charts:true};
@@ -502,10 +683,14 @@ document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeTQPopup();
 });
 
+// Render monthly summary after everything is loaded
+renderMonthlySummary(tqData);
+
 })();
 </script>"""
     )
     return html
+
 
 def get_chart_data(report_summary):
     chart = {
@@ -635,14 +820,7 @@ def get_columns(filters):
             "width": 140,
             "precision": 1
         },
-        # {
-        #     "fieldname": "pending_operations",
-        #     "label": "Pending Operations",
-        #     "fieldtype": "Percent",
-        #     "width": 140,
-        #     "precision": 1
-        # },
-         # Add action button column
+        # Add action button column
         {
             "fieldname": "actions",
             "label": "Actions",

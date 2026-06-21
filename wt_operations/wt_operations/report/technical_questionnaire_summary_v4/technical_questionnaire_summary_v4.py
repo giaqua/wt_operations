@@ -1,6 +1,3 @@
-# Copyright (c) 2025, Takamol and contributors
-# For license information, please see license.txt
-
 import frappe
 from datetime import datetime, date
 
@@ -15,12 +12,293 @@ def execute(filters=None):
         report_summary, primitive_summary = get_summary_data(grouped_data, "pending_with")
         chart = get_chart_data(report_summary)
         message = get_dashboard_html(grouped_data, report_summary)
+        
+        # Add grouping by month for the report data
+        if filters.get("group_by_month"):
+            columns = get_columns_with_month_grouping(filters)
+            data = get_grouped_by_month_data(grouped_data)
     else:
         report_summary, primitive_summary = get_summary_data(data, "pending_with")
         chart = get_chart_data(report_summary)
         message = get_dashboard_html(data, report_summary)
     
     return columns, data, message
+
+
+def get_grouped_by_month_data(data):
+    """
+    Groups data by year-month similar to trial balance.
+    Each month is a group header with TQs listed under it.
+    """
+    grouped_data = []
+    
+    # Group data by month
+    months = {}
+    for row in data:
+        month_key = row.get("month_group", "Unknown")
+        if month_key not in months:
+            months[month_key] = {
+                "label": month_key,
+                "items": [],
+                "total_count": 0,
+                "total_achieved": 0,
+                "total_delay": 0,
+                "completed_count": 0,
+                "pending_count": 0
+            }
+        
+        months[month_key]["items"].append(row)
+        months[month_key]["total_count"] += 1
+        months[month_key]["total_achieved"] += row.get("achieved_operations", 0)
+        months[month_key]["total_delay"] += row.get("delay_days", 0)
+        
+        if row.get("pending_with") == "Completed":
+            months[month_key]["completed_count"] += 1
+        else:
+            months[month_key]["pending_count"] += 1
+    
+    # Sort months chronologically
+    sorted_months = sorted(months.keys())
+    
+    # Build grouped data with month headers and items
+    for month_key in sorted_months:
+        month_data = months[month_key]
+        
+        # Add month header row
+        avg_achieved = round(month_data["total_achieved"] / month_data["total_count"], 1) if month_data["total_count"] > 0 else 0
+        avg_delay = round(month_data["total_delay"] / month_data["total_count"], 1) if month_data["total_count"] > 0 else 0
+        
+        # Format month display
+        month_display = format_month_display(month_key)
+        
+        header_row = {
+            "month_group": month_key,
+            "month_display": month_display,
+            "is_group": True,
+            "indent": 0,
+            "total_count": month_data["total_count"],
+            "completed_count": month_data["completed_count"],
+            "pending_count": month_data["pending_count"],
+            "avg_achieved": avg_achieved,
+            "avg_delay": avg_delay,
+            "lead_name": "",
+            "technical_questionnaire": "",
+            "tq_date": "",
+            "achieved_operations": "",
+            "pending_with": "",
+            "delay_days": "",
+            "actions": ""
+        }
+        grouped_data.append(header_row)
+        
+        # Add individual TQs under the month
+        for item in month_data["items"]:
+            item["indent"] = 1
+            item["is_group"] = False
+            item["month_display"] = ""
+            grouped_data.append(item)
+    
+    return grouped_data
+
+
+def format_month_display(month_key):
+    """Format YYYY-MM to display as 'January 2024'"""
+    try:
+        date_parts = month_key.split('-')
+        if len(date_parts) == 2:
+            year = date_parts[0]
+            month_num = int(date_parts[1])
+            month_names = ['January', 'February', 'March', 'April', 'May', 'June', 
+                          'July', 'August', 'September', 'October', 'November', 'December']
+            return f"{month_names[month_num - 1]} {year}"
+    except:
+        pass
+    return month_key
+
+
+def get_columns_with_month_grouping(filters=None):
+    """
+    Returns columns with month grouping support (indent and expand/collapse)
+    """
+    columns = [
+        {
+            "fieldname": "month_display",
+            "label": "Month / TQ",
+            "fieldtype": "Data",
+            "width": 160,
+        },
+        {
+            "fieldname": "technical_questionnaire",
+            "label": "Technical Questionnaire",
+            "fieldtype": "Link",
+            "options": "WWTP Technical Questionnaire",
+            "width": 180,
+        },
+        {
+            "fieldname": "lead_name",
+            "label": "Lead",
+            "fieldtype": "Link",
+            "options": "Lead",
+            "width": 140,
+        },
+        {
+            "fieldname": "wtq_workflow_state",
+            "label": "Workflow State",
+            "fieldtype": "Data",
+            "width": 180,
+        },
+        {
+            "fieldname": "tq_date",
+            "label": "Date",
+            "fieldtype": "Date",
+            "width": 140,
+        },
+        {
+            "fieldname": "achieved_operations",
+            "label": "Achieved %",
+            "fieldtype": "Percent",
+            "width": 120,
+            "precision": 1
+        },
+        {
+            "fieldname": "pending_with",
+            "label": "Pending With",
+            "fieldtype": "Data",
+            "width": 170
+        },
+        {
+            "fieldname": "delay_days",
+            "label": "Delay Days",
+            "fieldtype": "Int",
+            "width": 100
+        },
+        {
+            "fieldname": "actions",
+            "label": "Actions",
+            "fieldtype": "HTML",
+            "width": 120,
+        },
+    ]
+    
+    department = filters.get("department") if filters else None
+    if department:
+        if department == "Sales":
+            columns = [col for col in columns if col["fieldname"] not in ["lab_test_result", "technical_proposal"]]
+        elif department == "Technical":
+            columns = [col for col in columns if col["fieldname"] not in ["visit_request", "site_visit", "water_sample", "lab_test_result", "customer_proposal", "request_for_proposal"]]
+        elif department == "Lab":
+            columns = [col for col in columns if col["fieldname"] not in ["visit_request", "site_visit", "water_sample", "technical_proposal", "customer_proposal", "request_for_proposal"]]
+    
+    return columns
+
+
+def get_columns(filters):
+    columns = [
+        {
+            "fieldname": "lead_name",
+            "label": "Lead",
+            "fieldtype": "Link",
+            "options": "Lead",
+            "width": 140,
+        },
+        {
+            "fieldname": "technical_questionnaire",
+            "label": "Technical Questionnaire",
+            "fieldtype": "Link",
+            "options": "WWTP Technical Questionnaire",
+            "width": 180,
+        },
+        {
+            "fieldname": "wtq_workflow_state",
+            "label": "Workflow State",
+            "fieldtype": "Data",
+            "width": 180,
+        },
+        {
+            "fieldname": "tq_date",
+            "label": "Date",
+            "fieldtype": "Date",
+            "width": 140,
+        },
+        {
+            "fieldname": "achieved_operations",
+            "label": "Achieved Operations",
+            "fieldtype": "Percent",
+            "width": 140,
+            "precision": 1
+        },
+        {
+            "fieldname": "actions",
+            "label": "Actions",
+            "fieldtype": "HTML",
+            "width": 120,
+        },
+        {
+            "fieldname": "days_count",
+            "label": "Days Count",
+            "fieldtype": "Int",
+            "width": 80
+        },
+        {
+            "fieldname": "delay_days",
+            "label": "Delay Days",
+            "fieldtype": "Int",
+            "width": 80
+        },
+        {
+            "fieldname": "pending_with",
+            "label": "Pending With",
+            "fieldtype": "Data",
+            "width": 140
+        },
+        {
+            "fieldname": "visit_request",
+            "label": "Visit Request(Sales)",
+            "fieldtype": "Int",
+            "width": 140,
+        },
+        {
+            "fieldname": "site_visit",
+            "label": "Site Visit(Sales)",
+            "fieldtype": "Int",
+            "width": 140,
+        },
+        {
+            "fieldname": "water_sample",
+            "label": "Water Sample(Sales)",
+            "fieldtype": "Int",
+            "width": 140,
+        },
+        {
+            "fieldname": "lab_test_result",
+            "label": "Lab Test Result(Lab)",
+            "fieldtype": "Int",
+            "width": 140,
+        },
+        {
+            "fieldname": "technical_proposal",
+            "label": "Technical Proposal(Technical)",
+            "fieldtype": "Int",
+            "width": 140,
+        },
+        {
+            "fieldname": "customer_proposal",
+            "label": "Customer Proposal(Sales)",
+            "fieldtype": "Int",
+            "width": 140,
+        },
+    ]
+    
+    department = filters.get("department") if filters else None
+    if department:
+        if department == "Sales":
+            columns = [col for col in columns if col["fieldname"] not in ["lab_test_result", "technical_proposal"]]
+        elif department == "Technical":
+            columns = [col for col in columns if col["fieldname"] not in ["visit_request", "site_visit", "water_sample", "lab_test_result", "customer_proposal", "request_for_proposal"]]
+        elif department == "Lab":
+            columns = [col for col in columns if col["fieldname"] not in ["visit_request", "site_visit", "water_sample", "technical_proposal", "customer_proposal", "request_for_proposal"]]
+    
+    return columns
 
 
 def group_by_year_month(data):
@@ -37,54 +315,10 @@ def group_by_year_month(data):
             row["month_group"] = month_key
             grouped_data.append(row)
         else:
-            row["month_group"] = "No Date"
+            row["month_group"] = "Unknown"
             grouped_data.append(row)
     
     return grouped_data
-
-
-def get_monthly_summary(data):
-    """
-    Returns summary statistics grouped by year-month.
-    """
-    monthly_stats = {}
-    
-    for row in data:
-        month = row.get("month_group", "Unknown")
-        if month not in monthly_stats:
-            monthly_stats[month] = {
-                "total": 0,
-                "completed": 0,
-                "pending_sales": 0,
-                "pending_tech": 0,
-                "pending_lab": 0,
-                "avg_delay": 0,
-                "delays": []
-            }
-        
-        monthly_stats[month]["total"] += 1
-        
-        pending_with = row.get("pending_with", "")
-        if pending_with == "Completed":
-            monthly_stats[month]["completed"] += 1
-        elif pending_with == "Sales":
-            monthly_stats[month]["pending_sales"] += 1
-        elif pending_with == "Technical":
-            monthly_stats[month]["pending_tech"] += 1
-        elif pending_with == "Lab":
-            monthly_stats[month]["pending_lab"] += 1
-        
-        if pending_with != "Completed":
-            monthly_stats[month]["delays"].append(row.get("delay_days", 0))
-    
-    # Calculate averages
-    for month, stats in monthly_stats.items():
-        if stats["delays"]:
-            stats["avg_delay"] = round(sum(stats["delays"]) / len(stats["delays"]), 1)
-        stats["completion_rate"] = round((stats["completed"] / stats["total"] * 100) if stats["total"] else 0, 1)
-    
-    return monthly_stats
-
 
 def get_dashboard_html(data, report_summary):
     total         = len(data)
@@ -785,115 +1019,115 @@ def get_summary_data(data, group_by):
     return all_summary,(total_count)
 
 
-def get_columns(filters):
-    columns = [
-        {
-            "fieldname": "lead_name",
-            "label": "Lead",
-            "fieldtype": "Link",
-            "options": "Lead",
-            "width": 140,
-        },
-        {
-            "fieldname": "technical_questionnaire",
-            "label": """Technical Questionnaire""",
-            "fieldtype": "Link",
-            "options": "WWTP Technical Questionnaire",
-            "width": 180,
-        },
-        {
-            "fieldname": "wtq_workflow_state",
-            "label": "Workflow State",
-            "fieldtype": "Data",
-            "width": 180,
-        },
-        {
-            "fieldname": "tq_date",
-            "label": "Date",
-            "fieldtype": "Date",
-            "width": 140,
-        },
-        {
-            "fieldname": "achieved_operations",
-            "label": "Achieved Operations",
-            "fieldtype": "Percent",
-            "width": 140,
-            "precision": 1
-        },
-        # Add action button column
-        {
-            "fieldname": "actions",
-            "label": "Actions",
-            "fieldtype": "HTML",
-            "width": 120,
-        },
-        {
-            "fieldname": "days_count",
-            "label": "Days Count",
-            "fieldtype": "Int",
-            "width": 80
-        },
-        {
-            "fieldname": "delay_days",
-            "label": "Delay Days",
-            "fieldtype": "Int",
-            "width": 80
-        },
-        {
-            "fieldname": "pending_with",
-            "label": "Pending With",
-            "fieldtype": "Data",
-            "width": 140
-        },
-        {
-            "fieldname": "visit_request",
-            "label": "Visit Request(Sales)",
-            "fieldtype": "Int",
-            "width": 140,
-        },
-        {
-            "fieldname": "site_visit",
-            "label": "Site Visit(Sales)",
-            "fieldtype": "Int",
-            "width": 140,
-        },
-        {
-            "fieldname": "water_sample",
-            "label": "Water Sample(Sales)",
-            "fieldtype": "Int",
-            "width": 140,
-        },
-        {
-            "fieldname": "lab_test_result",
-            "label": "Lab Test Result(Lab)",
-            "fieldtype": "Int",
-            "width": 140,
-        },
-        {
-            "fieldname": "technical_proposal",
-            "label": "Technical Proposal(Technical)",
-            "fieldtype": "Int",
-            "width": 140,
-        },
-        {
-            "fieldname": "customer_proposal",
-            "label": "Customer Proposal(Sales)",
-            "fieldtype": "Int",
-            "width": 140,
-        },
+# def get_columns(filters):
+#     columns = [
+#         {
+#             "fieldname": "lead_name",
+#             "label": "Lead",
+#             "fieldtype": "Link",
+#             "options": "Lead",
+#             "width": 140,
+#         },
+#         {
+#             "fieldname": "technical_questionnaire",
+#             "label": """Technical Questionnaire""",
+#             "fieldtype": "Link",
+#             "options": "WWTP Technical Questionnaire",
+#             "width": 180,
+#         },
+#         {
+#             "fieldname": "wtq_workflow_state",
+#             "label": "Workflow State",
+#             "fieldtype": "Data",
+#             "width": 180,
+#         },
+#         {
+#             "fieldname": "tq_date",
+#             "label": "Date",
+#             "fieldtype": "Date",
+#             "width": 140,
+#         },
+#         {
+#             "fieldname": "achieved_operations",
+#             "label": "Achieved Operations",
+#             "fieldtype": "Percent",
+#             "width": 140,
+#             "precision": 1
+#         },
+#         # Add action button column
+#         {
+#             "fieldname": "actions",
+#             "label": "Actions",
+#             "fieldtype": "HTML",
+#             "width": 120,
+#         },
+#         {
+#             "fieldname": "days_count",
+#             "label": "Days Count",
+#             "fieldtype": "Int",
+#             "width": 80
+#         },
+#         {
+#             "fieldname": "delay_days",
+#             "label": "Delay Days",
+#             "fieldtype": "Int",
+#             "width": 80
+#         },
+#         {
+#             "fieldname": "pending_with",
+#             "label": "Pending With",
+#             "fieldtype": "Data",
+#             "width": 140
+#         },
+#         {
+#             "fieldname": "visit_request",
+#             "label": "Visit Request(Sales)",
+#             "fieldtype": "Int",
+#             "width": 140,
+#         },
+#         {
+#             "fieldname": "site_visit",
+#             "label": "Site Visit(Sales)",
+#             "fieldtype": "Int",
+#             "width": 140,
+#         },
+#         {
+#             "fieldname": "water_sample",
+#             "label": "Water Sample(Sales)",
+#             "fieldtype": "Int",
+#             "width": 140,
+#         },
+#         {
+#             "fieldname": "lab_test_result",
+#             "label": "Lab Test Result(Lab)",
+#             "fieldtype": "Int",
+#             "width": 140,
+#         },
+#         {
+#             "fieldname": "technical_proposal",
+#             "label": "Technical Proposal(Technical)",
+#             "fieldtype": "Int",
+#             "width": 140,
+#         },
+#         {
+#             "fieldname": "customer_proposal",
+#             "label": "Customer Proposal(Sales)",
+#             "fieldtype": "Int",
+#             "width": 140,
+#         },
        
-    ]
+#     ]
     
-    department = filters.get("department")
-    if department:
-        if department == "Sales":
-            columns = [col for col in columns if col["fieldname"] not in ["lab_test_result", "technical_proposal"]]
-        elif department == "Technical":
-            columns = [col for col in columns if col["fieldname"] not in ["visit_request", "site_visit", "water_sample", "lab_test_result", "customer_proposal", "request_for_proposal"]]
-        elif department == "Lab":
-            columns = [col for col in columns if col["fieldname"] not in ["visit_request", "site_visit", "water_sample", "technical_proposal", "customer_proposal", "request_for_proposal"]]
+#     department = filters.get("department")
+#     if department:
+#         if department == "Sales":
+#             columns = [col for col in columns if col["fieldname"] not in ["lab_test_result", "technical_proposal"]]
+#         elif department == "Technical":
+#             columns = [col for col in columns if col["fieldname"] not in ["visit_request", "site_visit", "water_sample", "lab_test_result", "customer_proposal", "request_for_proposal"]]
+#         elif department == "Lab":
+#             columns = [col for col in columns if col["fieldname"] not in ["visit_request", "site_visit", "water_sample", "technical_proposal", "customer_proposal", "request_for_proposal"]]
     
-    return columns
+#     return columns
 
 
 def get_data(filters):    

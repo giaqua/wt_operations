@@ -1,5 +1,3 @@
-// In your report's JavaScript file (e.g., technical_questionnaire_summary_v3.js)
-
 frappe.query_reports["Technical Questionnaire Summary V4"] = {
     "filters": [
         {
@@ -39,6 +37,71 @@ frappe.query_reports["Technical Questionnaire Summary V4"] = {
     ],
 
     "formatter": function(value, row, column, data, default_formatter) {
+        // If it's a month group row
+		
+        if (row && data.is_group) {
+            if (column.fieldname === "month_display") {
+                // Calculate statistics for the month
+                const total = data.total_count || 0;
+                const completed = data.completed_count || 0;
+                const pending = data.pending_count || 0;
+                const avgAchieved = data.avg_achieved || 0;
+                const avgDelay = data.avg_delay || 0;
+                
+                // Create progress bar for completion
+                const completionPct = total > 0 ? Math.round((completed / total) * 100) : 0;
+                const barColor = completionPct >= 70 ? '#1D9E75' : completionPct >= 40 ? '#D97706' : '#E24B4A';
+                
+                // Format with month name and stats
+				console.log("row", row,"value", value,"total", total,"completed", completed,"pending", pending,"avgAchieved", avgAchieved,"avgDelay", avgDelay,"completionPct", completionPct);
+                let html = `<div style="display:flex;align-items:center;gap:12px;padding:4px 0;">`;
+                html += `<span style="font-weight:700;font-size:14px;color:#1F2937;">📅 ${value}</span>`;
+                html += `<span style="background:#F3F4F6;padding:2px 12px;border-radius:12px;font-size:11px;font-weight:600;color:#6B7280;">
+                            ${total} TQs
+                        </span>`;
+                html += `<span style="background:#D1FAE5;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;color:#065F46;">
+                            ✓ ${completed} Completed
+                        </span>`;
+                if (pending > 0) {
+                    html += `<span style="background:#FEF3C7;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;color:#92400E;">
+                                ⏳ ${pending} Pending
+                            </span>`;
+                }
+                html += `<span style="background:#EFF6FF;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;color:#1D4ED8;">
+                            Avg ${avgAchieved}%
+                        </span>`;
+                html += `<span style="background:#FEE2E2;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:600;color:#991B1B;">
+                            ⏱ ${avgDelay}d avg
+                        </span>`;
+                html += `<div style="flex:1;min-width:100px;background:#F3F4F6;border-radius:4px;height:6px;overflow:hidden;margin-left:4px;">
+                            <div style="width:${completionPct}%;height:100%;background:${barColor};border-radius:4px;transition:width 0.5s;"></div>
+                        </div>`;
+                html += `<span style="font-size:11px;font-weight:600;color:${barColor};">${completionPct}%</span>`;
+                html += `</div>`;
+                return html;
+            }
+            // For other columns in group row, return empty or summary
+            if (column.fieldname === "actions") {
+                return `<span style="color:#9CA3AF;font-size:11px;">📊 ${data.total_count || 0} items</span>`;
+            }
+            if (column.fieldname === "pending_with") {
+                const completed = data.completed_count || 0;
+                const pending = data.pending_count || 0;
+                return `<span style="color:#D16105;font-weight:600;">${pending} Pending</span> / <span style="color:#0F6E56;font-weight:600;">${completed} Completed</span>`;
+            }
+            return '';
+        }
+
+        // For detail rows (individual TQs)
+        if (row && !row.is_group) {
+            if (column.fieldname === "month_display") {
+                // Show indented technical questionnaire name
+                const indent = row.indent || 0;
+                const padding = indent * 20;
+                return `<span style="padding-left:${padding}px;display:inline-block;">📄 ${row.technical_questionnaire || ''}</span>`;
+            }
+        }
+
         // Pending with — color-coded badge
         if (column.fieldname === "pending_with" && value) {
             const map = {

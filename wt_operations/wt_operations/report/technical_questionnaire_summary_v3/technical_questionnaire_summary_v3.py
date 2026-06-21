@@ -467,6 +467,12 @@ def get_columns(filters):
 			"width": 180,
 		},
 		{
+			"fieldname": "tq_date",
+			"label": "Date",
+			"fieldtype": "Date",
+			"width": 140,
+		},
+		{
 			"fieldname": "achieved_operations",
 			"label": "Achieved Operations",
 			"fieldtype": "Percent",

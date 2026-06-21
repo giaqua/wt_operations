@@ -17,7 +17,8 @@ frappe.query_reports["Technical Questionnaire Summary V3"] = {
         {
             fieldname: "hide_completed_operations",
             label: __("Hide Completed Operations"),
-            fieldtype: "Check"
+            fieldtype: "Check",
+            default: 1
         },
         {
             fieldname: "department",

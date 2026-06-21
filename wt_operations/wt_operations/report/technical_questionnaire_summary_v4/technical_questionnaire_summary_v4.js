@@ -31,7 +31,7 @@ frappe.query_reports["Technical Questionnaire Summary V4"] = {
             fieldname: "group_by_month",
             label: __("Group by Month"),
             fieldtype: "Check",
-            default: 0,
+            default: 1,
             description: __("Group data by year-month")
         }
     ],

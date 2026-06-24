@@ -1060,3 +1060,131 @@ def create_journal_entry_for_tool(tool_name):
     """Create journal entry for a specific tool"""
     tool = frappe.get_doc('Employee Project Allocation Tool', tool_name)
     return tool.create_journal_entry_from_allocations()
+
+
+
+
+
+# ===================
+# Add this to: wt_operations/wt_operations/doctype/employee_project_allocation_tool/employee_project_allocation_tool.py
+# (alongside your existing download_allocation_template / process_allocation_excel / delete_all_allocations methods)
+#
+# Make sure `import re` and `import frappe` exist at the top of that file.
+
+import re
+
+
+@frappe.whitelist()
+def get_dashboard_data(tool_name):
+    """
+    Returns everything the dashboard needs in ONE server round-trip:
+    - allocations + their child rows (1 query instead of N)
+    - employee details for all involved employees (1 query instead of N)
+    - project details/shortcuts for all involved projects (1 query instead of P)
+
+    Replaces the old client-side pattern of 3N + P sequential frappe.call()/
+    frappe.db.get_value() awaits with a single call.
+    """
+
+    allocations = frappe.get_all(
+        "Employee Project Allocation",
+        filters={"docstatus": 0, "employee_project_allocation_tool": tool_name},
+        fields=["name", "employee", "employee_name", "from_date", "to_date", "total_percentage"],
+    )
+
+    if not allocations:
+        return {"employees": [], "projects": [], "activities": [], "project_details": {}}
+
+    allocation_names = [a.name for a in allocations]
+    employee_ids = list({a.employee for a in allocations if a.employee})
+
+    # Resolve the child table doctype dynamically (no hardcoded/guessed name)
+    meta = frappe.get_meta("Employee Project Allocation")
+    child_field = meta.get_field("employee_project_allocation_details")
+    child_doctype = child_field.options
+
+    # 1 query: all child rows for all allocations at once
+    all_details = frappe.get_all(
+        child_doctype,
+        filters={"parent": ["in", allocation_names]},
+        fields=["parent", "project", "activity", "percentage"],
+    )
+
+    details_by_parent = {}
+    project_ids = set()
+    activity_set = set()
+    for d in all_details:
+        details_by_parent.setdefault(d.parent, []).append(d)
+        if d.project:
+            project_ids.add(d.project)
+        if d.activity:
+            activity_set.add(d.activity)
+
+    # 1 query: all employees at once
+    employee_info = {}
+    if employee_ids:
+        emp_rows = frappe.get_all(
+            "Employee",
+            filters={"name": ["in", employee_ids]},
+            fields=["name", "employee_name", "department", "designation"],
+        )
+        employee_info = {e.name: e for e in emp_rows}
+
+    # 1 query: all projects at once
+    project_details = {}
+    if project_ids:
+        proj_rows = frappe.get_all(
+            "Project",
+            filters={"name": ["in", list(project_ids)]},
+            fields=["name", "project_name", "custom_project_shortcut"],
+        )
+        for p in proj_rows:
+            shortcut = p.custom_project_shortcut or _generate_shortcut(p.project_name or p.name)
+            project_details[p.name] = {
+                "name": p.name,
+                "project_name": p.project_name or p.name,
+                "shortcut": shortcut,
+            }
+
+    # Fallback entries for any project referenced but not found (e.g. deleted/renamed)
+    for pid in project_ids:
+        if pid not in project_details:
+            project_details[pid] = {
+                "name": pid,
+                "project_name": pid,
+                "shortcut": _generate_shortcut(pid),
+            }
+
+    employees = []
+    for a in allocations:
+        emp = employee_info.get(a.employee) or {}
+        rows = details_by_parent.get(a.name, [])
+        employees.append({
+            "employee": a.employee,
+            "employee_name": a.employee_name or emp.get("employee_name") or a.employee,
+            "department": emp.get("department") or "N/A",
+            "designation": emp.get("designation") or "N/A",
+            "allocations": [
+                {"project": r.project, "activity": r.activity, "percentage": r.percentage}
+                for r in rows
+            ],
+            "total_percentage": a.total_percentage or 0,
+            "allocation_name": a.name,
+        })
+
+    return {
+        "employees": employees,
+        "projects": sorted(project_ids),
+        "activities": sorted(activity_set),
+        "project_details": project_details,
+    }
+
+
+def _generate_shortcut(name):
+    if not name:
+        return "N/A"
+    words = re.split(r"[\s\-_]+", name)
+    words = [w for w in words if w]
+    if len(words) <= 1:
+        return name[:4].upper()
+    return "".join(w[0] for w in words).upper()[:4]

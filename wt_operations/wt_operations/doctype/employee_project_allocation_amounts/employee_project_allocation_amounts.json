@@ -10,7 +10,10 @@
   "account",
   "amount",
   "salary_component",
+  "column_break_sahn",
   "employee_count",
+  "activity",
+  "section_break_eeqh",
   "allocation_details"
  ],
  "fields": [
@@ -49,13 +52,27 @@
    "fieldname": "allocation_details",
    "fieldtype": "Text",
    "label": "Allocation Details"
+  },
+  {
+   "fieldname": "column_break_sahn",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "activity",
+   "fieldtype": "Select",
+   "label": "Activity",
+   "options": "\nOperation\nInstallation"
+  },
+  {
+   "fieldname": "section_break_eeqh",
+   "fieldtype": "Section Break"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2026-06-03 14:32:46.913959",
+ "modified": "2026-06-24 10:38:01.537182",
  "modified_by": "Administrator",
  "module": "WT Operations",
  "name": "Employee Project Allocation Amounts",

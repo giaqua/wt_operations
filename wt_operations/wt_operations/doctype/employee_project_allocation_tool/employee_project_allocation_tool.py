@@ -40,7 +40,7 @@ class EmployeeProjectAllocationTool(Document):
             frappe.throw(_("No employee allocations found for this tool"))
         
         # Process each employee
-        all_project_allocations = {}  # Structure: {project: {salary_component: total_amount}}
+        all_project_allocations = {}
         
         for emp_alloc in employee_allocations:
             # Get last salary slip before or on target date
@@ -52,7 +52,7 @@ class EmployeeProjectAllocationTool(Document):
                 ), alert=True)
                 continue
             
-            # Get employee's allocation percentages
+            # Get employee's allocation percentages with activity
             employee_percentages = self.get_employee_allocation_percentages(emp_alloc.name)
             
             if not employee_percentages:
@@ -65,14 +65,18 @@ class EmployeeProjectAllocationTool(Document):
             for component in components:
                 for project_percentage in employee_percentages:
                     project = project_percentage['project']
+                    activity = project_percentage['activity']
                     percentage = project_percentage['percentage']
                     allocated_amount = (component['amount'] * percentage) / 100
                     
                     if allocated_amount > 0:
-                        key = f"{project}_{component['salary_component']}"
+                        # Include activity in the key to separate Operation and Installation
+                        key = f"{project}_{activity}_{component['salary_component']}"
+                        
                         if key not in all_project_allocations:
                             all_project_allocations[key] = {
                                 'project': project,
+                                'activity': activity,  # Added activity field
                                 'salary_component': component['salary_component'],
                                 'account': component.get('account'),
                                 'amount': 0,
@@ -85,6 +89,7 @@ class EmployeeProjectAllocationTool(Document):
                         all_project_allocations[key]['details'].append({
                             'employee': emp_alloc.employee,
                             'employee_name': emp_alloc.employee_name,
+                            'activity': activity,
                             'percentage': percentage,
                             'component_amount': component['amount'],
                             'allocated_amount': allocated_amount
@@ -94,6 +99,7 @@ class EmployeeProjectAllocationTool(Document):
         for key, data in all_project_allocations.items():
             self.append('employee_project_allocation_amounts', {
                 'project': data['project'],
+                'activity': data.get('activity'),  # Include activity in child table
                 'salary_component': data['salary_component'],
                 'account': data['account'],
                 'amount': data['amount'],
@@ -104,7 +110,8 @@ class EmployeeProjectAllocationTool(Document):
         self.save()
         return {
             'status': 'success',
-            'message': f"Processed {len(all_project_allocations)} allocation entries"
+            'message': f"Processed {len(all_project_allocations)} allocation entries",
+            'allocations': all_project_allocations
         }
     
     def get_last_salary_slip(self, employee, to_date):
@@ -125,7 +132,7 @@ class EmployeeProjectAllocationTool(Document):
         return None
     
     def get_employee_allocation_percentages(self, allocation_name):
-        """Get project allocation percentages for an employee"""
+        """Get project allocation percentages for an employee with activity"""
         allocation = frappe.get_doc('Employee Project Allocation', allocation_name)
         percentages = []
         
@@ -133,7 +140,7 @@ class EmployeeProjectAllocationTool(Document):
             if detail.percentage and detail.percentage > 0:
                 percentages.append({
                     'project': detail.project,
-                    'activity': detail.activity,
+                    'activity': detail.activity,  # Include activity
                     'percentage': detail.percentage
                 })
         
@@ -148,7 +155,8 @@ class EmployeeProjectAllocationTool(Document):
         for earning in salary_slip.earnings:
             if earning.amount and earning.amount > 0:
                 # Get the account from salary component
-                account = frappe.db.get_all('Salary Component Account', {'parent': earning.salary_component}, 'account')[0].account
+                account = frappe.db.get_all('Salary Component Account', {'parent': earning.salary_component}, 'account')
+                account = account[0].account if account else None
                 
                 components.append({
                     'salary_component': earning.salary_component,
@@ -160,7 +168,8 @@ class EmployeeProjectAllocationTool(Document):
         # Optionally include deductions (with negative sign)
         for deduction in salary_slip.deductions:
             if deduction.amount and deduction.amount > 0:
-                account = frappe.db.get_all('Salary Component Account', {'parent': deduction.salary_component}, 'account')[0].account
+                account = frappe.db.get_all('Salary Component Account', {'parent': deduction.salary_component}, 'account')
+                account = account[0].account if account else None
                 
                 components.append({
                     'salary_component': deduction.salary_component,
@@ -194,6 +203,9 @@ class EmployeeProjectAllocationTool(Document):
         # Create entries from each row in employee_project_allocation_amounts
         for alloc in self.employee_project_allocation_amounts:
             if alloc.amount and alloc.amount > 0:
+                # Build project name with activity
+                project_display = f"{alloc.project} ({alloc.activity})" if alloc.activity else alloc.project
+                
                 # Debit entry using account, amount, project, and cost center from child table
                 je.append("accounts", {
                     "account": alloc.account,
@@ -203,10 +215,7 @@ class EmployeeProjectAllocationTool(Document):
                     "party_type": None,
                     "party": None,
                     "project": alloc.project,
-                    # "reference_type": self.doctype,
-                    # "reference_name": self.name,
-                    # "reference_detail": alloc.name,
-                    "user_remark": f"Debit: {alloc.salary_component} - {alloc.employee_count} employees - Project: {alloc.project}"
+                    "user_remark": f"Debit: {alloc.salary_component} - {alloc.activity} - {alloc.employee_count} employees"
                 })
                 
                 # Credit entry (matching amount) with project "All-Project" and same cost center
@@ -214,14 +223,10 @@ class EmployeeProjectAllocationTool(Document):
                     "account": alloc.account,
                     "debit_in_account_currency": 0,
                     "credit_in_account_currency": alloc.amount,
-                    # "cost_center": self.get_project_cost_center(alloc.project),
                     "party_type": None,
                     "party": None,
-                    "project": self.payroll_project,
-                    # "reference_type": self.doctype,
-                    # "reference_name": self.name,
-                    # "reference_detail": alloc.name,
-                    "user_remark": f"Credit: {alloc.salary_component} - {alloc.employee_count} employees - All-Project"
+                    "project": self.payroll_project if hasattr(self, 'payroll_project') else "All-Project",
+                    "user_remark": f"Credit: {alloc.salary_component} - {alloc.activity} - {alloc.employee_count} employees"
                 })
         
         # Validate that debits equal credits
@@ -244,6 +249,16 @@ class EmployeeProjectAllocationTool(Document):
             "entries_count": len(self.employee_project_allocation_amounts) * 2
         }
     
+    def get_project_cost_center(self, project_name):
+        """Get cost center for a project"""
+        if project_name:
+            project = frappe.get_doc("Project", project_name)
+            if project.cost_center:
+                return project.cost_center
+        
+        # Return default cost center
+        return frappe.db.get_single_value("Global Defaults", "cost_center")
+
     def get_employee_cost_center(self, employee):
         """Get employee's cost center from payroll"""
         cost_center = frappe.db.get_value('Employee', employee, 'payroll_cost_center')
@@ -264,16 +279,7 @@ class EmployeeProjectAllocationTool(Document):
         
         return cost_center
     
-    def get_project_cost_center(self, project_name):
-        """Get cost center for a project"""
-        if project_name:
-            project = frappe.get_doc("Project", project_name)
-            if project.cost_center:
-                return project.cost_center
-        
-        # Return default cost center
-        return frappe.db.get_single_value("Global Defaults", "cost_center")
-    
+   
     def get_cost_center(self):
         """Get default cost center"""
         return frappe.db.get_single_value("Global Defaults", "cost_center")
@@ -295,29 +301,112 @@ class EmployeeProjectAllocationTool(Document):
         return salary_payable_account
     
 
-@frappe.whitelist()
-def get_child_table_data(parent_doctype, child_table_fieldname):
-    """
-    Get child table data for a parent document
-    """
-    try:
-        # Get the parent document
-        parent_doc = frappe.get_doc("Employee Project Allocation", parent_doctype)
+     # ... existing methods ...
+    
+    @frappe.whitelist()
+    def duplicate_tool_with_allocations(self, new_department=None, new_from_date=None, new_to_date=None):
+        """
+        Duplicate the current tool with all its employee project allocations
+        """
+        try:
+            # Create new tool
+            new_tool = frappe.copy_doc(self)
+            # new_tool.name = None  # Let system generate new name
+            
+            # Update fields if provided
+            if new_department:
+                new_tool.department = new_department
+            if new_from_date:
+                new_tool.from_date = getdate(new_from_date)
+            if new_to_date:
+                new_tool.to_date = getdate(new_to_date)
+            
+            # Clear processed allocations if they exist
+            new_tool.set('employee_project_allocation_amounts', [])
+            new_tool.last_journal_entry = None
+            
+            # Insert new tool
+            new_tool.insert()
+            new_tool.save()
+            
+            # Now duplicate all employee allocations linked to this tool
+            self.duplicate_employee_allocations(new_tool.name, new_from_date, new_to_date)
+            
+            frappe.db.commit()
+            
+            return {
+                'status': 'success',
+                'new_tool_name': new_tool.name,
+                'message': f'Tool duplicated successfully: {new_tool.name}'
+            }
+            
+        except Exception as e:
+            frappe.db.rollback()
+            frappe.log_error(f"Error duplicating tool: {str(e)}", "Tool Duplication Error")
+            frappe.throw(str(e))
+    
+    def duplicate_employee_allocations(self, new_tool_name, new_from_date=None, new_to_date=None):
+        """
+        Duplicate all employee project allocations linked to this tool
+        """
+        # Get all employee allocations for this tool
+        employee_allocations = frappe.get_all(
+            'Employee Project Allocation',
+            filters={
+                'employee_project_allocation_tool': self.name,
+                'docstatus': 0
+            },
+            fields=['name', 'employee', 'employee_name', 'from_date', 'to_date', 'total_percentage']
+        )
         
-        # Get child table data
-        child_table_data = parent_doc.get(child_table_fieldname, [])
+        if not employee_allocations:
+            return
         
-        # Return as list of dicts
-        return [{
-            "project": row.project,
-            "activity": row.activity,
-            "percentage": row.percentage
-        } for row in child_table_data]
+        for emp_alloc in employee_allocations:
+            # Get the full document
+            doc = frappe.get_doc('Employee Project Allocation', emp_alloc.name)
+            
+            # Create new document
+            new_alloc = frappe.copy_doc(doc)
+            new_alloc.name = None  # Let system generate new name
+            new_alloc.employee_project_allocation_tool = new_tool_name  # Link to new tool
+            
+            # Update dates if provided
+            if new_from_date:
+                new_alloc.from_date = getdate(new_from_date)
+            if new_to_date:
+                new_alloc.to_date = getdate(new_to_date)
+            
+            # Insert new allocation
+            new_alloc.insert()
+            new_alloc.save()
         
-    except Exception as e:
-        frappe.log_error(f"Error getting child table data: {str(e)}", "Employee Allocation Tool")
-        return []
+        return True
 
+
+@frappe.whitelist()
+def duplicate_tool_with_allocations(tool_name, new_department=None, new_from_date=None, new_to_date=None):
+    """
+    Duplicate a tool with all its allocations
+    """
+    tool = frappe.get_doc('Employee Project Allocation Tool', tool_name)
+    return tool.duplicate_tool_with_allocations(new_department, new_from_date, new_to_date)
+
+@frappe.whitelist()
+def get_employee_allocations_for_tool(tool_name):
+    """
+    Get all employee allocations for a tool
+    """
+    allocations = frappe.get_all(
+        'Employee Project Allocation',
+        filters={
+            'employee_project_allocation_tool': tool_name,
+            'docstatus': 0
+        },
+        fields=['name', 'employee', 'employee_name', 'from_date', 'to_date', 'total_percentage']
+    )
+    
+    return allocations
 
 # Updated server-side Python code for processing Excel files
 
@@ -329,6 +418,235 @@ import os
 from frappe.utils import getdate, today, get_site_path
 from frappe.utils.file_manager import get_file_path
 
+@frappe.whitelist()
+def get_child_table_data(parent_doctype, child_table_fieldname):
+    """
+    Get child table data for a parent document with activity
+    """
+    try:
+        # Get the parent document
+        parent_doc = frappe.get_doc("Employee Project Allocation", parent_doctype)
+        
+        # Get child table data
+        child_table_data = parent_doc.get(child_table_fieldname, [])
+        
+        # Return as list of dicts with activity
+        return [{
+            "project": row.project,
+            "activity": row.activity,
+            "percentage": row.percentage
+        } for row in child_table_data]
+        
+    except Exception as e:
+        frappe.log_error(f"Error getting child table data: {str(e)}", "Employee Allocation Tool")
+        return []
+
+
+# Updated download template to include activity
+@frappe.whitelist()
+def download_allocation_template(department, tool_name):
+    """Generate and return Excel template for employee allocations"""
+    try:
+        # Get employees from selected department
+        employees = frappe.get_all('Employee',
+            filters={
+                'department': department,
+                'status': 'Active'
+            },
+            fields=['name', 'employee_name', 'designation']
+        )
+        
+        # Get projects with custom_include_employee_allocation filter
+        projects = frappe.get_all('Project',
+            fields=['name', 'custom_project_shortcut as project_name'],
+            filters={'custom_include_employee_allocation': 1}
+        )
+        
+        activities = ['Operation', 'Installation']
+        
+        if not employees:
+            frappe.throw(_('No active employees found in the selected department'))
+        
+        if not projects:
+            frappe.throw(_('No projects found in the system'))
+        
+        # Create workbook
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Employee Allocations"
+        
+        # Define styles
+        header_fill = PatternFill(start_color="2c3e50", end_color="2c3e50", fill_type="solid")
+        header_font = Font(color="FFFFFF", bold=True)
+        center_alignment = Alignment(horizontal="center", vertical="center")
+        border = Border(
+            left=Side(style='thin'),
+            right=Side(style='thin'),
+            top=Side(style='thin'),
+            bottom=Side(style='thin')
+        )
+        
+        # Prepare header row
+        headers = ['Employee ID', 'Employee Name', 'Designation']
+        for project in projects:
+            for activity in activities:
+                project_name = project.get('project_name') or project.get('name')
+                headers.append(f"{project_name} - {activity} (%)")
+        
+        headers.extend(['Total Percentage', 'Status'])
+        
+        # Write main headers
+        for col_idx, header in enumerate(headers, start=1):
+            cell = ws.cell(row=1, column=col_idx, value=header)
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = center_alignment
+            cell.border = border
+        
+        # Write data rows
+        current_row = 2
+        for employee in employees:
+            # Add employee info
+            ws.cell(row=current_row, column=1, value=employee.get('name'))
+            ws.cell(row=current_row, column=2, value=employee.get('employee_name'))
+            ws.cell(row=current_row, column=3, value=employee.get('designation') or 'N/A')
+            
+            # Empty cells for percentages (user will fill)
+            for col in range(4, len(headers) - 1):
+                cell = ws.cell(row=current_row, column=col, value='')
+                cell.border = border
+                cell.alignment = center_alignment
+            
+            # Total percentage and status
+            total_cell = ws.cell(row=current_row, column=len(headers), value='0')
+            total_cell.border = border
+            total_cell.alignment = center_alignment
+            
+            status_cell = ws.cell(row=current_row, column=len(headers)+1, value='Pending')
+            status_cell.border = border
+            status_cell.alignment = center_alignment
+            
+            # Apply borders to all cells
+            for col in range(1, len(headers) + 2):
+                cell = ws.cell(row=current_row, column=col)
+                cell.border = border
+                cell.alignment = center_alignment
+            
+            current_row += 1
+        
+        # Add instructions
+        current_row += 1
+        instructions = [
+            'INSTRUCTIONS:',
+            '1. Fill in the percentage values for each project-activity combination',
+            '2. Each employee\'s total percentage should sum to 100%',
+            '3. Only fill numeric values (0-100) in the percentage columns',
+            '4. Do not modify employee information columns',
+            '5. Make sure each employee has exactly 100% total allocation'
+        ]
+        
+        for idx, instruction in enumerate(instructions):
+            cell = ws.cell(row=current_row + idx, column=1, value=instruction)
+            if idx == 0:
+                cell.font = Font(bold=True, color="7d6608")
+            cell.alignment = Alignment(horizontal="left", vertical="center")
+        
+        # Set column widths
+        ws.column_dimensions['A'].width = 15
+        ws.column_dimensions['B'].width = 25
+        ws.column_dimensions['C'].width = 20
+        
+        for col in range(4, len(headers) + 1):
+            col_letter = openpyxl.utils.get_column_letter(col)
+            ws.column_dimensions[col_letter].width = 22
+        
+        ws.column_dimensions[openpyxl.utils.get_column_letter(len(headers))].width = 15
+        ws.column_dimensions[openpyxl.utils.get_column_letter(len(headers)+1)].width = 12
+        
+        # Save to file
+        file_name = f"Employee_Allocation_Template_{department}_{today()}.xlsx"
+        temp_path = get_site_path('private', 'files', 'templates')
+        
+        if not os.path.exists(temp_path):
+            os.makedirs(temp_path)
+        
+        file_path = os.path.join(temp_path, file_name)
+        wb.save(file_path)
+        
+        # Create file record
+        from frappe.utils.file_manager import save_file
+        
+        with open(file_path, 'rb') as f:
+            file_content = f.read()
+        
+        file_doc = save_file(
+            file_name,
+            file_content,
+            'Employee Project Allocation Tool',
+            tool_name,
+            is_private=1
+        )
+        
+        # Clean up temp file
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        
+        return {
+            'file_url': file_doc.file_url,
+            'file_name': file_name
+        }
+        
+    except Exception as e:
+        frappe.log_error(f"Error generating template: {str(e)}", "Template Generation Error")
+        frappe.throw(str(e))
+
+
+@frappe.whitelist()
+def process_salary_allocation_for_tool(tool_name):
+    """Process salary allocation for a specific tool"""
+    tool = frappe.get_doc('Employee Project Allocation Tool', tool_name)
+    return tool.process_salary_allocation()
+
+
+@frappe.whitelist()
+def create_journal_entry_for_tool(tool_name):
+    """Create journal entry for a specific tool"""
+    tool = frappe.get_doc('Employee Project Allocation Tool', tool_name)
+    return tool.create_journal_entry_from_allocations()
+
+
+@frappe.whitelist()
+def get_salary_payable_account(company=None):
+    """Get salary payable account"""
+    if not company:
+        company = frappe.defaults.get_user_default("company") or frappe.db.get_single_value("Global Defaults", "default_company")
+    return frappe.db.get_value("Company", company, "default_income_account")
+
+
+@frappe.whitelist()
+def delete_all_allocations(tool_name):
+    """Delete all employee project allocations linked to the given tool"""
+    try:
+        allocations = frappe.get_all('Employee Project Allocation', 
+            filters={
+                'employee_project_allocation_tool': tool_name,
+                'docstatus': 0
+            },
+            pluck='name'
+        )
+        
+        count = len(allocations)
+        
+        for alloc_name in allocations:
+            frappe.delete_doc('Employee Project Allocation', alloc_name, force=True)
+        
+        frappe.db.commit()
+        return count
+        
+    except Exception as e:
+        frappe.db.rollback()
+        frappe.log_error(f"Error deleting allocations: {str(e)}", "Allocation Delete Error")
+        frappe.throw(str(e))
 @frappe.whitelist()
 def download_allocation_template(department, tool_name):
     """Generate and return Excel template for employee allocations"""
@@ -906,107 +1224,10 @@ def update_allocation(allocation_name, allocations, total_percentage):
     doc.save()
     return doc
 
-def create_allocation(employee_id, tool_name, from_date, to_date, allocations, total_percentage):
-    """Create new employee project allocation"""
-    doc = frappe.get_doc({
-        'doctype': 'Employee Project Allocation',
-        'employee': employee_id,
-        'from_date': from_date,
-        'to_date': to_date,
-        'employee_project_allocation_tool': tool_name,
-        'employee_project_allocation_details': []
-    })
-    
-    for alloc in allocations:
-        doc.append('employee_project_allocation_details', {
-            'project': alloc['project'],
-            'activity': alloc['activity'],
-            'percentage': alloc['percentage']
-        })
-    
-    doc.total_percentage = total_percentage
-    doc.insert()
-    return doc
-
-def update_allocation(allocation_name, allocations, total_percentage):
-    """Update existing employee project allocation"""
-    doc = frappe.get_doc('Employee Project Allocation', allocation_name)
-    doc.employee_project_allocation_details = []
-    
-    for alloc in allocations:
-        doc.append('employee_project_allocation_details', {
-            'project': alloc['project'],
-            'activity': alloc['activity'],
-            'percentage': alloc['percentage']
-        })
-    
-    doc.total_percentage = total_percentage
-    doc.save()
-    return doc
-
-@frappe.whitelist()
-def delete_all_allocations(tool_name):
-    """Delete all employee project allocations linked to the given tool"""
-    try:
-        # Get all allocations linked to this tool
-        allocations = frappe.get_all('Employee Project Allocation', 
-            filters={
-                'employee_project_allocation_tool': tool_name,
-                'docstatus': 0
-            },
-            pluck='name'
-        )
-        
-        count = len(allocations)
-        
-        # Delete each allocation
-        for alloc_name in allocations:
-            frappe.delete_doc('Employee Project Allocation', alloc_name, force=True)
-        
-        frappe.db.commit()
-        
-        return count
-        
-    except Exception as e:
-        frappe.db.rollback()
-        frappe.log_error(f"Error deleting allocations: {str(e)}", "Allocation Delete Error")
-        frappe.throw(str(e))
-
-@frappe.whitelist()
-def get_child_table_data(parent_doctype, child_table_fieldname):
-    """Get child table data for a parent document"""
-    try:
-        if not parent_doctype:
-            return []
-            
-        # Get the parent document
-        parent_doc = frappe.get_doc('Employee Project Allocation', parent_doctype)
-        
-        if parent_doc and hasattr(parent_doc, child_table_fieldname):
-            child_data = []
-            for row in parent_doc.get(child_table_fieldname):
-                child_data.append({
-                    'project': row.project,
-                    'activity': row.activity,
-                    'percentage': row.percentage
-                })
-            return child_data
-        
-        return []
-    except Exception as e:
-        frappe.log_error(f"Error getting child table data: {str(e)}", "Child Table Error")
-        return []
-    
 
 
 
 
-# Standalone method for direct calling
-@frappe.whitelist()
-def process_salary_allocation_for_tool(tool_name):
-    """Process salary allocation for a specific tool"""
-    tool = frappe.get_doc('Employee Project Allocation Tool', tool_name)
-    return tool.process_salary_allocation()
 
 
 # Method to get salary component accounts
@@ -1045,21 +1266,6 @@ def get_employee_salary_slip_for_date(employee, to_date):
     return slip
 
 
-@frappe.whitelist()
-def get_salary_payable_account(company=None):
-    """Get salary payable account"""
-    if not company:
-        company = frappe.defaults.get_user_default("company") or frappe.db.get_single_value("Global Defaults", "default_company")
-    
-    return frappe.db.get_value("Company", company, "default_income_account")
-
-
-
-@frappe.whitelist()
-def create_journal_entry_for_tool(tool_name):
-    """Create journal entry for a specific tool"""
-    tool = frappe.get_doc('Employee Project Allocation Tool', tool_name)
-    return tool.create_journal_entry_from_allocations()
 
 
 

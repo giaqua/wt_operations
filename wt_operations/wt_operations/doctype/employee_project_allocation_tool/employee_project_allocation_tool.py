@@ -223,6 +223,7 @@ class EmployeeProjectAllocationTool(Document):
                     "account": alloc.account,
                     "debit_in_account_currency": 0,
                     "credit_in_account_currency": alloc.amount,
+                    "cost_center": self.get_project_cost_center(alloc.project),
                     "party_type": None,
                     "party": None,
                     "project": self.payroll_project if hasattr(self, 'payroll_project') else "All-Project",
@@ -256,6 +257,10 @@ class EmployeeProjectAllocationTool(Document):
             if project.cost_center:
                 return project.cost_center
         
+        if self.payroll_project:
+            project = frappe.get_doc("Project", self.payroll_project)
+            if project.cost_center:
+                return project.cost_center
         # Return default cost center
         return frappe.db.get_single_value("Global Defaults", "cost_center")
 
@@ -444,17 +449,42 @@ def get_child_table_data(parent_doctype, child_table_fieldname):
 
 # Updated download template to include activity
 @frappe.whitelist()
-def download_allocation_template(department, tool_name):
+def download_allocation_template(department, tool_name, from_date=None, to_date=None):
     """Generate and return Excel template for employee allocations"""
     try:
         # Get employees from selected department
-        employees = frappe.get_all('Employee',
-            filters={
-                'department': department,
-                'status': 'Active'
-            },
-            fields=['name', 'employee_name', 'designation']
-        )
+        # employees = frappe.get_all('Employee',
+        #     filters={
+        #         'department': department,
+        #         'status': 'Active'
+        #     },
+        #     fields=['name', 'employee_name', 'designation']
+        # )
+        if from_date and to_date:
+            # Use SQL for better performance
+            employees = frappe.db.sql("""
+                SELECT DISTINCT 
+                    e.name, 
+                    e.employee_name, 
+                    e.designation
+                FROM `tabEmployee` e
+                INNER JOIN `tabSalary Slip` ss ON ss.employee = e.name
+                WHERE e.department = %s
+                  
+                    AND ss.docstatus = 1
+                    AND ss.start_date >= %s
+                    AND ss.end_date <= %s
+                ORDER BY e.employee_name
+            """, (department, from_date, to_date), as_dict=True)
+        else:
+            # Get employees from selected department (no salary slip filter)
+            employees = frappe.get_all('Employee',
+                filters={
+                    'department': department,
+                    'status': 'Active'
+                },
+                fields=['name', 'employee_name', 'designation']
+            )
         
         # Get projects with custom_include_employee_allocation filter
         projects = frappe.get_all('Project',
@@ -602,71 +632,51 @@ def download_allocation_template(department, tool_name):
 
 
 @frappe.whitelist()
-def process_salary_allocation_for_tool(tool_name):
-    """Process salary allocation for a specific tool"""
-    tool = frappe.get_doc('Employee Project Allocation Tool', tool_name)
-    return tool.process_salary_allocation()
-
-
-@frappe.whitelist()
-def create_journal_entry_for_tool(tool_name):
-    """Create journal entry for a specific tool"""
-    tool = frappe.get_doc('Employee Project Allocation Tool', tool_name)
-    return tool.create_journal_entry_from_allocations()
-
-
-@frappe.whitelist()
-def get_salary_payable_account(company=None):
-    """Get salary payable account"""
-    if not company:
-        company = frappe.defaults.get_user_default("company") or frappe.db.get_single_value("Global Defaults", "default_company")
-    return frappe.db.get_value("Company", company, "default_income_account")
-
-
-@frappe.whitelist()
-def delete_all_allocations(tool_name):
-    """Delete all employee project allocations linked to the given tool"""
-    try:
-        allocations = frappe.get_all('Employee Project Allocation', 
-            filters={
-                'employee_project_allocation_tool': tool_name,
-                'docstatus': 0
-            },
-            pluck='name'
-        )
-        
-        count = len(allocations)
-        
-        for alloc_name in allocations:
-            frappe.delete_doc('Employee Project Allocation', alloc_name, force=True)
-        
-        frappe.db.commit()
-        return count
-        
-    except Exception as e:
-        frappe.db.rollback()
-        frappe.log_error(f"Error deleting allocations: {str(e)}", "Allocation Delete Error")
-        frappe.throw(str(e))
-@frappe.whitelist()
-def download_allocation_template(department, tool_name):
+def download_allocation_template_v2(department, tool_name, from_date=None, to_date=None):
     """Generate and return Excel template for employee allocations"""
     try:
         # Get employees from selected department
-        employees = frappe.get_all('Employee',
-            filters={
-                'department': department,
-                'status': 'Active'
-            },
-            fields=['name', 'employee_name', 'designation']
-        )
+        # employees = frappe.get_all('Employee',
+        #     filters={
+        #         'department': department,
+        #         'status': 'Active'
+        #     },
+        #     fields=['name', 'employee_name', 'designation']
+        # )
+        if from_date and to_date:
+            # Use SQL for better performance
+            employees = frappe.db.sql("""
+                SELECT DISTINCT 
+                    e.name, 
+                    e.employee_name, 
+                    e.designation
+                FROM `tabEmployee` e
+                INNER JOIN `tabSalary Slip` ss ON ss.employee = e.name
+                WHERE e.department = %s
+                  
+                    AND ss.docstatus = 1
+                    AND ss.start_date >= %s
+                    AND ss.end_date <= %s
+                ORDER BY e.employee_name
+            """, (department, from_date, to_date), as_dict=True)
+        else:
+            # Get employees from selected department (no salary slip filter)
+            employees = frappe.get_all('Employee',
+                filters={
+                    'department': department,
+                    'status': 'Active'
+                },
+                fields=['name', 'employee_name', 'designation']
+            )
         
-        # Get up to 4 projects
+        # Get projects with custom_include_employee_allocation filter
         projects = frappe.get_all('Project',
-            fields=['name', 'custom_project_shortcut as project_name'],
+            fields=['name', 'custom_project_shortcut as project_name',"custom_employee_project_activity"],
             filters={'custom_include_employee_allocation': 1}
         )
-        
-        activities = ['Operation', 'Installation']
+        all_activities = [frappe.get_all("Employee Project Activity")]
+        activities = [item["name"] for sublist in all_activities for item in sublist]
+        # activities = [frappe.get_all("Employee Project Activity")]
         
         if not employees:
             frappe.throw(_('No active employees found in the selected department'))
@@ -682,7 +692,6 @@ def download_allocation_template(department, tool_name):
         # Define styles
         header_fill = PatternFill(start_color="2c3e50", end_color="2c3e50", fill_type="solid")
         header_font = Font(color="FFFFFF", bold=True)
-        subheader_fill = PatternFill(start_color="34495e", end_color="34495e", fill_type="solid")
         center_alignment = Alignment(horizontal="center", vertical="center")
         border = Border(
             left=Side(style='thin'),
@@ -695,8 +704,9 @@ def download_allocation_template(department, tool_name):
         headers = ['Employee ID', 'Employee Name', 'Designation']
         for project in projects:
             for activity in activities:
-                project_name = project.get('project_name') or project.get('name')
-                headers.append(f"{project_name} - {activity} (%)")
+                if activity == project.get("custom_employee_project_activity"):
+                    project_name = project.get('project_name') or project.get('name')
+                    headers.append(f"{project_name} - {activity} (%)")
         
         headers.extend(['Total Percentage', 'Status'])
         
@@ -804,6 +814,305 @@ def download_allocation_template(department, tool_name):
     except Exception as e:
         frappe.log_error(f"Error generating template: {str(e)}", "Template Generation Error")
         frappe.throw(str(e))
+
+
+# @frappe.whitelist()
+# def download_allocation_template(department, tool_name, from_date=None, to_date=None):
+#     """Generate and return Excel template for employee allocations"""
+#     try:
+#         # Build query to get employees with salary slips in the period
+#         if from_date and to_date:
+#             # Use SQL for better performance
+#             employees = frappe.db.sql("""
+#                 SELECT DISTINCT 
+#                     e.name, 
+#                     e.employee_name, 
+#                     e.designation
+#                 FROM `tabEmployee` e
+#                 INNER JOIN `tabSalary Slip` ss ON ss.employee = e.name
+#                 WHERE e.department = %s
+                  
+#                     AND ss.docstatus = 1
+#                     AND ss.start_date >= %s
+#                     AND ss.end_date <= %s
+#                 ORDER BY e.employee_name
+#             """, (department, from_date, to_date), as_dict=True)
+#         else:
+#             # Get employees from selected department (no salary slip filter)
+#             employees = frappe.get_all('Employee',
+#                 filters={
+#                     'department': department,
+#                     'status': 'Active'
+#                 },
+#                 fields=['name', 'employee_name', 'designation']
+#             )
+        
+#         if not employees:
+#             if from_date and to_date:
+#                 frappe.throw(_('No employees found with salary slips in the period {0} to {1}').format(from_date, to_date))
+#             else:
+#                 frappe.throw(_('No active employees found in the selected department'))
+        
+#         # Get projects with custom_include_employee_allocation filter
+#         projects = frappe.get_all('Project',
+#             fields=['name', 'custom_project_shortcut as project_name'],
+#             filters={'custom_include_employee_allocation': 1}
+#         )
+        
+#         if not projects:
+#             frappe.throw(_('No projects found in the system'))
+        
+#         # ... rest of the function remains the same ...
+        
+#         # Add count to instructions
+#         instructions = [
+#             'INSTRUCTIONS:',
+#             '1. ffFill in the percentage values for each project-activity combination',
+#             '2. Each employee\'s total percentage should sum to 100%',
+#             '3. Only fill numeric values (0-100) in the percentage columns',
+#             '4. Do not modify employee information columns',
+#             '5. Make sure each employee has exactly 100% total allocation',
+#             f'6. Employees included: {len(employees)} (with salary slips in the selected period)'
+#         ]
+        
+#         # ... rest of the function remains the same ...
+#         #         # Save to file
+# #         file_name = f"Employee_Allocation_Template_{department}_{today()}.xlsx"
+# #         temp_path = get_site_path('private', 'files', 'templates')
+        
+# #         if not os.path.exists(temp_path):
+# #             os.makedirs(temp_path)
+        
+# #         file_path = os.path.join(temp_path, file_name)
+# #         wb.save(file_path)
+        
+# #         # Create file record
+# #         from frappe.utils.file_manager import save_file
+        
+# #         with open(file_path, 'rb') as f:
+# #             file_content = f.read()
+        
+# #         file_doc = save_file(
+# #             file_name,
+# #             file_content,
+# #             'Employee Project Allocation Tool',
+# #             tool_name,
+# #             is_private=1
+# #         )
+        
+#         return {
+#             'file_url': file_doc.file_url,
+#             'file_name': file_name,
+#             'employee_count': len(employees)
+#         }
+        
+#     except Exception as e:
+#         frappe.log_error(f"Error generating template: {str(e)}", "Template Generation Error")
+#         frappe.throw(str(e))
+
+@frappe.whitelist()
+def process_salary_allocation_for_tool(tool_name):
+    """Process salary allocation for a specific tool"""
+    tool = frappe.get_doc('Employee Project Allocation Tool', tool_name)
+    return tool.process_salary_allocation()
+
+
+@frappe.whitelist()
+def create_journal_entry_for_tool(tool_name):
+    """Create journal entry for a specific tool"""
+    tool = frappe.get_doc('Employee Project Allocation Tool', tool_name)
+    return tool.create_journal_entry_from_allocations()
+
+
+@frappe.whitelist()
+def get_salary_payable_account(company=None):
+    """Get salary payable account"""
+    if not company:
+        company = frappe.defaults.get_user_default("company") or frappe.db.get_single_value("Global Defaults", "default_company")
+    return frappe.db.get_value("Company", company, "default_income_account")
+
+
+@frappe.whitelist()
+def delete_all_allocations(tool_name):
+    """Delete all employee project allocations linked to the given tool"""
+    try:
+        allocations = frappe.get_all('Employee Project Allocation', 
+            filters={
+                'employee_project_allocation_tool': tool_name,
+                'docstatus': 0
+            },
+            pluck='name'
+        )
+        
+        count = len(allocations)
+        
+        for alloc_name in allocations:
+            frappe.delete_doc('Employee Project Allocation', alloc_name, force=True)
+        
+        frappe.db.commit()
+        return count
+        
+    except Exception as e:
+        frappe.db.rollback()
+        frappe.log_error(f"Error deleting allocations: {str(e)}", "Allocation Delete Error")
+        frappe.throw(str(e))
+# @frappe.whitelist()
+# def download_allocation_template(department, tool_name):
+#     """Generate and return Excel template for employee allocations"""
+#     try:
+#         # Get employees from selected department
+#         employees = frappe.get_all('Employee',
+#             filters={
+#                 'department': department,
+#                 'status': 'Active'
+#             },
+#             fields=['name', 'employee_name', 'designation']
+#         )
+        
+#         # Get up to 4 projects
+#         projects = frappe.get_all('Project',
+#             fields=['name', 'custom_project_shortcut as project_name'],
+#             filters={'custom_include_employee_allocation': 1}
+#         )
+        
+#         activities = ['Operation', 'Installation']
+        
+#         if not employees:
+#             frappe.throw(_('No active employees found in the selected department'))
+        
+#         if not projects:
+#             frappe.throw(_('No projects found in the system'))
+        
+#         # Create workbook
+#         wb = openpyxl.Workbook()
+#         ws = wb.active
+#         ws.title = "Employee Allocations"
+        
+#         # Define styles
+#         header_fill = PatternFill(start_color="2c3e50", end_color="2c3e50", fill_type="solid")
+#         header_font = Font(color="FFFFFF", bold=True)
+#         subheader_fill = PatternFill(start_color="34495e", end_color="34495e", fill_type="solid")
+#         center_alignment = Alignment(horizontal="center", vertical="center")
+#         border = Border(
+#             left=Side(style='thin'),
+#             right=Side(style='thin'),
+#             top=Side(style='thin'),
+#             bottom=Side(style='thin')
+#         )
+        
+#         # Prepare header row
+#         headers = ['Employee ID', 'Employee Name', 'Designation']
+#         for project in projects:
+#             for activity in activities:
+#                 project_name = project.get('project_name') or project.get('name')
+#                 headers.append(f"{project_name} - {activity} (%)")
+        
+#         headers.extend(['Total Percentage', 'Status'])
+        
+#         # Write main headers
+#         for col_idx, header in enumerate(headers, start=1):
+#             cell = ws.cell(row=1, column=col_idx, value=header)
+#             cell.fill = header_fill
+#             cell.font = header_font
+#             cell.alignment = center_alignment
+#             cell.border = border
+        
+#         # Write data rows
+#         current_row = 2
+#         for employee in employees:
+#             # Add employee info
+#             ws.cell(row=current_row, column=1, value=employee.get('name'))
+#             ws.cell(row=current_row, column=2, value=employee.get('employee_name'))
+#             ws.cell(row=current_row, column=3, value=employee.get('designation') or 'N/A')
+            
+#             # Empty cells for percentages (user will fill)
+#             for col in range(4, len(headers) - 1):
+#                 cell = ws.cell(row=current_row, column=col, value='')
+#                 cell.border = border
+#                 cell.alignment = center_alignment
+            
+#             # Total percentage and status
+#             total_cell = ws.cell(row=current_row, column=len(headers), value='0')
+#             total_cell.border = border
+#             total_cell.alignment = center_alignment
+            
+#             status_cell = ws.cell(row=current_row, column=len(headers)+1, value='Pending')
+#             status_cell.border = border
+#             status_cell.alignment = center_alignment
+            
+#             # Apply borders to all cells
+#             for col in range(1, len(headers) + 2):
+#                 cell = ws.cell(row=current_row, column=col)
+#                 cell.border = border
+#                 cell.alignment = center_alignment
+            
+#             current_row += 1
+        
+#         # Add instructions
+#         current_row += 1
+#         instructions = [
+#             'INSTRUCTIONS:',
+#             '1. Fill in the percentage values for each project-activity combination',
+#             '2. Each employee\'s total percentage should sum to 100%',
+#             '3. Only fill numeric values (0-100) in the percentage columns',
+#             '4. Do not modify employee information columns',
+#             '5. Make sure each employee has exactly 100% total allocation'
+#         ]
+        
+#         for idx, instruction in enumerate(instructions):
+#             cell = ws.cell(row=current_row + idx, column=1, value=instruction)
+#             if idx == 0:
+#                 cell.font = Font(bold=True, color="7d6608")
+#             cell.alignment = Alignment(horizontal="left", vertical="center")
+        
+#         # Set column widths
+#         ws.column_dimensions['A'].width = 15
+#         ws.column_dimensions['B'].width = 25
+#         ws.column_dimensions['C'].width = 20
+        
+#         for col in range(4, len(headers) + 1):
+#             col_letter = openpyxl.utils.get_column_letter(col)
+#             ws.column_dimensions[col_letter].width = 22
+        
+#         ws.column_dimensions[openpyxl.utils.get_column_letter(len(headers))].width = 15
+#         ws.column_dimensions[openpyxl.utils.get_column_letter(len(headers)+1)].width = 12
+        
+#         # Save to file
+#         file_name = f"Employee_Allocation_Template_{department}_{today()}.xlsx"
+#         temp_path = get_site_path('private', 'files', 'templates')
+        
+#         if not os.path.exists(temp_path):
+#             os.makedirs(temp_path)
+        
+#         file_path = os.path.join(temp_path, file_name)
+#         wb.save(file_path)
+        
+#         # Create file record
+#         from frappe.utils.file_manager import save_file
+        
+#         with open(file_path, 'rb') as f:
+#             file_content = f.read()
+        
+#         file_doc = save_file(
+#             file_name,
+#             file_content,
+#             'Employee Project Allocation Tool',
+#             tool_name,
+#             is_private=1
+#         )
+        
+#         # Clean up temp file
+#         if os.path.exists(file_path):
+#             os.remove(file_path)
+        
+#         return {
+#             'file_url': file_doc.file_url,
+#             'file_name': file_name
+#         }
+        
+#     except Exception as e:
+#         frappe.log_error(f"Error generating template: {str(e)}", "Template Generation Error")
+#         frappe.throw(str(e))
 
     
 
@@ -1342,7 +1651,7 @@ def get_dashboard_data(tool_name):
         proj_rows = frappe.get_all(
             "Project",
             filters={"name": ["in", list(project_ids)]},
-            fields=["name", "project_name", "custom_project_shortcut"],
+            fields=["name", "project_name", "custom_project_shortcut","custom_employee_project_activity"],
         )
         for p in proj_rows:
             shortcut = p.custom_project_shortcut or _generate_shortcut(p.project_name or p.name)
@@ -1350,15 +1659,16 @@ def get_dashboard_data(tool_name):
                 "name": p.name,
                 "project_name": p.project_name or p.name,
                 "shortcut": shortcut,
+                "project_activity": p.custom_employee_project_activity
             }
-
+    print(project_details)
     # Fallback entries for any project referenced but not found (e.g. deleted/renamed)
     for pid in project_ids:
         if pid not in project_details:
             project_details[pid] = {
                 "name": pid,
                 "project_name": pid,
-                "shortcut": _generate_shortcut(pid),
+                "shortcut": _generate_shortcut(pid)
             }
 
     employees = []
@@ -1377,7 +1687,12 @@ def get_dashboard_data(tool_name):
             "total_percentage": a.total_percentage or 0,
             "allocation_name": a.name,
         })
-
+    print(str({
+        "employees": employees,
+        "projects": sorted(project_ids),
+        "activities": sorted(activity_set),
+        "project_details": project_details,
+    }),"========================")
     return {
         "employees": employees,
         "projects": sorted(project_ids),

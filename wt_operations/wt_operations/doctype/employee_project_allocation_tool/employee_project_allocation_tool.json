@@ -15,8 +15,12 @@
   "allocation_details",
   "allocations_tab",
   "employee_project_allocation_amounts",
+  "section_break_sjer",
   "last_journal_entry",
-  "payroll_project"
+  "payroll_project",
+  "column_break_agfz",
+  "cost_center",
+  "add_cost_center"
  ],
  "fields": [
   {
@@ -82,6 +86,26 @@
    "fieldtype": "Link",
    "label": "Payroll Project",
    "options": "Project"
+  },
+  {
+   "fieldname": "section_break_sjer",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_agfz",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "cost_center",
+   "fieldtype": "Link",
+   "label": "Cost Center",
+   "options": "Cost Center"
+  },
+  {
+   "default": "1",
+   "fieldname": "add_cost_center",
+   "fieldtype": "Check",
+   "label": "Add Cost Center"
   }
  ],
  "grid_page_length": 50,
@@ -92,7 +116,7 @@
    "link_fieldname": "employee_project_allocation_tool"
   }
  ],
- "modified": "2026-06-04 16:12:16.086255",
+ "modified": "2026-07-08 12:53:24.479759",
  "modified_by": "Administrator",
  "module": "WT Operations",
  "name": "Employee Project Allocation Tool",

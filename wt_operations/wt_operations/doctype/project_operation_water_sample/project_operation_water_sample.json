@@ -10,6 +10,8 @@
   "amended_from",
   "sampling_date",
   "responsible",
+  "result_type",
+  "external_lab_name",
   "column_break_vbcw",
   "site",
   "sample_process_location",
@@ -213,12 +215,26 @@
    "label": "Sample Process Location",
    "no_copy": 1,
    "read_only": 1
+  },
+  {
+   "default": "Internal",
+   "fieldname": "result_type",
+   "fieldtype": "Select",
+   "label": "Result Type",
+   "options": "Internal\nExternal"
+  },
+  {
+   "depends_on": "eval:doc.result_type==\"External\"",
+   "fieldname": "external_lab_name",
+   "fieldtype": "Link",
+   "label": "External Lab Name",
+   "options": "External Lab"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-04-28 09:25:51.624025",
+ "modified": "2026-07-08 14:01:01.348473",
  "modified_by": "Administrator",
  "module": "WT Operations",
  "name": "Project Operation Water Sample",

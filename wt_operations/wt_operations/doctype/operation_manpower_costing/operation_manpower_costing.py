@@ -22,28 +22,51 @@ class OperationManpowerCosting(Document):
 
 	pass
 
-
+@frappe.whitelist()
 def update_daily_operation_report_costs(self):
 	try:
-		if self.daily_operation_report_references:
-			for reference in self.daily_operation_report_references:
-				daily_report = frappe.get_doc('Daily Operation Report', reference.daily_operation_report)
-				daily_report.manpower_cost_per_m3 = self.manpower_cost_per_m3
-				daily_report.manpower_cost_per_treated_water = self.manpower_cost_per_m3 * reference.waste_water_treated_volume
-				daily_report.save()
-				daily_report.submit()
+		doc = frappe.get_doc("Operation Manpower Costing", self.name)
 
-		return {
+		if doc.daily_operation_report_references:
+			for reference in doc.daily_operation_report_references:
+				daily_report = frappe.get_doc('Daily Operation Report', reference.daily_operation_report)
+
+				manpower_cost_per_treated_water = doc.manpower_cost_per_m3 * reference.waste_water_treated_volume
+
+				daily_report.db_set('manpower_cost_per_m3', doc.manpower_cost_per_m3, update_modified=False)
+				daily_report.db_set('manpower_cost_per_treated_water', manpower_cost_per_treated_water, update_modified=False)
+
+		frappe.response['message'] = {
 			"status": "success",
 			"message": "Costs updated on linked Daily Operation Reports successfully."
 		}
 
 	except Exception as e:
-		frappe.log_error(f"Error in process_data: {str(e)}", "Backend Process")
-		return {
+		frappe.log_error(f"Error in update_daily_operation_report_costs: {str(e)}", "Backend Process")
+		frappe.response['message'] = {
 			"status": "error",
 			"message": str(e)
 		}
+	# try:
+	# 	if self.daily_operation_report_references:
+	# 		for reference in self.daily_operation_report_references:
+	# 			daily_report = frappe.get_doc('Daily Operation Report', reference.daily_operation_report)
+	# 			daily_report.manpower_cost_per_m3 = self.manpower_cost_per_m3
+	# 			daily_report.manpower_cost_per_treated_water = self.manpower_cost_per_m3 * reference.waste_water_treated_volume
+	# 			daily_report.save()
+	# 			daily_report.submit()
+
+	# 	return {
+	# 		"status": "success",
+	# 		"message": "Costs updated on linked Daily Operation Reports successfully."
+	# 	}
+
+	# except Exception as e:
+	# 	frappe.log_error(f"Error in process_data: {str(e)}", "Backend Process")
+	# 	return {
+	# 		"status": "error",
+	# 		"message": str(e)
+	# 	}
 
 
 def check_between_dates(self):

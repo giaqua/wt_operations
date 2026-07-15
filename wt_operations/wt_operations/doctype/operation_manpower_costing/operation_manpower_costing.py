@@ -9,7 +9,9 @@ class OperationManpowerCosting(Document):
 	def before_save(self):
 		update_daily_operation_report_references(self)
 		set_manpower_costing_values(self)
-	
+		set_spare_parts_and_maintenance_costs(self)
+		set_housing_and_transportation_cost(self)
+
 	def validate(self):
 		check_between_dates(self)
 
@@ -22,6 +24,29 @@ class OperationManpowerCosting(Document):
 
 	pass
 
+
+def set_housing_and_transportation_cost(self):
+	if self.housing_and_transportation_cost_details and len(self.housing_and_transportation_cost_details) > 0:
+		housing_and_transportation_cost = 0
+		for item in self.housing_and_transportation_cost_details:
+			if item.amount > 0:
+				housing_and_transportation_cost += item.amount
+		self.housing_and_transportation_cost = housing_and_transportation_cost
+
+		if self.waste_water_treated_volume > 0:
+			self.housing_and_transportation_cost_per_m3 = housing_and_transportation_cost / self.waste_water_treated_volume
+
+def set_spare_parts_and_maintenance_costs(self):
+	if self.spare_parts_and_maintenance_cost_details and len(self.spare_parts_and_maintenance_cost_details) > 0:
+		spare_parts_and_maintenance_total = 0
+		for item in self.spare_parts_and_maintenance_cost_details:
+			if item.amount > 0:
+				spare_parts_and_maintenance_total += item.amount
+		self.spare_parts_and_maintenance_total = spare_parts_and_maintenance_total
+
+		if self.waste_water_treated_volume > 0:
+			self.spare_parts_and_maintenance_cost_per_m3 = spare_parts_and_maintenance_total / self.waste_water_treated_volume
+
 @frappe.whitelist()
 def update_daily_operation_report_costs(self):
 	try:
@@ -33,8 +58,8 @@ def update_daily_operation_report_costs(self):
 
 				manpower_cost_per_treated_water = doc.manpower_cost_per_m3 * reference.waste_water_treated_volume
 
-				daily_report.db_set('manpower_cost_per_m3', doc.manpower_cost_per_m3, update_modified=False)
-				daily_report.db_set('manpower_cost_per_treated_water', manpower_cost_per_treated_water, update_modified=False)
+				daily_report.db_set('manpower_cost_per_m3', doc.manpower_cost_per_m3, update_modified=True)
+				daily_report.db_set('manpower_cost_per_treated_water', manpower_cost_per_treated_water, update_modified=True)
 
 		frappe.response['message'] = {
 			"status": "success",

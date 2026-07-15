@@ -6,6 +6,7 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "cost_summary_html",
   "section_break_qsbr",
   "amended_from",
   "project",
@@ -28,7 +29,19 @@
   "manpower_cost_per_day",
   "manpower_cost_per_m3",
   "section_break_piha",
-  "daily_operation_report_references"
+  "daily_operation_report_references",
+  "spare_parts_and_maintenance_tab",
+  "spare_parts_and_maintenance_total",
+  "column_break_xpob",
+  "spare_parts_and_maintenance_cost_per_m3",
+  "section_break_ygjp",
+  "spare_parts_and_maintenance_cost_details",
+  "housing_and_transportation_tab",
+  "housing_and_transportation_cost",
+  "column_break_bnic",
+  "housing_and_transportation_cost_per_m3",
+  "section_break_xgsl",
+  "housing_and_transportation_cost_details"
  ],
  "fields": [
   {
@@ -163,13 +176,82 @@
    "fieldname": "update_costs_on_reports",
    "fieldtype": "Button",
    "label": "Update Costs On Reports"
+  },
+  {
+   "fieldname": "spare_parts_and_maintenance_tab",
+   "fieldtype": "Tab Break",
+   "label": "Spare parts And Maintenance"
+  },
+  {
+   "fieldname": "spare_parts_and_maintenance_total",
+   "fieldtype": "Currency",
+   "label": "Spare parts & maintenance Cost",
+   "read_only": 1
+  },
+  {
+   "fieldname": "spare_parts_and_maintenance_cost_details",
+   "fieldtype": "Table",
+   "label": "Spare parts And Maintenance Cost Details",
+   "options": "Spare parts And Maintenance Cost Details"
+  },
+  {
+   "fieldname": "housing_and_transportation_tab",
+   "fieldtype": "Tab Break",
+   "label": "Housing and Transportation"
+  },
+  {
+   "fieldname": "housing_and_transportation_cost",
+   "fieldtype": "Currency",
+   "label": "Housing and Transportation Cost",
+   "read_only": 1
+  },
+  {
+   "fieldname": "housing_and_transportation_cost_details",
+   "fieldtype": "Table",
+   "label": "Housing and Transportation Cost Details",
+   "options": "Housing and Transportation Cost Details"
+  },
+  {
+   "fieldname": "column_break_xpob",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_ygjp",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_bnic",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "housing_and_transportation_cost_per_m3",
+   "fieldtype": "Currency",
+   "label": "Housing and Transportation Cost Per M3",
+   "precision": "5",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_xgsl",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "spare_parts_and_maintenance_cost_per_m3",
+   "fieldtype": "Currency",
+   "label": "Spare parts And Maintenance Cost Per M3",
+   "precision": "5",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cost_summary_html",
+   "fieldtype": "HTML",
+   "label": "cost_summary_html"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-04-28 11:18:01.575676",
+ "modified": "2026-07-15 13:42:29.154519",
  "modified_by": "Administrator",
  "module": "WT Operations",
  "name": "Operation Manpower Costing",

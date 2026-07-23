@@ -61,6 +61,16 @@ def update_daily_operation_report_costs(self):
 				daily_report.db_set('manpower_cost_per_m3', doc.manpower_cost_per_m3, update_modified=True)
 				daily_report.db_set('manpower_cost_per_treated_water', manpower_cost_per_treated_water, update_modified=True)
 
+				if doc.spare_parts_and_maintenance_cost_per_m3 is not None and doc.spare_parts_and_maintenance_cost_per_m3 > 0:
+					spare_parts_and_maintenance_cost_per_treated_water = doc.spare_parts_and_maintenance_cost_per_m3 * reference.waste_water_treated_volume
+					daily_report.db_set('spare_parts_cost_per_m3', doc.spare_parts_and_maintenance_cost_per_m3, update_modified=True)
+					daily_report.db_set('spare_part_cost_per_treated_water', spare_parts_and_maintenance_cost_per_treated_water, update_modified=True)
+
+				if doc.housing_and_transportation_cost_per_m3 is not None and doc.housing_and_transportation_cost_per_m3 > 0:
+					housing_and_transportation_cost_per_treated_water = doc.housing_and_transportation_cost_per_m3 * reference.waste_water_treated_volume
+					daily_report.db_set('other_cost_per_m3', doc.housing_and_transportation_cost_per_m3, update_modified=True)
+					daily_report.db_set('other_cost_per_treated_water', housing_and_transportation_cost_per_treated_water, update_modified=True)
+
 		frappe.response['message'] = {
 			"status": "success",
 			"message": "Costs updated on linked Daily Operation Reports successfully."

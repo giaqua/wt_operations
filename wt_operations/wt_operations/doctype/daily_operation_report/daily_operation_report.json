@@ -56,7 +56,10 @@
   "manpower_cost_per_m3",
   "column_break_cwvf",
   "spare_part_cost_per_treated_water",
-  "spare_parts_cost_per_m3"
+  "spare_parts_cost_per_m3",
+  "column_break_ssru",
+  "other_cost_per_treated_water",
+  "other_cost_per_m3"
  ],
  "fields": [
   {
@@ -365,6 +368,28 @@
    "fieldtype": "Currency",
    "label": "Spare Parts Cost Per M3",
    "no_copy": 1,
+   "precision": "9",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_ssru",
+   "fieldtype": "Column Break"
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "other_cost_per_treated_water",
+   "fieldtype": "Currency",
+   "label": "Other Cost Per Treated Water",
+   "no_copy": 1,
+   "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "other_cost_per_m3",
+   "fieldtype": "Currency",
+   "label": "Other Cost Per M3",
+   "no_copy": 1,
+   "precision": "9",
    "read_only": 1
   }
  ],
@@ -372,7 +397,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2026-04-26 16:18:04.348116",
+ "modified": "2026-07-23 14:00:52.901245",
  "modified_by": "Administrator",
  "module": "WT Operations",
  "name": "Daily Operation Report",

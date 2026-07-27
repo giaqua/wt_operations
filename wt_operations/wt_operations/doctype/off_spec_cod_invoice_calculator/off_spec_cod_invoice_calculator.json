@@ -5,6 +5,8 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "project",
+  "section_break_sgse",
   "base_reception_tariff",
   "contractual_cod_baseline_m1ppm",
   "effective_from",
@@ -89,12 +91,22 @@
    "fieldtype": "Currency",
    "label": "Daily Off Spec",
    "read_only": 1
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "label": "Project",
+   "options": "Project"
+  },
+  {
+   "fieldname": "section_break_sgse",
+   "fieldtype": "Section Break"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-07-26 16:50:41.454998",
+ "modified": "2026-07-27 09:46:31.640640",
  "modified_by": "Administrator",
  "module": "WT Operations",
  "name": "Off-Spec COD Invoice Calculator",

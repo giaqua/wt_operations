@@ -1,0 +1,75 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-07-26 16:30:52.816707",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "tier",
+  "lower_bound_ppm",
+  "premium",
+  "tier_tariff",
+  "cod_range_start",
+  "cod_range_end"
+ ],
+ "fields": [
+  {
+   "columns": 2,
+   "fieldname": "lower_bound_ppm",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Lower bound > (ppm)"
+  },
+  {
+   "columns": 2,
+   "fieldname": "premium",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Premium (\u00d7 T1)"
+  },
+  {
+   "columns": 2,
+   "fieldname": "tier_tariff",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Tier Tariff (SAR/m\u00b3)"
+  },
+  {
+   "columns": 1,
+   "fieldname": "cod_range_start",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "COD Range Start"
+  },
+  {
+   "columns": 1,
+   "fieldname": "cod_range_end",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "COD Range End"
+  },
+  {
+   "columns": 1,
+   "fieldname": "tier",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Tier"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-07-26 16:37:13.078240",
+ "modified_by": "Administrator",
+ "module": "WT Operations",
+ "name": "Tier Tariff Structure",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

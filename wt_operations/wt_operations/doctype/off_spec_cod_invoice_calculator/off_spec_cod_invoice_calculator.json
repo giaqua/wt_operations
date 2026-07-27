@@ -1,0 +1,121 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2026-07-26 16:24:13.548700",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "base_reception_tariff",
+  "contractual_cod_baseline_m1ppm",
+  "effective_from",
+  "column_break_xwet",
+  "contractual_monthly_sar",
+  "fixed_cost__month_sar",
+  "design_flow_m\u00b3day",
+  "column_break_ieub",
+  "inlet_treated_vol",
+  "cod",
+  "daily_off_spec",
+  "section_break_wgrs",
+  "tier_tariff_structure",
+  "formula"
+ ],
+ "fields": [
+  {
+   "fieldname": "contractual_cod_baseline_m1ppm",
+   "fieldtype": "Float",
+   "label": "Contractual COD Baseline (M1)(ppm)"
+  },
+  {
+   "fieldname": "effective_from",
+   "fieldtype": "Date",
+   "label": "Effective From"
+  },
+  {
+   "fieldname": "column_break_xwet",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "contractual_monthly_sar",
+   "fieldtype": "Currency",
+   "label": "Contractual Monthly (SAR)"
+  },
+  {
+   "fieldname": "fixed_cost__month_sar",
+   "fieldtype": "Currency",
+   "label": "Fixed Cost / Month (SAR)"
+  },
+  {
+   "fieldname": "design_flow_m\u00b3day",
+   "fieldtype": "Float",
+   "label": "Design Flow (m\u00b3/day)"
+  },
+  {
+   "fieldname": "section_break_wgrs",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "formula",
+   "fieldtype": "Small Text",
+   "label": "Formula"
+  },
+  {
+   "fieldname": "tier_tariff_structure",
+   "fieldtype": "Table",
+   "label": "Tier Tariff Structure",
+   "options": "Tier Tariff Structure"
+  },
+  {
+   "fieldname": "base_reception_tariff",
+   "fieldtype": "Currency",
+   "label": "Base Reception Tariff (T1) "
+  },
+  {
+   "fieldname": "column_break_ieub",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "inlet_treated_vol",
+   "fieldtype": "Float",
+   "label": "Inlet treated Vol"
+  },
+  {
+   "fieldname": "cod",
+   "fieldtype": "Float",
+   "label": "COD"
+  },
+  {
+   "fieldname": "daily_off_spec",
+   "fieldtype": "Currency",
+   "label": "Daily Off Spec",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-07-26 16:50:41.454998",
+ "modified_by": "Administrator",
+ "module": "WT Operations",
+ "name": "Off-Spec COD Invoice Calculator",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

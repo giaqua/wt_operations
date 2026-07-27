@@ -46,5 +46,34 @@ frappe.query_reports["Daily Off-Spec Report"] = {
                 ].filter((d) => d.value.toLowerCase().includes((txt || "").toLowerCase()));
             },
         },
+        {
+            fieldname: "sample_process_location",
+            label: __("Sample Process Location"),
+            fieldtype: "Data",
+        },
+        {
+            fieldname: "result_type",
+            label: __("Result Type"),
+            fieldtype: "Select",
+            options: ["", "Internal", "External"],
+        },
+        {
+            fieldname: "show_daily_report",
+            label: __("Show Daily Report"),
+            fieldtype: "Check",
+            default: 0,
+        },
+        {
+            fieldname: "show_water_sample",
+            label: __("Show Water Sample"),
+            fieldtype: "Check",
+            default: 0,
+        },
+        {
+            fieldname: "show_sample_process_location",
+            label: __("Show Sample Process Location"),
+            fieldtype: "Check",
+            default: 0,
+        },
     ],
 };

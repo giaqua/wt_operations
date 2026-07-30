@@ -13,10 +13,6 @@ frappe.query_reports["Daily Off-Spec Report"] = {
             fieldname: "unit",
             label: __("Unit"),
             fieldtype: "Data",
-            // If "unit" on Daily Operation Report is actually a Link to a
-            // "Project Unit" doctype rather than plain text, change fieldtype
-            // to "Link" and add options: "Project Unit" (or your doctype name),
-            // and consider filtering it by the selected project.
         },
         {
             fieldname: "from_date",
@@ -82,6 +78,303 @@ frappe.query_reports["Daily Off-Spec Report"] = {
             label: __("Show Arabic Report"),
             fieldtype: "Check",
             default: 1,
-        }
+        },
     ],
+
+    onload: function (report) {
+        report.page.add_inner_button(
+            __("Print Report"),
+            function () {
+                print_daily_offspec_report(report);
+            },
+            __("Actions")
+        );
+    },
 };
+
+// ---------------------------------------------------------------------------
+// Branded print view
+// Uses the <thead> "display: table-header-group" trick so the header block
+// (logo + company + report title + column headers) repeats on every printed
+// page. Works for both browser Print and "Save as PDF" from the print dialog.
+// ---------------------------------------------------------------------------
+
+const HM_BLUE = "#010BCE";
+const HM_RED = "#D50000";
+
+function print_daily_offspec_report(report) {
+    const columns = frappe.query_report.columns;
+    const data = frappe.query_report.data;
+
+    if (!data || !data.length) {
+        frappe.msgprint(__("No data to print. Please run the report first."));
+        return;
+    }
+
+    const filters = frappe.query_report.get_filter_values();
+    const is_arabic = !!filters.show_arabic_report;
+    const default_company = frappe.defaults.get_default("company");
+
+    frappe.dom.freeze(__("Preparing print view..."));
+
+    frappe.db
+        .get_value("Company", default_company, ["company_name", "company_logo"])
+        .then((r) => {
+            frappe.dom.unfreeze();
+            const company = (r && r.message) || {};
+            render_print_window(columns, data, filters, company, is_arabic);
+        })
+        .catch(() => {
+            frappe.dom.unfreeze();
+            render_print_window(columns, data, filters, {}, is_arabic);
+        });
+}
+
+function format_cell_value(value, col) {
+    if (value === null || value === undefined || value === "") return "";
+
+    if (col.fieldtype === "Currency") {
+        return frappe.format(value, { fieldtype: "Currency" }, { always_show_decimals: true });
+    }
+    if (col.fieldtype === "Float") {
+        return flt(value).toFixed(2);
+    }
+    if (col.fieldtype === "Date") {
+        return frappe.datetime.str_to_user(value);
+    }
+    return frappe.utils.escape_html(String(value));
+}
+
+function render_print_window(columns, data, filters, company, is_arabic) {
+    const logo_url = company.company_logo ? frappe.urllib.get_full_url(company.company_logo) : "";
+    const company_name = company.company_name || "";
+
+    const title = is_arabic ? "تقرير تكاليف معالجة مياه الصرف الصحي غير المطابقة للمواصفات المعتمدة" : "Daily Off-Spec Report";
+    const date_range_label = is_arabic ? "الفترة" : "Period";
+    const date_range = `${frappe.datetime.str_to_user(filters.from_date)} - ${frappe.datetime.str_to_user(filters.to_date)}`;
+    const generated_label = is_arabic ? "تاريخ الطباعة" : "Generated on";
+    const generated_on = frappe.datetime.now_datetime();
+    const project = filters.project || "";
+
+    // Column header row
+    const header_cells = columns
+        .map((col) => `<th>${frappe.utils.escape_html(__(col.label))}</th>`)
+        .join("");
+
+    // Totals: sum every numeric (Float/Currency) column
+    const totals = {};
+    columns.forEach((col) => {
+        if (col.fieldtype === "Float" || col.fieldtype === "Currency") totals[col.fieldname] = 0;
+    });
+
+    const body_rows = data
+        .map((row, idx) => {
+            const cells = columns
+                .map((col) => {
+                    const raw = row[col.fieldname];
+                    if (totals.hasOwnProperty(col.fieldname)) totals[col.fieldname] += flt(raw) || 0;
+                    const align =
+                        col.fieldtype === "Float" || col.fieldtype === "Currency"
+                            ? "right"
+                            : is_arabic
+                            ? "right"
+                            : "left";
+                    return `<td style="text-align:${align}">${format_cell_value(raw, col)}</td>`;
+                })
+                .join("");
+            return `<tr class="${idx % 2 === 0 ? "row-even" : "row-odd"}">${cells}</tr>`;
+        })
+        .join("");
+
+    const totals_label_colspan = columns.findIndex(
+        (c) => c.fieldtype === "Float" || c.fieldtype === "Currency"
+    );
+    const totals_row = columns
+        .map((col, idx) => {
+            if (totals.hasOwnProperty(col.fieldname)) {
+                return `<td style="text-align:right"><b>${format_cell_value(
+                    totals[col.fieldname],
+                    col
+                )}</b></td>`;
+            }
+            if (idx === Math.max(totals_label_colspan - 1, 0)) {
+                return `<td style="text-align:${is_arabic ? "right" : "left"}"><b>${
+                    is_arabic ? "الإجمالي" : "Total"
+                }</b></td>`;
+            }
+            return "<td></td>";
+        })
+        .join("");
+
+    const html = `
+    <!DOCTYPE html>
+    <html lang="${is_arabic ? "ar" : "en"}" dir="${is_arabic ? "ltr" : "ltr"}">
+    <head>
+    <meta charset="UTF-8">
+    <title>${title}</title>
+    <style>
+        @page { size: A4 landscape; margin: 14mm 10mm 16mm 10mm; }
+
+        * { box-sizing: border-box; }
+        body {
+            font-family: ${is_arabic ? "'Tahoma','Arial',sans-serif" : "'Segoe UI','Arial',sans-serif"};
+            color: #1a1a1a;
+            margin: 0;
+            font-size: 11px;
+        }
+
+        table.report-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        /* This is the key trick: a thead inside a table repeats on every
+           printed page in all major browsers (Chrome, Edge, Firefox). */
+        thead.report-header { display: table-header-group; }
+        tfoot.report-footer { display: table-footer-group; }
+
+        .brand-bar {
+            background: ${HM_BLUE};
+            color: #fff;
+            padding: 10px 14px;
+        }
+        .brand-bar-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .brand-bar img.logo {
+            max-height: 42px;
+            max-width: 160px;
+            background: #fff;
+            padding: 3px 6px;
+            border-radius: 3px;
+        }
+        .brand-bar .company-name {
+            font-size: 15px;
+            font-weight: 600;
+        }
+        .brand-bar .report-title {
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+            flex: 1;
+        }
+        .brand-bar .meta {
+            font-size: 10px;
+            text-align: ${is_arabic ? "left" : "right"};
+            line-height: 1.5;
+        }
+        .accent-strip {
+            height: 4px;
+            background: ${HM_RED};
+        }
+
+        thead.report-header th {
+            background: #f1f2fb;
+            color: ${HM_BLUE};
+            border: 1px solid #ccc;
+            padding: 6px 8px;
+            font-size: 10.5px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        tbody td {
+            border: 1px solid #ddd;
+            padding: 5px 8px;
+            font-size: 10.5px;
+        }
+        tr.row-even td { background: #ffffff; }
+        tr.row-odd td { background: #f8f9fd; }
+        tr { page-break-inside: avoid; }
+
+        tfoot.report-footer td {
+            border: 1px solid #ccc;
+            border-top: 2px solid ${HM_RED};
+            padding: 6px 8px;
+            background: #f1f2fb;
+            font-size: 10.5px;
+        }
+
+        .print-toolbar {
+            position: fixed;
+            top: 8px;
+            right: 8px;
+            z-index: 999;
+        }
+        .print-toolbar button {
+            background: ${HM_BLUE};
+            color: #fff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        @media print {
+            .print-toolbar { display: none; }
+        }
+    </style>
+    </head>
+    <body>
+
+    <div class="print-toolbar">
+        <button onclick="window.print()">${is_arabic ? "طباعة" : "Print"}</button>
+    </div>
+
+    <table class="report-table">
+        <thead class="report-header">
+            <tr>
+                <th colspan="${columns.length}" style="padding:0;border:none">
+                    <div class="brand-bar">
+                        <div class="brand-bar-inner">
+                            ${logo_url ? `<img class="logo" src="${logo_url}">` : "<div></div>"}
+                            <div class="company-name">
+                            
+                            </div>
+                            <div class="report-title">
+                            ${frappe.utils.escape_html(company_name)}
+                            <br>
+                            ${title}
+                            
+                            </div>
+                            <div class="meta">
+                                ${date_range_label}: ${date_range}<br>
+                                ${generated_label}: ${generated_on}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accent-strip"></div>
+                </th>
+            </tr>
+            <tr>${header_cells}</tr>
+        </thead>
+        <tfoot class="report-footer">
+            <tr>${totals_row}</tr>
+        </tfoot>
+        <tbody>
+            ${body_rows}
+        </tbody>
+    </table>
+
+    <script>
+        // Auto-trigger print once the logo (if any) has loaded, so the
+        // print dialog opens with the image already rendered.
+        window.addEventListener("load", function () {
+            setTimeout(function () { window.print(); }, 300);
+        });
+    </script>
+    </body>
+    </html>
+    `;
+
+    const print_window = window.open("", "_blank");
+    if (!print_window) {
+        frappe.msgprint(__("Please allow pop-ups for this site to print the report."));
+        return;
+    }
+    print_window.document.open();
+    print_window.document.write(html);
+    print_window.document.close();
+}

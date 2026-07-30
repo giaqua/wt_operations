@@ -45,11 +45,13 @@ frappe.query_reports["Daily Off-Spec Report"] = {
                     { value: "TDS.", description: "" },
                 ].filter((d) => d.value.toLowerCase().includes((txt || "").toLowerCase()));
             },
+            default: ["COD"],
         },
         {
             fieldname: "sample_process_location",
             label: __("Sample Process Location"),
             fieldtype: "Data",
+            default: "lift",
         },
         {
             fieldname: "result_type",
@@ -75,5 +77,11 @@ frappe.query_reports["Daily Off-Spec Report"] = {
             fieldtype: "Check",
             default: 0,
         },
+        {
+            fieldname: "show_arabic_report",
+            label: __("Show Arabic Report"),
+            fieldtype: "Check",
+            default: 1,
+        }
     ],
 };

@@ -37,6 +37,7 @@ class OffSpecCODInvoiceCalculator(Document):
 		elif not inlet_vol or not baseline:
 			doc.daily_off_spec = 0
 		else:
+			print("Matched Tier:", matched_tier)
 			tier_tariff = flt(matched_tier.tier_tariff) * flt(matched_tier.premium)
-			doc.daily_off_spec = inlet_vol * (cod / baseline) * tier_tariff
+			doc.daily_off_spec = (inlet_vol * (cod / baseline) * tier_tariff) - (inlet_vol * tier_tariff)
 					

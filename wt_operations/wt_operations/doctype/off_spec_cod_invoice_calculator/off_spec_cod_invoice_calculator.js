@@ -44,7 +44,7 @@ function calculate_daily_off_spec(frm) {
     }
 
     let tier_tariff = flt(matched_tier.tier_tariff) * flt(matched_tier.premium);
-    let daily_off_spec = inlet_vol * (cod / baseline) * tier_tariff;
+    let daily_off_spec = (inlet_vol * (cod / baseline) * tier_tariff) - (inlet_vol * tier_tariff);
 
     frm.set_value('daily_off_spec', daily_off_spec);
 };

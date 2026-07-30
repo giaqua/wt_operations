@@ -56,11 +56,14 @@ def param_to_fieldname(param):
 
 
 def get_columns(filters):
-    columns = [
-        {"label": _("Project"), "fieldname": "project", "fieldtype": "Link", "options": "Project", "width": 130},
-        # {"label": _("Unit"), "fieldname": "unit", "fieldtype": "Data", "width": 130},
-        {"label": _("Date"), "fieldname": "date", "fieldtype": "Date", "width": 100},
-    ]
+    columns = []
+    if not filters.get("show_arabic_report"):
+       columns = [
+               {"label": _("Project"), "fieldname": "project", "fieldtype": "Link", "options": "Project", "width": 130},
+               # {"label": _("Unit"), "fieldname": "unit", "fieldtype": "Data", "width": 130},
+               # {"label": _("Date"), "fieldname": "date", "fieldtype": "Date", "width": 100},
+           ]
+    
 
     if filters.get("show_daily_report"):
         columns.append(
@@ -76,7 +79,7 @@ def get_columns(filters):
     if filters.get("show_water_sample"):
         columns.append(
             {
-                "label": _("Water Sample"),
+                "label": _("QTY m3"),
                 "fieldname": "water_sample",
                 "fieldtype": "Link",
                 "options": "Project Operation Water Sample",
@@ -94,14 +97,15 @@ def get_columns(filters):
     #         }
     #     )
 
-    columns.append(
+    columns.extend([
+        {"label": _("Date"), "fieldname": "date", "fieldtype": "Date", "width": 100},
         {
-            "label": _("Waste Water Treated Vol. (m³)"),
+            "label": _("QTY m3"),
             "fieldname": "waste_water_treated_volume",
             "fieldtype": "Float",
             "width": 170,
         }
-    )
+    ])
 
     selected_parameters = filters.get("parameter")
     if selected_parameters and isinstance(selected_parameters, str):
@@ -152,9 +156,19 @@ def get_columns(filters):
             }
         )
 
-    columns.append(
-        {"label": _("Daily Off-Spec (SAR)"), "fieldname": "daily_off_spec", "fieldtype": "Currency", "width": 150}
-    )
+    if filters.get("show_arabic_report"):
+        columns.extend([
+                {"label": _("COD الحد التعاقدي"), "fieldname": "contractual_limit_cod", "fieldtype": "Currency", "width": 200},
+                {"label": _("نسبة تجاوز العنصر"), "fieldname": "element_exceeding_percentage", "fieldtype": "Currency", "width": 200},
+                {"label": _("تكلفة المعالجة الأساسية"), "fieldname": "base_processing_cost", "fieldtype": "Currency", "width": 200},
+                {"label": _("تكلفة معالجة المياه الغير مطابقة"), "fieldname": "cost_of_treating_noncompliant_water", "fieldtype": "Currency", "width": 200},
+                {"label": _("فرق تكلفة المعالجة الإضافي"), "fieldname": "additional_processing_cost_difference", "fieldtype": "Currency", "width": 200},
+                {"label": _("فرق تكاليف فترة الاحتساب"), "fieldname": "daily_off_spec", "fieldtype": "Currency", "width": 200},
+        ])
+    else:
+        columns.append(
+            {"label": _("Daily Off-Spec (SAR)"), "fieldname": "daily_off_spec", "fieldtype": "Currency", "width": 150}
+        )
 
     return columns, parameters
 
@@ -196,8 +210,8 @@ def get_data(filters, parameters):
 
         # If the user filtered by Sample Process Location or Result Type,
         # only keep rows that actually have a matching sample.
-        if not pws and (filters.get("sample_process_location") or filters.get("result_type")):
-            continue
+        # if not pws and (filters.get("sample_process_location") or filters.get("result_type")):
+        #     continue
 
         param_values = {}
         if pws:
@@ -207,7 +221,7 @@ def get_data(filters, parameters):
                 fields=["parameter", "inlet"],
             )
             for sr in sample_rows:
-                param_values[sr.parameter] = flt(sr.inlet)
+                param_values[sr.parameter] = flt(sr.inlet) if dor.waste_water_treated_volume else 0
 
         for param in parameters:
             row[param_to_fieldname(param)] = param_values.get(param)
@@ -222,14 +236,23 @@ def get_data(filters, parameters):
             row["sample_process_location"] = pws.sample_process_location if pws else None
 
         cod_value = param_values.get("COD")
-        row["daily_off_spec"] = calculate_daily_off_spec(
+        daily_off_spec_values = calculate_daily_off_spec(
             dor.project,
             dor.date,
             dor.waste_water_treated_volume,
             cod_value,
             settings_cache,
             tier_cache,
-        )
+        ) or [0, 0, 0, 0, 0, 0]
+        print("Daily Off-Spec Values:", daily_off_spec_values)
+    
+        if len(daily_off_spec_values)> 0:
+            row["element_exceeding_percentage"] = daily_off_spec_values[1]
+            row["cost_of_treating_noncompliant_water"] = daily_off_spec_values[2]
+            row["additional_processing_cost_difference"] = daily_off_spec_values[3]
+            row["contractual_limit_cod"] = daily_off_spec_values[4]
+            row["base_processing_cost"] = daily_off_spec_values[5]
+        row["daily_off_spec"]= daily_off_spec_values[0] if len(daily_off_spec_values) > 0 else 0
 
         data.append(row)
 
@@ -309,4 +332,13 @@ def calculate_daily_off_spec(project, date, treated_vol, cod_value, settings_cac
         return 0
 
     tier_tariff = flt(tier.tier_tariff) * flt(tier.premium)
-    return flt(treated_vol) * (flt(cod_value) / baseline) * tier_tariff
+    # daily_off_spec = (flt(treated_vol) * (flt(cod_value) / baseline) * tier_tariff) - (flt(treated_vol) * flt(tier_tariff))
+
+    contractual_limit_cod = baseline or 0
+    base_processing_cost = (flt(tier_tariff)) or 0
+    element_exceeding_percentage = (flt(cod_value) / 2500) or 0
+    cost_of_treating_noncompliant_water = (element_exceeding_percentage * flt(tier_tariff)) or 0
+    additional_processing_cost_difference = (cost_of_treating_noncompliant_water - (flt(tier_tariff))) or 0
+    daily_off_spec = (additional_processing_cost_difference * flt(treated_vol)) or 0
+
+    return [daily_off_spec, element_exceeding_percentage, cost_of_treating_noncompliant_water, additional_processing_cost_difference, contractual_limit_cod,base_processing_cost]

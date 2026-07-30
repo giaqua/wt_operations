@@ -7,9 +7,9 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
+  "project",
   "date",
   "inlet_treated_vol",
-  "comments",
   "column_break_ljpo",
   "ph",
   "cod",
@@ -23,7 +23,9 @@
   "cost_of_treating_noncompliant_water",
   "additional_processing_cost_difference",
   "contractual_limit_cod",
-  "base_processing_cost"
+  "base_processing_cost",
+  "column_break_sgop",
+  "comments"
  ],
  "fields": [
   {
@@ -107,12 +109,22 @@
    "fieldname": "base_processing_cost",
    "fieldtype": "Currency",
    "label": "Base Processing Cost"
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "label": "Project",
+   "options": "Project"
+  },
+  {
+   "fieldname": "column_break_sgop",
+   "fieldtype": "Column Break"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-07-30 15:17:26.044443",
+ "modified": "2026-07-30 16:34:33.093368",
  "modified_by": "Administrator",
  "module": "WT Operations",
  "name": "Daily Operation Report Archive",

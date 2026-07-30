@@ -1,0 +1,141 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "allow_rename": 1,
+ "autoname": "format:DORA-{#}",
+ "creation": "2026-07-30 14:44:25.594874",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "date",
+  "inlet_treated_vol",
+  "comments",
+  "column_break_ljpo",
+  "ph",
+  "cod",
+  "tss",
+  "turbidity",
+  "oil_and_grease",
+  "column_break_sxbr",
+  "daily_offspec_amount",
+  "section_break_xqfz",
+  "element_exceeding_percentage",
+  "cost_of_treating_noncompliant_water",
+  "additional_processing_cost_difference",
+  "contractual_limit_cod",
+  "base_processing_cost"
+ ],
+ "fields": [
+  {
+   "fieldname": "date",
+   "fieldtype": "Date",
+   "label": "DATE"
+  },
+  {
+   "fieldname": "inlet_treated_vol",
+   "fieldtype": "Float",
+   "label": "Inlet treated Vol"
+  },
+  {
+   "fieldname": "comments",
+   "fieldtype": "Small Text",
+   "label": "Comments"
+  },
+  {
+   "fieldname": "column_break_ljpo",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "ph",
+   "fieldtype": "Float",
+   "label": "pH"
+  },
+  {
+   "fieldname": "cod",
+   "fieldtype": "Float",
+   "label": "COD"
+  },
+  {
+   "fieldname": "tss",
+   "fieldtype": "Float",
+   "label": "TSS"
+  },
+  {
+   "fieldname": "turbidity",
+   "fieldtype": "Float",
+   "label": "Turbidity"
+  },
+  {
+   "fieldname": "oil_and_grease",
+   "fieldtype": "Float",
+   "label": "Oil And Grease"
+  },
+  {
+   "fieldname": "column_break_sxbr",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "daily_offspec_amount",
+   "fieldtype": "Currency",
+   "label": "Daily OffSpec Amount"
+  },
+  {
+   "fieldname": "section_break_xqfz",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "element_exceeding_percentage",
+   "fieldtype": "Float",
+   "label": "Element Exceeding Percentage"
+  },
+  {
+   "fieldname": "cost_of_treating_noncompliant_water",
+   "fieldtype": "Currency",
+   "label": "Cost Of Treating Noncompliant Water"
+  },
+  {
+   "fieldname": "additional_processing_cost_difference",
+   "fieldtype": "Currency",
+   "label": "Additional Processing Cost Difference"
+  },
+  {
+   "fieldname": "contractual_limit_cod",
+   "fieldtype": "Float",
+   "label": "Contractual Limit COD"
+  },
+  {
+   "fieldname": "base_processing_cost",
+   "fieldtype": "Currency",
+   "label": "Base Processing Cost"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-07-30 15:17:26.044443",
+ "modified_by": "Administrator",
+ "module": "WT Operations",
+ "name": "Daily Operation Report Archive",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

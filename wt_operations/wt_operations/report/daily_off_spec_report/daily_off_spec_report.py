@@ -158,11 +158,11 @@ def get_columns(filters):
 
     if filters.get("show_arabic_report"):
         columns.extend([
-                {"label": _("COD الحد التعاقدي"), "fieldname": "contractual_limit_cod", "fieldtype": "Currency", "width": 200},
-                {"label": _("نسبة تجاوز العنصر"), "fieldname": "element_exceeding_percentage", "fieldtype": "Currency", "width": 200},
-                {"label": _("تكلفة المعالجة الأساسية"), "fieldname": "base_processing_cost", "fieldtype": "Currency", "width": 200},
-                {"label": _("تكلفة معالجة المياه الغير مطابقة"), "fieldname": "cost_of_treating_noncompliant_water", "fieldtype": "Currency", "width": 200},
-                {"label": _("فرق تكلفة المعالجة الإضافي"), "fieldname": "additional_processing_cost_difference", "fieldtype": "Currency", "width": 200},
+                {"label": _("COD الحد التعاقدي"), "fieldname": "contractual_limit_cod", "fieldtype": "float","precision": 2, "width": 200},
+                {"label": _("نسبة تجاوز العنصر"), "fieldname": "element_exceeding_percentage", "fieldtype": "float","precision": 2, "width": 200},
+                {"label": _("تكلفة المعالجة الأساسية"), "fieldname": "base_processing_cost", "fieldtype": "float","precision": 2, "width": 200},
+                {"label": _("تكلفة معالجة المياه الغير مطابقة"), "fieldname": "cost_of_treating_noncompliant_water", "fieldtype": "float","precision": 2, "width": 200},
+                {"label": _("فرق تكلفة المعالجة الإضافي"), "fieldname": "additional_processing_cost_difference", "fieldtype": "float","precision": 2, "width": 200},
                 {"label": _("فرق تكاليف فترة الاحتساب"), "fieldname": "daily_off_spec", "fieldtype": "Currency", "width": 200},
         ])
     else:
@@ -247,11 +247,11 @@ def get_data(filters, parameters):
         print("Daily Off-Spec Values:", daily_off_spec_values)
     
         if len(daily_off_spec_values)> 0:
-            row["element_exceeding_percentage"] = daily_off_spec_values[1]
-            row["cost_of_treating_noncompliant_water"] = daily_off_spec_values[2]
-            row["additional_processing_cost_difference"] = daily_off_spec_values[3]
-            row["contractual_limit_cod"] = daily_off_spec_values[4]
-            row["base_processing_cost"] = daily_off_spec_values[5]
+            row["element_exceeding_percentage"] =daily_off_spec_values[1]
+            row["cost_of_treating_noncompliant_water"] = round(daily_off_spec_values[2],2)
+            row["additional_processing_cost_difference"] = round(daily_off_spec_values[3],2)
+            row["contractual_limit_cod"] = round(daily_off_spec_values[4],2)
+            row["base_processing_cost"] = round(daily_off_spec_values[5],2)
         row["daily_off_spec"]= daily_off_spec_values[0] if len(daily_off_spec_values) > 0 else 0
 
         data.append(row)

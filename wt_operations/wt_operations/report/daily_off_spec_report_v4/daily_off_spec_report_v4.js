@@ -110,7 +110,12 @@ frappe.query_reports["Daily Off-Spec Report V4"] = {
     tree: true,
     name_field: "particulars",
     parent_field: "parent_particulars",
-    initial_depth: 0,
+    // initial_depth: 1 means every month row loads already expanded, showing
+    // ALL of its daily rows right away - no click needed. Each month can
+    // still be individually collapsed afterwards if you want to tuck it
+    // away again. (Set this back to 0 if you'd rather months start
+    // collapsed and only expand on click.)
+    initial_depth: 1,
 
     formatter: function (value, row, column, data, default_formatter) {
         // Current Frappe passes (value, row, column, data, default_formatter) -
@@ -118,7 +123,12 @@ frappe.query_reports["Daily Off-Spec Report V4"] = {
         // shape (that mismatch is what threw "Cannot read properties of
         // undefined (reading 'fieldname')" here before).
         if (column.fieldname === "particulars" && data) {
-            value = data.display_label;
+            // Fall back to the raw particulars value if display_label is
+            // somehow missing, so we never render the literal text
+            // "undefined" in the tree column.
+            value = data.display_label !== undefined && data.display_label !== null
+                ? data.display_label
+                : value;
             column.is_tree = true;
         }
 

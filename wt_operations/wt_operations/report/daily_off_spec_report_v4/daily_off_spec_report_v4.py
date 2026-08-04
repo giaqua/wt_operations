@@ -21,16 +21,21 @@
 # Extra filters:
 #   - show_daily_report / show_water_sample / show_sample_process_location (Check):
 #     toggle optional columns on/off. These are forced off when group_by_month is set,
-#     since a Daily Operation Report / Water Sample no longer maps 1:1 to a grouped row.
+#     since a Daily Operation Report / Water Sample no longer maps 1:1 to a row.
 #   - sample_process_location (Data): filters rows by a case-insensitive partial match
 #     against the water sample's Sample Process Location. Rows without a matching
 #     water sample are excluded when this filter is set.
-#   - group_by_month (Check): collapses the daily rows into one row per
-#     Project + Unit + Month. Volumes and the Daily Off-Spec amount are summed;
-#     parameter readings (COD, pH, TSS, Turbidity, TDS) are volume-weighted
-#     averaged; tariff/settings-derived fields are simple-averaged across the
-#     days included in that month. A "Days" column shows how many daily rows
-#     were rolled up into that month.
+#   - group_by_month (Check): turns the report into a Trial-Balance-style
+#     collapsible tree. Each row is a Month (Project + Unit + Month), collapsed
+#     by default, showing the month's totals. Expanding a month row reveals the
+#     individual Daily Operation Report rows that were rolled into it.
+#       - waste_water_treated_volume / daily_off_spec on the month row: SUMMED
+#         from its daily children
+#       - parameter readings (COD, pH, TSS, ...) on the month row: volume-weighted
+#         average of the daily children
+#       - tariff/settings-derived fields on the month row: simple average of the
+#         daily children
+#       - the daily child rows keep their own actual (unaggregated) values
 
 import frappe
 from frappe import _
@@ -38,7 +43,7 @@ from frappe.utils import flt, getdate
 
 ALL_PARAMETERS = ["COD", "pH", "TSS", "Turbidity.", "TDS."]
 
-# Settings/tariff-derived fields that get averaged (not summed) when grouping monthly
+# Settings/tariff-derived fields that get averaged (not summed) on month rows
 SETTINGS_DERIVED_FIELDS = [
     "element_exceeding_percentage",
     "cost_of_treating_noncompliant_water",
@@ -59,8 +64,16 @@ def execute(filters=None):
 
 
 def validate_filters(filters):
+    # Tree-configured script reports (tree: true / name_field / parent_field
+    # in report.js) can trigger an initial query_report.run call before the
+    # report's own filter defaults have been applied client-side, arriving
+    # here with from_date/to_date empty. Rather than hard-throw and break
+    # that call, fall back to a sensible default window (last 1 month) so
+    # the report still renders something - it re-runs correctly once your
+    # actual filter values are sent.
     if not filters.get("from_date") or not filters.get("to_date"):
-        frappe.throw(_("Please select From Date and To Date"))
+        filters["to_date"] = filters.get("to_date") or frappe.utils.today()
+        filters["from_date"] = filters.get("from_date") or frappe.utils.add_months(filters["to_date"], -1)
 
     if getdate(filters.get("from_date")) > getdate(filters.get("to_date")):
         frappe.throw(_("From Date cannot be after To Date"))
@@ -80,8 +93,8 @@ def get_columns(filters):
         ]
 
     if group_by_month:
-        # Unit isn't shown normally, but once rows are collapsed to one-per-month
-        # it's the only thing distinguishing multiple rows for the same project.
+        # Unit isn't shown normally, but once rows are grouped into a tree it's
+        # the only thing distinguishing separate month-branches for one project.
         columns.append({"label": _("Unit"), "fieldname": "unit", "fieldtype": "Data", "width": 100})
     else:
         if filters.get("show_daily_report"):
@@ -107,7 +120,20 @@ def get_columns(filters):
             )
 
     if group_by_month:
-        columns.append({"label": _("Month"), "fieldname": "month", "fieldtype": "Data", "width": 100})
+        # The tree/expand column: month rows show "Jan 2026", daily child rows
+        # (once expanded) show their actual date. See report.js: this is the
+        # configured name_field, and its display value is overridden there.
+        columns.append({"label": _("Month / Date"), "fieldname": "particulars", "fieldtype": "Data", "width": 160})
+
+        # These carry the tree wiring (parent link, pretty label, group/indent
+        # flags) that report.js's formatter reads. They MUST be declared as
+        # real columns - Frappe's normalize_result() step drops any row key
+        # that isn't a declared column fieldname, which is why these were
+        # coming back as `undefined` in the browser before being added here.
+        columns.append({"label": _("Display Label"), "fieldname": "display_label", "fieldtype": "Data", "hidden": 1})
+        columns.append({"label": _("Parent"), "fieldname": "parent_particulars", "fieldtype": "Data", "hidden": 1})
+        columns.append({"label": _("Is Group"), "fieldname": "is_group", "fieldtype": "Check", "hidden": 1})
+        columns.append({"label": _("Indent"), "fieldname": "indent", "fieldtype": "Int", "hidden": 1})
     else:
         columns.append({"label": _("Date"), "fieldname": "date", "fieldtype": "Date", "width": 100})
 
@@ -195,7 +221,7 @@ def get_data(filters, parameters):
     settings_cache = {}  # project -> list of Off-Spec settings, sorted by effective_from desc
     tier_cache = {}  # settings doc name -> list of tier rows
 
-    data = []
+    daily_rows = []
 
     for dor in dor_list:
         row = {
@@ -247,45 +273,54 @@ def get_data(filters, parameters):
             row["base_processing_cost"] = round(daily_off_spec_values[5], 2)
         row["daily_off_spec"] = daily_off_spec_values[0] if len(daily_off_spec_values) > 0 else 0
 
-        data.append(row)
+        daily_rows.append(row)
 
     if filters.get("group_by_month"):
-        data = group_data_by_month(data, parameters)
+        return build_monthly_tree(daily_rows, parameters)
 
-    return data
+    return daily_rows
 
 
-def group_data_by_month(rows, parameters):
-    """Collapse daily rows into one row per Project + Unit + Month.
+def build_monthly_tree(daily_rows, parameters):
+    """Build a Trial-Balance-style tree: one collapsible row per
+    Project + Unit + Month (the totals), each with its underlying daily rows
+    as children (only visible once the month row is expanded in the UI).
 
-    - waste_water_treated_volume, daily_off_spec: summed
-    - parameter readings (COD, pH, TSS, ...): volume-weighted average
-    - tariff/settings-derived fields: simple average across days present
+    Tree linkage uses "particulars" (unique per row) / "parent_particulars"
+    (the parent's "particulars" value) - see report.js `name_field` /
+    `parent_field` config, mirroring how core reports like Trial Balance /
+    Inventory Balance implement their collapsible tree views.
     """
     param_fieldnames = [param_to_fieldname(p) for p in parameters]
 
     groups = {}
-    order = []  # preserves first-seen order of (project, unit, month) for stable sort fallback
+    order = []  # preserves first-seen (project, unit, month) order
 
-    for row in rows:
-        month_dt = getdate(row["date"]).replace(day=1)
+    for row in daily_rows:
+        date = row["date"]
+        month_dt = getdate(date).replace(day=1)
         month_sort_key = month_dt.strftime("%Y-%m")
         month_label = month_dt.strftime("%b %Y")
 
-        key = (row.get("project"), row.get("unit"), month_sort_key)
+        project = row.get("project")
+        unit = row.get("unit")
+        key = (project, unit, month_sort_key)
+
         if key not in groups:
+            particulars_key = "{0}::{1}::{2}".format(project or "", unit or "", month_sort_key)
             groups[key] = {
-                "project": row.get("project"),
-                "unit": row.get("unit"),
-                "month": month_label,
-                "_month_sort": month_sort_key,
+                "particulars_key": particulars_key,
+                "month_label": month_label,
+                "project": project,
+                "unit": unit,
                 "waste_water_treated_volume": 0.0,
-                "days_count": 0,
                 "daily_off_spec": 0.0,
+                "days_count": 0,
                 "_param_weighted_sum": {f: 0.0 for f in param_fieldnames},
                 "_param_weight": {f: 0.0 for f in param_fieldnames},
                 "_settings_sum": {f: 0.0 for f in SETTINGS_DERIVED_FIELDS},
                 "_settings_count": {f: 0 for f in SETTINGS_DERIVED_FIELDS},
+                "children": [],
             }
             order.append(key)
 
@@ -294,8 +329,8 @@ def group_data_by_month(rows, parameters):
         weight = vol if vol else 1.0
 
         g["waste_water_treated_volume"] += vol
-        g["days_count"] += 1
         g["daily_off_spec"] += flt(row.get("daily_off_spec"))
+        g["days_count"] += 1
 
         for f in param_fieldnames:
             val = row.get(f)
@@ -309,36 +344,53 @@ def group_data_by_month(rows, parameters):
                 g["_settings_sum"][f] += flt(val)
                 g["_settings_count"][f] += 1
 
-    grouped_rows = []
+        child = {
+            "particulars": "{0}::{1}".format(g["particulars_key"], date),
+            "parent_particulars": g["particulars_key"],
+            "display_label": getdate(date).strftime("%d %b %Y"),
+            "is_group": 0,
+            "indent": 1,
+            "project": project,
+            "unit": unit,
+            "waste_water_treated_volume": row.get("waste_water_treated_volume"),
+            "daily_off_spec": row.get("daily_off_spec"),
+            "days_count": None,
+        }
+        for f in param_fieldnames:
+            child[f] = row.get(f)
+        for f in SETTINGS_DERIVED_FIELDS:
+            child[f] = row.get(f)
+
+        g["children"].append(child)
+
+    tree_rows = []
     for key in order:
         g = groups[key]
-        out = {
+        group_row = {
+            "particulars": g["particulars_key"],
+            "parent_particulars": "",
+            "display_label": g["month_label"],
+            "is_group": 1,
+            "indent": 0,
             "project": g["project"],
             "unit": g["unit"],
-            "month": g["month"],
-            "_month_sort": g["_month_sort"],
             "waste_water_treated_volume": round(g["waste_water_treated_volume"], 2),
-            "days_count": g["days_count"],
             "daily_off_spec": round(g["daily_off_spec"], 2),
+            "days_count": g["days_count"],
         }
 
         for f in param_fieldnames:
             w = g["_param_weight"][f]
-            out[f] = round(g["_param_weighted_sum"][f] / w, 2) if w else None
+            group_row[f] = round(g["_param_weighted_sum"][f] / w, 2) if w else None
 
         for f in SETTINGS_DERIVED_FIELDS:
             n = g["_settings_count"][f]
-            out[f] = round(g["_settings_sum"][f] / n, 2) if n else None
+            group_row[f] = round(g["_settings_sum"][f] / n, 2) if n else None
 
-        grouped_rows.append(out)
+        tree_rows.append(group_row)
+        tree_rows.extend(sorted(g["children"], key=lambda c: c["particulars"]))
 
-    grouped_rows.sort(
-        key=lambda r: (r.get("project") or "", r.get("unit") or "", r.get("_month_sort") or "")
-    )
-    for r in grouped_rows:
-        r.pop("_month_sort", None)
-
-    return grouped_rows
+    return tree_rows
 
 
 def get_matching_sample(dor, filters):
@@ -437,11 +489,17 @@ def calculate_daily_off_spec(project, date, treated_vol, cod_value, settings_cac
 # ---------------------------------------------------------------------------
 # This is the single source of truth for the print view: it re-runs the exact
 # same execute()/get_data() logic used by the report grid (including the
-# group_by_month roll-up when that filter is set), then computes the column
-# totals ONCE, server-side, directly from that data list. The client
-# (report.js) no longer re-derives or re-sums anything - it just renders
-# whatever this method returns. This removes any possibility of the print
-# totals drifting from (or doubling relative to) what the report itself shows.
+# month/day tree when group_by_month is set), then computes the column totals
+# ONCE, server-side, directly from that data list. The client (report.js) no
+# longer re-derives or re-sums anything - it just renders whatever this
+# method returns.
+#
+# IMPORTANT: when group_by_month is set, `data` contains BOTH the month rows
+# (is_group=1) AND their daily children (is_group=0) so the tree can expand.
+# Totals must only be computed from the month (is_group) rows, or the daily
+# children would be double-counted on top of the month totals they already
+# feed into. `row.get("is_group", 1)` defaults to True for the ordinary
+# (non-grouped) flat mode, where every row should count as before.
 
 
 @frappe.whitelist()
@@ -452,12 +510,13 @@ def get_print_data(filters=None):
     columns, parameters = get_columns(filters)
     data = get_data(filters, parameters)
 
-    # Compute totals once, from this exact data list - no client-side re-summing.
+    rows_for_totals = [row for row in data if row.get("is_group", 1)]
+
     totals = {}
     for col in columns:
         if col.get("fieldtype") in ("Float", "Currency"):
             fieldname = col.get("fieldname")
-            totals[fieldname] = flt(sum(flt(row.get(fieldname)) for row in data))
+            totals[fieldname] = flt(sum(flt(row.get(fieldname)) for row in rows_for_totals))
 
     default_company = frappe.defaults.get_global_default("company")
     company = {}

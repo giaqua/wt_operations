@@ -91,6 +91,18 @@ frappe.query_reports["Daily Off-Spec Report V3-2"] = {
             fieldtype: "Check",
             default: 1,
         },
+		{
+            fieldname: "hide_project_and_days",
+            label: __("Hide Project and Days"),
+            fieldtype: "Check",
+            default: 1,
+        },
+		{
+            fieldname: "hide_zero_off_spec_rows",
+            label: __("Hide Zero Off-Spec Rows"),
+            fieldtype: "Check",
+            default: 1,
+        },
     ],
 
     onload: function (report) {
@@ -127,7 +139,7 @@ const HM_RED = "#D50000";
 // TODO: replace with the actual dotted path to this report's .py module, e.g.
 // "your_app.your_module.report.daily_off_spec_report.daily_off_spec_report.get_print_data"
 const PRINT_DATA_METHOD =
-    "wt_operations.wt_operations.report.daily_off_spec_report_v3.daily_off_spec_report_v3.get_print_data";
+    "wt_operations.wt_operations.report.daily_off_spec_report_v3_2.daily_off_spec_report_v3_2.get_print_data";
 
 function print_daily_offspec_report(report, filter_overrides) {
     const filters = Object.assign({}, frappe.query_report.get_filter_values(), filter_overrides || {});
@@ -242,11 +254,12 @@ function render_print_window(columns, data, totals, filters, company, is_arabic)
         .join("");
 
     const totals_label_colspan = columns.findIndex(
-        (c) => c.fieldtype === "Float" || c.fieldtype === "Currency"
+        (c) => ((c.fieldtype === "Float" || c.fieldtype === "Currency") && (c.fieldname === "waste_water_treated_volume" || c.fieldname === "total_off_spec_count"))
     );
     const totals_row = columns
         .map((col, idx) => {
-            if (totals && totals.hasOwnProperty(col.fieldname)) {
+			console.log("totals_row", totals, col.fieldname, idx, totals_label_colspan);
+            if (totals && totals.hasOwnProperty(col.fieldname) && (col.fieldname === "waste_water_treated_volume" || col.fieldname === "daily_off_spec")) {
                 return `<td style="text-align:right;white-space:nowrap"><b>${format_total_value(
                     totals[col.fieldname],
                     col

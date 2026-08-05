@@ -82,7 +82,8 @@ def get_columns(filters):
     if group_by_month:
         # Unit isn't shown normally, but once rows are collapsed to one-per-month
         # it's the only thing distinguishing multiple rows for the same project.
-        columns.append({"label": _("Unit"), "fieldname": "unit", "fieldtype": "Data", "width": 100})
+        if not filters.get("hide_project_and_days"):
+            columns.append({"label": _("Unit"), "fieldname": "unit", "fieldtype": "Data", "width": 100})
     else:
         if filters.get("show_daily_report"):
             columns.append(
@@ -120,8 +121,9 @@ def get_columns(filters):
         }
     )
 
-    if group_by_month:
+    if group_by_month and not filters.get("hide_project_and_days"):
         columns.append({"label": _("Days"), "fieldname": "days_count", "fieldtype": "Int", "width": 80})
+        
     elif filters.get("show_sample_process_location"):
         columns.append(
             {
@@ -181,6 +183,9 @@ def get_data(filters, parameters):
         dor_filters["project"] = filters.get("project")
     if filters.get("unit"):
         dor_filters["unit"] = filters.get("unit")
+
+    if filters.get("hide_zero_off_spec_rows"):
+        dor_filters["waste_water_treated_volume"] = [">", 0]
 
     dor_list = frappe.get_all(
         "Daily Operation Report",
@@ -455,7 +460,7 @@ def get_print_data(filters=None):
     # Compute totals once, from this exact data list - no client-side re-summing.
     totals = {}
     for col in columns:
-        if col.get("fieldtype") in ("Float", "Currency") and col.get("fieldname") in ("waste_water_treated_volume","daily_off_spec"):
+        if col.get("fieldtype") in ("Float", "Currency"):
             fieldname = col.get("fieldname")
             totals[fieldname] = flt(sum(flt(row.get(fieldname)) for row in data))
 

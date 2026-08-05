@@ -123,6 +123,21 @@ frappe.query_reports["Daily Off-Spec Report V3-3"] = {
             },
             __("Actions")
         );
+
+        // New: prints the full daily detail (never rolled up server-side),
+        // but adds a subtotal row after every Project + Unit + Month group,
+        // totalling only QTY (waste_water_treated_volume) and Daily Off-Spec.
+        report.page.add_inner_button(
+            __("Print Report (Detailed + Monthly Totals)"),
+            function () {
+                print_daily_offspec_report(
+                    report,
+                    { group_by_month: 0 },
+                    { add_monthly_subtotals: true }
+                );
+            },
+            __("Actions")
+        );
     },
 };
 
@@ -141,8 +156,9 @@ const HM_RED = "#D50000";
 const PRINT_DATA_METHOD =
     "wt_operations.wt_operations.report.daily_off_spec_report_v3_3.daily_off_spec_report_v3_3.get_print_data";
 
-function print_daily_offspec_report(report, filter_overrides) {
+function print_daily_offspec_report(report, filter_overrides, options) {
     const filters = Object.assign({}, frappe.query_report.get_filter_values(), filter_overrides || {});
+    const opts = options || {};
 
     frappe.dom.freeze(__("Preparing print view..."));
 
@@ -166,7 +182,15 @@ function print_daily_offspec_report(report, filter_overrides) {
 
             // const is_arabic = !!server_filters.show_arabic_report;
 			const is_arabic = 0;
-            render_print_window(columns, data, totals, server_filters, company || {}, is_arabic);
+            render_print_window(
+                columns,
+                data,
+                totals,
+                server_filters,
+                company || {},
+                is_arabic,
+                !!opts.add_monthly_subtotals
+            );
         },
         error: function () {
             frappe.dom.unfreeze();
@@ -209,33 +233,49 @@ function format_total_value(value, col) {
     return fixed;
 }
 
-function render_print_window(columns, data, totals, filters, company, is_arabic) {
-    const logo_url = company.company_logo ? frappe.urllib.get_full_url(company.company_logo) : "";
-    const company_name = company.company_name || "";
-    const is_monthly = !!filters.group_by_month;
+// ---------------------------------------------------------------------------
+// Monthly subtotal row builder (used by the "Detailed + Monthly Totals" print)
+// ---------------------------------------------------------------------------
 
-    const title = is_arabic
-        ? is_monthly
-            ? "التقرير الشهري لمخالفة المواصفات"
-            : "التقرير اليومي لمخالفة المواصفات"
-        : is_monthly
-        ? "Daily Off-Spec Report (Monthly Summary)"
-        : "Daily Off-Spec Report";
-    const date_range_label = is_arabic ? "الفترة" : "Period";
-    const date_range = `${frappe.datetime.str_to_user(filters.from_date)} - ${frappe.datetime.str_to_user(filters.to_date)}`;
-    const generated_label = is_arabic ? "تاريخ الطباعة" : "Generated on";
-    const generated_on = frappe.datetime.now_datetime();
+function get_month_label(date_str, is_arabic) {
+    if (!date_str) return "";
+    const d = frappe.datetime.str_to_obj(date_str);
+    try {
+        return d.toLocaleString(is_arabic ? "ar" : "en", { month: "long", year: "numeric" });
+    } catch (e) {
+        // Fallback if Intl locale isn't available in the print window
+        return frappe.datetime.str_to_user(date_str);
+    }
+}
 
-    // Column header row
-    const header_cells = columns
-        .map((col) => `<th>${frappe.utils.escape_html(__(col.label))}</th>`)
-        .join("");
+function build_subtotal_row(columns, label, vol_total, offspec_total, is_arabic) {
+    const qty_idx = columns.findIndex((c) => c.fieldname === "waste_water_treated_volume");
+    const offspec_idx = columns.findIndex((c) => c.fieldname === "daily_off_spec");
+    const label_span = Math.max(qty_idx, 1);
 
-    // Data comes straight from the server's get_print_data - it's already the
-    // authoritative row list (the same one execute()/get_data() produced,
-    // including the monthly roll-up when group_by_month is set), so no
-    // client-side de-duplication, grouping, or re-summing happens here.
-    const body_rows = data
+    const cells = [];
+    cells.push(
+        `<td colspan="${label_span}" style="text-align:${
+            is_arabic ? "right" : "left"
+        }"><b>${frappe.utils.escape_html(label)}</b></td>`
+    );
+
+    for (let idx = label_span; idx < columns.length; idx++) {
+        const col = columns[idx];
+        if (idx === qty_idx) {
+            cells.push(`<td style="text-align:right"><b>${format_total_value(vol_total, col)}</b></td>`);
+        } else if (idx === offspec_idx) {
+            cells.push(`<td style="text-align:right"><b>${format_total_value(offspec_total, col)}</b></td>`);
+        } else {
+            cells.push(`<td></td>`);
+        }
+    }
+
+    return `<tr class="month-subtotal-row">${cells.join("")}</tr>`;
+}
+
+function build_body_rows(columns, data, is_arabic) {
+    return data
         .map((row, idx) => {
             const cells = columns
                 .map((col) => {
@@ -252,6 +292,96 @@ function render_print_window(columns, data, totals, filters, company, is_arabic)
             return `<tr class="${idx % 2 === 0 ? "row-even" : "row-odd"}">${cells}</tr>`;
         })
         .join("");
+}
+
+// Renders daily rows in order, inserting a bold subtotal row (QTY + Daily
+// Off-Spec only) every time the Project + Unit + Month key changes.
+function build_body_rows_with_monthly_subtotals(columns, data, is_arabic) {
+    let html = "";
+    let group_key = null;
+    let month_label = "";
+    let vol_sum = 0;
+    let offspec_sum = 0;
+    let row_idx = 0;
+
+    const flush_group = () => {
+        if (group_key === null) return;
+        const label = is_arabic ? `إجمالي - ${month_label}` : `Total - ${month_label}`;
+        html += build_subtotal_row(columns, label, vol_sum, offspec_sum, is_arabic);
+    };
+
+    data.forEach((row) => {
+        const month_key = (row.date || "").slice(0, 7); // "YYYY-MM"
+        const key = `${row.project || ""}|${row.unit || ""}|${month_key}`;
+
+        if (group_key !== null && key !== group_key) {
+            flush_group();
+            vol_sum = 0;
+            offspec_sum = 0;
+        }
+
+        group_key = key;
+        month_label = get_month_label(row.date, is_arabic);
+        vol_sum += flt(row.waste_water_treated_volume);
+        offspec_sum += flt(row.daily_off_spec);
+
+        const cells = columns
+            .map((col) => {
+                const raw = row[col.fieldname];
+                const align =
+                    col.fieldtype === "Float" || col.fieldtype === "Currency" || col.fieldtype === "Int"
+                        ? "right"
+                        : is_arabic
+                        ? "right"
+                        : "left";
+                return `<td style="text-align:${align}">${format_cell_value(raw, col)}</td>`;
+            })
+            .join("");
+        html += `<tr class="${row_idx % 2 === 0 ? "row-even" : "row-odd"}">${cells}</tr>`;
+        row_idx++;
+    });
+
+    flush_group(); // last group
+
+    return html;
+}
+
+function render_print_window(columns, data, totals, filters, company, is_arabic, add_monthly_subtotals) {
+    const logo_url = company.company_logo ? frappe.urllib.get_full_url(company.company_logo) : "";
+    const company_name = company.company_name || "";
+    const is_monthly = !!filters.group_by_month;
+
+    const title = is_arabic
+        ? is_monthly
+            ? "التقرير الشهري لمخالفة المواصفات"
+            : add_monthly_subtotals
+            ? "التقرير اليومي التفصيلي لمخالفة المواصفات مع إجمالي شهري"
+            : "التقرير اليومي لمخالفة المواصفات"
+        : is_monthly
+        ? "Daily Off-Spec Report (Monthly Summary)"
+        : add_monthly_subtotals
+        ? "Daily Off-Spec Report (Detailed, with Monthly Totals)"
+        : "Daily Off-Spec Report";
+    const date_range_label = is_arabic ? "الفترة" : "Period";
+    const date_range = `${frappe.datetime.str_to_user(filters.from_date)} - ${frappe.datetime.str_to_user(filters.to_date)}`;
+    const generated_label = is_arabic ? "تاريخ الطباعة" : "Generated on";
+    const generated_on = frappe.datetime.now_datetime();
+
+    // Column header row
+    const header_cells = columns
+        .map((col) => `<th>${frappe.utils.escape_html(__(col.label))}</th>`)
+        .join("");
+
+    // Data comes straight from the server's get_print_data - it's already the
+    // authoritative row list (the same one execute()/get_data() produced,
+    // including the monthly roll-up when group_by_month is set), so no
+    // client-side de-duplication, grouping, or re-summing happens here -
+    // EXCEPT for the monthly subtotal rows below, which only sum QTY and
+    // Daily Off-Spec for display and never touch the underlying data/totals.
+    const body_rows =
+        add_monthly_subtotals && !is_monthly
+            ? build_body_rows_with_monthly_subtotals(columns, data, is_arabic)
+            : build_body_rows(columns, data, is_arabic);
 
     const totals_label_colspan = columns.findIndex(
         (c) => ((c.fieldtype === "Float" || c.fieldtype === "Currency") && (c.fieldname === "waste_water_treated_volume" || c.fieldname === "total_off_spec_count"))
@@ -356,6 +486,14 @@ function render_print_window(columns, data, totals, filters, company, is_arabic)
         tr.row-even td { background: #ffffff; }
         tr.row-odd td { background: #f8f9fd; }
         tr { page-break-inside: avoid; }
+
+        tr.month-subtotal-row td {
+            background: #fdeaea;
+            border-top: 2px solid ${HM_RED};
+            border-bottom: 1px solid #ccc;
+            font-size: 10.5px;
+            font-weight: 600;
+        }
 
         tfoot.report-footer td {
             border: 1px solid #ccc;

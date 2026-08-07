@@ -429,7 +429,9 @@ function render_print_window(columns, data, totals, filters, company, is_arabic,
         /* This is the key trick: a thead inside a table repeats on every
            printed page in all major browsers (Chrome, Edge, Firefox). */
         thead.report-header { display: table-header-group; }
-        tfoot.report-footer { display: table-footer-group; }
+        /* NOTE: no table-footer-group here on purpose - the grand total row
+           lives inside <tbody> as the last row so it prints ONCE, at the
+           true end of the report, not on every page. */
 
         .brand-bar {
             background: ${HM_BLUE};
@@ -495,7 +497,8 @@ function render_print_window(columns, data, totals, filters, company, is_arabic,
             font-weight: 600;
         }
 
-        tfoot.report-footer td {
+        /* Grand total row - now a normal tbody row, printed once at the end */
+        tr.grand-total-row td {
             border: 1px solid #ccc;
             border-top: 2px solid ${HM_RED};
             padding: 6px 8px;
@@ -553,11 +556,9 @@ function render_print_window(columns, data, totals, filters, company, is_arabic,
             </tr>
             <tr>${header_cells}</tr>
         </thead>
-        <tfoot class="report-footer">
-            <tr>${totals_row}</tr>
-        </tfoot>
         <tbody>
             ${body_rows}
+            <tr class="grand-total-row">${totals_row}</tr>
         </tbody>
     </table>
 

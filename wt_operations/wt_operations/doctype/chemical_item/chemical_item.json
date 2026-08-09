@@ -9,6 +9,7 @@
   "chemical_item_name",
   "uom",
   "stock_item",
+  "stock_item_uom",
   "valuation_rate",
   "density"
  ],
@@ -44,12 +45,20 @@
    "fieldname": "density",
    "fieldtype": "Float",
    "label": "Density"
+  },
+  {
+   "fetch_from": "stock_item.stock_uom",
+   "fetch_if_empty": 1,
+   "fieldname": "stock_item_uom",
+   "fieldtype": "Link",
+   "label": "Stock Item UOM",
+   "options": "UOM"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-04-20 10:32:36.862801",
+ "modified": "2026-08-09 10:46:12.813076",
  "modified_by": "Administrator",
  "module": "WT Operations",
  "name": "Chemical Item",

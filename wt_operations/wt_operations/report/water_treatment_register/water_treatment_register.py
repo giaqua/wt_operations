@@ -1,7 +1,7 @@
 # Copyright (c) 2026, HM
 # For license information, please see license.txt
 #
-# Report: Daily Off-Spec Report
+# Report: Water Treatment Register
 # Combines:
 #   - Daily Operation Report (project, unit, date, waste_water_treated_volume,
 #     energy_consumtion, running_hours)
@@ -36,6 +36,15 @@
 #     chemical qty: summed. Parameter readings (inlet + outlet): volume-
 #     weighted averaged. Tariff/settings-derived fields + energy_consumtion:
 #     simple-averaged across the days included in that month.
+#
+# Print grouping:
+#   - Inlet parameter columns, Outlet parameter columns, and Chemical qty
+#     columns are each tagged with a "group" key ("inlet" / "outlet" /
+#     "chemical"). The print view's JS (build_group_header_row) reads this
+#     exact key to render the spanning "Inlet" / "Outlet" / "Chemical Usage"
+#     header band above the normal column-header row. All other columns
+#     (Project, Date, QTY, etc.) are left untagged and render as blank
+#     spacer cells in that band.
 
 import frappe
 from frappe import _
@@ -197,6 +206,10 @@ def get_columns(filters):
     )
 
     # Inlet parameter columns (filtered by "parameter")
+    # NOTE: "group": "inlet" is what drives the spanning "Inlet" header band
+    # in the print view (water_treatment_register.js -> build_group_header_row
+    # reads col.group). Previously this was "water_group", which the JS never
+    # read, so the Inlet band silently never rendered.
     for param in inlet_parameters:
         columns.append(
             {
@@ -204,11 +217,12 @@ def get_columns(filters):
                 "fieldname": param_to_fieldname(param, "in_"),
                 "fieldtype": "Float",
                 "width": 110,
-                "water_group": "inlet",
+                "group": "inlet",
             }
         )
 
     # Outlet parameter columns - always ALL_PARAMETERS
+    # Same fix: "group": "outlet" (was "water_group").
     for param in outlet_parameters:
         columns.append(
             {
@@ -216,11 +230,12 @@ def get_columns(filters):
                 "fieldname": param_to_fieldname(param, "out_"),
                 "fieldtype": "Float",
                 "width": 110,
-                "water_group": "outlet",
+                "group": "outlet",
             }
         )
 
     # Chemical usage qty columns - one per selected chemical
+    # Same fix: "group": "chemical" (was "chemical_group": True).
     density_suffix = " " + str(_("(after density)")) if show_density else ""
     for chemical in selected_chemicals:
         columns.append(
@@ -230,7 +245,7 @@ def get_columns(filters):
                 "fieldtype": "Float",
                 "precision": 2,
                 "width": 140,
-                "chemical_group": True,
+                "group": "chemical",
             }
         )
 
@@ -308,7 +323,7 @@ def get_data(filters, ctx):
             "unit": dor.unit,
             "date": dor.date,
             "waste_water_treated_volume": dor.waste_water_treated_volume,
-            "energy_consumtion": dor.energy_consumtion,
+            "energy_consumtion": round(dor.energy_consumtion*dor.waste_water_treated_volume if dor.energy_consumtion else 0, 2),
             "running_hours": dor.running_hours,
         }
 

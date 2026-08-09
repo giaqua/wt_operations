@@ -63,7 +63,7 @@ frappe.query_reports["Water Treatment Register"] = {
             get_data: function (txt) {
                 return frappe
                     .call({
-                        method: `${REPORT_METHOD_PATH}.get_chemical_options`,
+                        method: `${REPORT_METHOD_PATH}.get_chemical_list`,
                         args: { txt: txt || "" },
                     })
                     .then((r) => (r.message || []).map((v) => ({ value: v, description: "" })));
@@ -138,7 +138,7 @@ frappe.query_reports["Water Treatment Register"] = {
             default: 1,
         },
         {
-            fieldname: "hide_calculation_and_amount",
+            fieldname: "hide_calculation_amount_columns",
             label: __("Hide Calculation & Amount Columns"),
             fieldtype: "Check",
             default: 1,

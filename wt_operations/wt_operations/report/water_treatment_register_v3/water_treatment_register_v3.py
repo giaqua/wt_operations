@@ -36,6 +36,14 @@
 #     chemical qty: summed. Parameter readings (inlet + outlet): volume-
 #     weighted averaged. Tariff/settings-derived fields + energy_consumtion:
 #     simple-averaged across the days included in that month.
+#   - hide_zero_qty_chemical_columns (Check, default on): after the report
+#     data is built, any chemical qty column whose total across ALL returned
+#     rows is 0 (or entirely None) gets dropped from the column list. This
+#     runs after `chemicals`/`show_chemicals` resolve which chemicals are
+#     candidates in the first place - it only prunes columns that made it
+#     into the report but never actually had any usage in the selected
+#     date range/project/unit. The underlying row data is untouched; only
+#     the column definition (and therefore the rendered column) is removed.
 #
 # Print grouping:
 #   - Inlet parameter columns, Outlet parameter columns, and Chemical qty
@@ -45,6 +53,19 @@
 #     header band above the normal column-header row. All other columns
 #     (Project, Date, QTY, etc.) are left untagged and render as blank
 #     spacer cells in that band.
+#
+# Chemical column labels:
+#   - `Chemical Usage Table.chemical` stores a Chemical Item name (e.g.
+#     "G Nano Stream 1"), which is an internal/operational name and not
+#     necessarily what the business wants printed on the register.
+#   - Each Chemical Item optionally links to a stock Item via `stock_item`.
+#     For display (column headers + the chemical picker's dropdown hint) we
+#     resolve Chemical Item -> stock Item -> item_name and show that instead,
+#     falling back to the Chemical Item name itself if there's no linked
+#     stock Item or the Item has no item_name.
+#   - The column FIELDNAME (`chemical_to_fieldname`) stays keyed off the
+#     Chemical Item name - that's guaranteed unique/stable even if an Item's
+#     item_name is renamed later. Only the LABEL changes.
 
 import frappe
 from frappe import _
@@ -72,6 +93,12 @@ def execute(filters=None):
     columns, ctx = get_columns(filters)
     data = get_data(filters, ctx)
 
+    # Default-on: drop chemical qty columns that have zero usage across
+    # everything currently in `data`. filters.get(..., 1) so this stays on
+    # even if the caller never passed the key (e.g. older bookmarks/links).
+    if filters.get("hide_zero_qty_chemical_columns", 1):
+        columns = prune_zero_qty_chemical_columns(columns, data)
+
     return columns, data
 
 
@@ -93,6 +120,36 @@ def chemical_to_fieldname(chemical):
     while "__" in slug:
         slug = slug.replace("__", "_")
     return "chem_{0}".format(slug.strip("_") or "unknown")
+
+
+def get_chemical_item_names(chemicals):
+    """Map Chemical Item name -> linked stock Item's item_name, for display
+    purposes only (column labels, picker hint text).
+
+    - Chemical Item.stock_item links to an Item.
+    - Falls back to the Chemical Item name itself if there's no stock_item
+      link, the linked Item doesn't exist, or it has no item_name.
+    """
+    if not chemicals:
+        return {}
+
+    chem_rows = frappe.get_all(
+        "Chemical Item",
+        filters={"name": ["in", chemicals]},
+        fields=["name", "stock_item"],
+    )
+
+    stock_items = [r.stock_item for r in chem_rows if r.stock_item]
+    item_names = {}
+    if stock_items:
+        item_names = {
+            i.name: i.item_name
+            for i in frappe.get_all(
+                "Item", filters={"name": ["in", stock_items]}, fields=["name", "item_name"]
+            )
+        }
+
+    return {r.name: (item_names.get(r.stock_item) or r.name) for r in chem_rows}
 
 
 def get_selected_parameters(filters):
@@ -179,6 +236,10 @@ def get_columns(filters):
     # so the `parameter` filter (which narrows Inlet) doesn't apply here.
     outlet_parameters = list(ALL_PARAMETERS) if show_outlet else []
     selected_chemicals = get_selected_chemicals(filters)
+    # Display-only: Chemical Item name -> linked stock Item's item_name.
+    # Column fieldnames still key off the Chemical Item name (see
+    # chemical_to_fieldname) - only the printed/grid label changes.
+    chemical_item_names = get_chemical_item_names(selected_chemicals)
 
     columns = []
     if not filters.get("show_arabic_report"):
@@ -285,13 +346,17 @@ def get_columns(filters):
             }
         )
 
-    # Chemical usage qty columns - one per selected chemical
-    # Same fix: "group": "chemical" (was "chemical_group": True).
+    # Chemical usage qty columns - one per selected chemical.
+    # Label is the linked stock Item's item_name (falls back to the
+    # Chemical Item name if unresolved); fieldname stays keyed off the
+    # Chemical Item name for stability.
+    # Same group fix as above: "group": "chemical" (was "chemical_group": True).
     density_suffix = " " + str(_("(after density)")) if show_density else ""
     for chemical in selected_chemicals:
+        display_name = chemical_item_names.get(chemical, chemical)
         columns.append(
             {
-                "label": "{0} {1}{2}".format(chemical, _("Qty (kg)"), density_suffix),
+                "label": "{0} {1}{2}".format(display_name, _("Qty (kg)"), density_suffix),
                 "fieldname": chemical_to_fieldname(chemical),
                 "fieldtype": "Float",
                 "precision": 2,
@@ -572,6 +637,22 @@ def group_data_by_month(rows, ctx):
     return grouped_rows
 
 
+def prune_zero_qty_chemical_columns(columns, data):
+    """Drop any column tagged group == "chemical" whose total across all
+    rows in `data` is 0 (or every value is None). Runs after data has been
+    built (and, if applicable, monthly-grouped) so it reflects the actual
+    totals being shown - a chemical selected via the filter but never
+    actually used in range simply won't get a column."""
+    kept = []
+    for col in columns:
+        if col.get("group") == "chemical":
+            total = sum(flt(row.get(col["fieldname"])) for row in data)
+            if not total:
+                continue
+        kept.append(col)
+    return kept
+
+
 def get_matching_sample(dor, filters, water_source):
     """Find the single-source Project Operation Water Sample for this DOR's
     project + date + water_source ("Inlet" or "Outlet")."""
@@ -693,6 +774,9 @@ def get_print_data(filters=None):
     columns, ctx = get_columns(filters)
     data = get_data(filters, ctx)
 
+    if filters.get("hide_zero_qty_chemical_columns", 1):
+        columns = prune_zero_qty_chemical_columns(columns, data)
+
     totals = {}
     for col in columns:
         if col.get("fieldtype") in ("Float", "Currency"):
@@ -723,6 +807,12 @@ def get_chemical_options(txt=None):
     """Distinct chemical names across all DOR Chemical Usage Table rows -
     powers the "Chemicals (Qty Columns)" MultiSelectList filter's dropdown.
 
+    Returns [{"value": <Chemical Item name>, "description": <linked stock
+    Item's item_name>}, ...] - the value stored/filtered on is still the
+    Chemical Item name (matches Chemical Usage Table.chemical), the
+    description is just a display hint so users can tell which stock item
+    each chemical maps to while picking.
+
     NOTE: this name must match the method called from
     water_treatment_register.js (REPORT_METHOD_PATH + ".get_chemical_options").
     It was previously named get_chemical_list, which the JS never actually
@@ -737,4 +827,6 @@ def get_chemical_options(txt=None):
     names = [c.chemical for c in chemicals if c.chemical]
     if txt:
         names = [n for n in names if txt.lower() in n.lower()]
-    return names
+
+    item_names = get_chemical_item_names(names)
+    return [{"value": n, "description": item_names.get(n, "")} for n in names]

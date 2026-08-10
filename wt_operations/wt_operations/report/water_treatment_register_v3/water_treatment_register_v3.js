@@ -76,12 +76,16 @@ frappe.query_reports["Water Treatment Register V3"] = {
             fieldtype: "MultiSelectList",
             depends_on: "eval:frappe.query_report.get_filter_value('show_chemicals')",
             get_data: function (txt) {
+                // Server returns [{value: <Chemical Item name>, description:
+                // <linked stock Item's item_name>}, ...] - pass it straight
+                // through so the picker shows the item name as a hint next
+                // to the Chemical Item name being selected.
                 return frappe
                     .call({
                         method: `${REPORT_METHOD_PATH}.get_chemical_options`,
                         args: { txt: txt || "" },
                     })
-                    .then((r) => (r.message || []).map((v) => ({ value: v, description: "" })));
+                    .then((r) => r.message || []);
             },
             default: [],
             description: __("Leave empty (with Show Chemicals checked) to show every chemical used instead of a specific list"),
@@ -92,6 +96,17 @@ frappe.query_reports["Water Treatment Register V3"] = {
             fieldtype: "Check",
             default: 0,
             description: __("When checked, chemical qty columns use 'Chemical Quantity Used (kg) After Density'"),
+        },
+        {
+            fieldname: "hide_zero_qty_chemical_columns",
+            label: __("Hide Zero-Qty Chemical Columns"),
+            fieldtype: "Check",
+            default: 1,
+            description: __("Drops any chemical qty column whose total across the current results is 0"),
+            on_change: function (report) {
+                // Which columns exist changes server-side, so re-run.
+                report.refresh();
+            },
         },
         {
             fieldname: "sample_process_location",

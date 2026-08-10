@@ -353,9 +353,9 @@ def get_columns(filters):
     columns.append(
         {"label": _("Energy Consumption"), "fieldname": "energy_consumtion", "fieldtype": "Float", "precision": 4, "width": 130}
     )
-    columns.append(
-        {"label": _("Running Hours"), "fieldname": "running_hours", "fieldtype": "Float", "precision": 1, "width": 110}
-    )
+    # columns.append(
+    #     {"label": _("Running Hours"), "fieldname": "running_hours", "fieldtype": "Float", "precision": 1, "width": 110}
+    # )
 
     # Inlet parameter columns (filtered by "parameter")
     # NOTE: "group": "inlet" is what drives the spanning "Inlet" header band

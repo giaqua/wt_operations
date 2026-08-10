@@ -313,7 +313,7 @@ function format_total_value(value, col) {
 function group_label(group, is_arabic) {
     if (group === "inlet") return is_arabic ? "المدخل (Inlet)" : "Inlet";
     if (group === "outlet") return is_arabic ? "المخرج (Outlet)" : "Outlet";
-    if (group === "chemical") return is_arabic ? "استهلاك الكيماويات" : "Chemical Usage";
+    if (group === "chemical") return is_arabic ? "استهلاك الكيماويات" : "Chemical Consumptions";
     return "";
 }
 

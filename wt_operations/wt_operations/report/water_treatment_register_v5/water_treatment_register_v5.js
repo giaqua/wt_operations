@@ -175,6 +175,13 @@ frappe.query_reports["Water Treatment Register V5"] = {
             default: 1,
             description: __("Hides the whole off-spec calculation block, including Daily Off-Spec"),
         },
+		 {
+            fieldname: "hide_fresh_water_consumption",
+            label: __("Hide Fresh Water Consumption"),
+            fieldtype: "Check",
+            default: 0,
+            description: __("Hides the fresh water consumption column"),
+        },
     ],
 
     onload: function (report) {
@@ -198,7 +205,8 @@ frappe.query_reports["Water Treatment Register V5"] = {
 
         // Prints the full daily detail (never rolled up server-side), but adds
         // a subtotal row after every Project + Unit + Month group, totalling
-        // only QTY (waste_water_treated_volume) and Daily Off-Spec.
+        // QTY (waste_water_treated_volume), Fresh Water Consumption, Daily
+        // Off-Spec, and every chemical qty column.
         report.page.add_inner_button(
             __("Print Report (Detailed + Monthly Totals)"),
             function () {
@@ -398,9 +406,11 @@ function build_group_header_row(columns, is_arabic) {
 
 // ---------------------------------------------------------------------------
 // Monthly subtotal row builder (used by the "Detailed + Monthly Totals" print)
-// Sums QTY (waste_water_treated_volume) and Daily Off-Spec only - nothing
-// else is subtotalled. If Daily Off-Spec is hidden (hide_calculation_and_amount),
-// its column simply won't be found and that part of the row is skipped.
+// Sums QTY (waste_water_treated_volume), Fresh Water Consumption, Daily
+// Off-Spec, and every chemical qty column - nothing else is subtotalled.
+// If a given column is hidden by its own filter (e.g. Daily Off-Spec when
+// hide_calculation_and_amount is on), it simply won't be found in `columns`
+// and that part of the row is skipped.
 // ---------------------------------------------------------------------------
 
 function get_month_label(date_str, is_arabic) {
@@ -417,8 +427,8 @@ function get_month_label(date_str, is_arabic) {
 // {fieldname: numeric_value} object - any column whose fieldname appears
 // in it gets that value rendered (bold, right-aligned); columns not in the
 // map render as an empty cell. Used for both the monthly subtotal rows
-// (QTY + Daily Off-Spec + every chemical column) and reused logic-wise by
-// the grand total row further down.
+// (QTY + Fresh Water Consumption + Daily Off-Spec + every chemical column)
+// and reused logic-wise by the grand total row further down.
 function build_subtotal_row(columns, label, totals_map, is_arabic) {
     const qty_idx = columns.findIndex((c) => c.fieldname === "waste_water_treated_volume");
     const label_span = Math.max(qty_idx, 1);
@@ -464,12 +474,19 @@ function build_body_rows(columns, data, is_arabic) {
 
 // Renders daily rows in order, inserting a bold subtotal row every time
 // the Project + Unit + Month key changes. Sums QTY (waste_water_treated_volume),
-// Daily Off-Spec, and every chemical qty column (col.group === "chemical") -
-// nothing else is subtotalled. Columns that aren't present (e.g. Daily
-// Off-Spec when hide_calculation_and_amount is on) are simply skipped.
+// Fresh Water Consumption (fresh_water_consumption), Daily Off-Spec, and
+// every chemical qty column (col.group === "chemical") - nothing else is
+// subtotalled. Columns that aren't present (e.g. Daily Off-Spec when
+// hide_calculation_and_amount is on) are simply skipped.
 function build_body_rows_with_monthly_subtotals(columns, data, is_arabic) {
     const subtotal_fieldnames = columns
-        .filter((c) => c.fieldname === "waste_water_treated_volume" || c.fieldname === "daily_off_spec" || c.group === "chemical")
+        .filter(
+            (c) =>
+                c.fieldname === "waste_water_treated_volume" ||
+                c.fieldname === "fresh_water_consumption" ||
+                c.fieldname === "daily_off_spec" ||
+                c.group === "chemical"
+        )
         .map((c) => c.fieldname);
 
     let html = "";
@@ -555,7 +572,8 @@ function render_print_window(columns, data, totals, filters, company, is_arabic,
 
     // Data comes straight from the server's get_print_data - authoritative,
     // no client-side de-duplication/grouping/re-summing - EXCEPT the monthly
-    // subtotal rows below, which only sum QTY and Daily Off-Spec for display.
+    // subtotal rows below, which only sum QTY / Fresh Water Consumption /
+    // Daily Off-Spec / chemical columns for display.
     const body_rows =
         add_monthly_subtotals && !is_monthly
             ? build_body_rows_with_monthly_subtotals(columns, data, is_arabic)
@@ -570,6 +588,7 @@ function render_print_window(columns, data, totals, filters, company, is_arabic,
                 totals &&
                 totals.hasOwnProperty(col.fieldname) &&
                 (col.fieldname === "waste_water_treated_volume" ||
+                    col.fieldname === "fresh_water_consumption" ||
                     col.fieldname === "daily_off_spec" ||
                     col.group === "chemical");
             if (is_summable) {

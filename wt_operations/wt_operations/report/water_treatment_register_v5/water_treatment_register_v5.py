@@ -14,6 +14,14 @@
 #   - Off-Spec COD Invoice Calculator (+ Tier Tariff Structure child) for the
 #     Daily Off-Spec calc - always keyed off the INLET sample's COD value,
 #     independent of the Water Source display filter.
+#   - Treatment parameters table (child of Daily Operation Report) -> Fresh
+#     Water Consumption. The Treatment parameter MASTER doctype carries a
+#     `treatment_parameter_purpose` field; any Treatment parameter whose
+#     purpose == "Fresh Water Consumption" is resolved and its child-table
+#     `actual` value(s) on the DOR are summed into a single column. This is
+#     resolved by PURPOSE, not by matching the parameter's name/label - the
+#     same purpose could in principle be tagged on a differently-named
+#     parameter, and the label should never be hardcoded/string-matched.
 #
 # Filters:
 #   - water_source (Select: "", "Inlet", "Outlet"): "" means show both Inlet
@@ -33,9 +41,10 @@
 #     runs (kept internally) even when the columns are hidden.
 #   - group_by_month (Check): collapses daily rows into one row per
 #     Project + Unit + Month. Volumes / daily_off_spec / running_hours /
-#     chemical qty: summed. Parameter readings (inlet + outlet): volume-
-#     weighted averaged. Tariff/settings-derived fields + energy_consumtion:
-#     simple-averaged across the days included in that month.
+#     chemical qty / fresh_water_consumption: summed. Parameter readings
+#     (inlet + outlet): volume-weighted averaged. Tariff/settings-derived
+#     fields + energy_consumtion: simple-averaged across the days included
+#     in that month.
 #   - hide_zero_qty_chemical_columns (Check, default on): after the report
 #     data is built, any chemical qty column whose total across ALL returned
 #     rows is 0 (or entirely None) gets dropped from the column list. This
@@ -64,8 +73,8 @@
 #     "chemical"). The print view's JS (build_group_header_row) reads this
 #     exact key to render the spanning "Inlet" / "Outlet" / "Chemical Usage"
 #     header band above the normal column-header row. All other columns
-#     (Project, Date, QTY, etc.) are left untagged and render as blank
-#     spacer cells in that band.
+#     (Project, Date, QTY, Fresh Water Consumption, etc.) are left untagged
+#     and render as blank spacer cells in that band.
 #
 # Chemical column labels:
 #   - `Chemical Usage Table.chemical` stores a Chemical Item name (e.g.
@@ -79,6 +88,22 @@
 #   - Column fieldnames are now derived from that resolved DISPLAY NAME
 #     (see chemical_group_fieldname), not the raw Chemical Item name -
 #     see "Chemical column grouping" above for why.
+#
+# Fresh Water Consumption:
+#   - Daily Operation Report has a child table `treatment_parameters_table`
+#     (doctype "Treatment parameters table") with one row per Treatment
+#     parameter, each carrying an `actual` value for that DOR/day.
+#   - The Treatment parameter MASTER doctype has a
+#     `treatment_parameter_purpose` field. Fresh water rows are identified
+#     by `treatment_parameter_purpose == "Fresh Water Consumption"` on the
+#     linked master, NOT by matching the child row's `treatment_parameter`
+#     name/label against a hardcoded string - purposes are the source of
+#     truth, names can change/vary.
+#   - get_fresh_water_consumption_map() resolves the set of Treatment
+#     parameter master names carrying that purpose ONCE, then batch-fetches
+#     every matching child row across all DORs in range in a single query,
+#     summing `actual` per DOR (in case more than one parameter under that
+#     purpose ever appears on the same DOR).
 
 import os
 from io import BytesIO
@@ -101,17 +126,20 @@ SETTINGS_DERIVED_FIELDS = [
 CHEMICAL_QTY_FIELD = "chemical_quantity_used_kg"
 CHEMICAL_QTY_FIELD_DENSITY = "chemical_quantity_used_kg_after_dansity"
 
+FRESH_WATER_PURPOSE = "Fresh Water Consumption"
+
 # Fieldnames that get a bold subtotal/grand-total figure in both print and
-# Excel export: QTY, Daily Off-Spec, and every merged chemical qty column.
-# Kept as a function (not a static list) since chemical fieldnames are
-# dynamic per-report - see summable_fieldnames().
+# Excel export: QTY, Fresh Water Consumption, Daily Off-Spec, and every
+# merged chemical qty column. Kept as a function (not a static list) since
+# chemical fieldnames are dynamic per-report - see summable_fieldnames().
 
 
 def summable_fieldnames(columns):
     return [
         c["fieldname"]
         for c in columns
-        if c["fieldname"] in ("waste_water_treated_volume", "daily_off_spec") or c.get("group") == "chemical"
+        if c["fieldname"] in ("waste_water_treated_volume", "fresh_water_consumption", "daily_off_spec")
+        or c.get("group") == "chemical"
     ]
 
 
@@ -278,6 +306,50 @@ def get_chemicals_in_scope(filters):
     return [r.chemical for r in rows if r.chemical]
 
 
+def get_fresh_water_purpose_param_names():
+    """Names of every Treatment parameter master doc whose
+    `treatment_parameter_purpose` is "Fresh Water Consumption". Resolved by
+    PURPOSE (not by matching the parameter's own name/label) - the purpose
+    field is the source of truth, and more than one differently-named
+    parameter could in principle carry it."""
+    return frappe.get_all(
+        "Treatment parameter",
+        filters={"treatment_parameter_purpose": FRESH_WATER_PURPOSE},
+        pluck="name",
+    )
+
+
+def get_fresh_water_consumption_map(dor_names):
+    """dor.name -> summed Fresh Water Consumption `actual` value, across all
+    Treatment parameters table rows on that DOR whose `treatment_parameter`
+    resolves (via the master doc) to purpose == "Fresh Water Consumption".
+
+    Batched: one query to resolve the master parameter name(s), one query
+    to pull every matching child row across ALL dor_names, rather than
+    querying per-DOR."""
+    if not dor_names:
+        return {}
+
+    fresh_water_param_names = get_fresh_water_purpose_param_names()
+    if not fresh_water_param_names:
+        return {}
+
+    rows = frappe.get_all(
+        "Treatment parameters table",
+        filters={
+            "parent": ["in", dor_names],
+            "parenttype": "Daily Operation Report",
+            "treatment_parameter": ["in", fresh_water_param_names],
+        },
+        fields=["parent", "actual"],
+    )
+
+    result = {}
+    for r in rows:
+        result[r.parent] = (result.get(r.parent) or 0) + flt(r.actual)
+    return result
+
+
 def get_columns(filters):
     group_by_month = bool(filters.get("group_by_month"))
     water_source = (filters.get("water_source") or "").strip()  # "", "Inlet", "Outlet"
@@ -373,6 +445,21 @@ def get_columns(filters):
     # columns.append(
     #     {"label": _("Running Hours"), "fieldname": "running_hours", "fieldtype": "Float", "precision": 1, "width": 110}
     # )
+
+    # Fresh Water Consumption - always shown. Resolved from the DOR's
+    # Treatment parameters table child rows whose linked Treatment
+    # parameter master has treatment_parameter_purpose == "Fresh Water
+    # Consumption" (see get_fresh_water_consumption_map).
+    if not filters.get("hide_fresh_water_consumption"):
+        columns.append(
+			{
+				"label": _("Fresh Water Consumption"),
+				"fieldname": "fresh_water_consumption",
+				"fieldtype": "Float",
+				"precision": 2,
+				"width": 150,
+			}
+		)
 
     # Inlet parameter columns (filtered by "parameter")
     # NOTE: "group": "inlet" is what drives the spanning "Inlet" header band
@@ -486,6 +573,8 @@ def get_data(filters, ctx):
 
     settings_cache = {}
     tier_cache = {}
+    # Batched once for every DOR in range - see get_fresh_water_consumption_map.
+    fresh_water_map = get_fresh_water_consumption_map([d.name for d in dor_list])
 
     data = []
 
@@ -497,6 +586,7 @@ def get_data(filters, ctx):
             "waste_water_treated_volume": dor.waste_water_treated_volume,
             "energy_consumtion": dor.energy_consumtion,
             "running_hours": dor.running_hours,
+            "fresh_water_consumption": fresh_water_map.get(dor.name),
         }
 
         inlet_sample = None
@@ -587,8 +677,8 @@ def get_data(filters, ctx):
 def group_data_by_month(rows, ctx):
     """Collapse daily rows into one row per Project + Unit + Month.
 
-    - waste_water_treated_volume, daily_off_spec, running_hours, chemical
-      qty columns: summed
+    - waste_water_treated_volume, fresh_water_consumption, daily_off_spec,
+      running_hours, chemical qty columns: summed
     - parameter readings (inlet + outlet): volume-weighted average
     - tariff/settings-derived fields, energy_consumtion: simple average
       across days present
@@ -614,6 +704,7 @@ def group_data_by_month(rows, ctx):
                 "month": month_label,
                 "_month_sort": month_sort_key,
                 "waste_water_treated_volume": 0.0,
+                "fresh_water_consumption": 0.0,
                 "days_count": 0,
                 "daily_off_spec": 0.0,
                 "running_hours": 0.0,
@@ -633,6 +724,7 @@ def group_data_by_month(rows, ctx):
         weight = vol if vol else 1.0
 
         g["waste_water_treated_volume"] += vol
+        g["fresh_water_consumption"] += flt(row.get("fresh_water_consumption"))
         g["days_count"] += 1
         g["daily_off_spec"] += flt(row.get("daily_off_spec"))
         g["running_hours"] += flt(row.get("running_hours"))
@@ -668,6 +760,7 @@ def group_data_by_month(rows, ctx):
             "month": g["month"],
             "_month_sort": g["_month_sort"],
             "waste_water_treated_volume": round(g["waste_water_treated_volume"], 2),
+            "fresh_water_consumption": round(g["fresh_water_consumption"], 2),
             "days_count": g["days_count"],
             "daily_off_spec": round(g["daily_off_spec"], 2),
             "running_hours": round(g["running_hours"], 2),
@@ -867,8 +960,9 @@ def get_print_data(filters=None):
 # Mirrors the branded print view (water_treatment_register_v3.js ->
 # render_print_window): same HM blue/red header bar, spanning Inlet/Outlet/
 # Chemical Usage group-header band, alternating row shading, monthly
-# subtotal rows (QTY + Daily Off-Spec + every chemical column) when
-# add_monthly_subtotals is set, and a grand total row at the very end.
+# subtotal rows (QTY + Fresh Water Consumption + Daily Off-Spec + every
+# chemical column) when add_monthly_subtotals is set, and a grand total
+# row at the very end.
 # Built with openpyxl so merged cells / fills / borders can be replicated -
 # frappe.utils.xlsxutils.make_xlsx() only does plain rows, not this layout.
 # ---------------------------------------------------------------------------

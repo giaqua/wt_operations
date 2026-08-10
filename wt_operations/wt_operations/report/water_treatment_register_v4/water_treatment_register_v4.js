@@ -362,9 +362,14 @@ function get_month_label(date_str, is_arabic) {
     }
 }
 
-function build_subtotal_row(columns, label, vol_total, offspec_total, is_arabic) {
+// Generic bold subtotal/total row builder. `totals_map` is a plain
+// {fieldname: numeric_value} object - any column whose fieldname appears
+// in it gets that value rendered (bold, right-aligned); columns not in the
+// map render as an empty cell. Used for both the monthly subtotal rows
+// (QTY + Daily Off-Spec + every chemical column) and reused logic-wise by
+// the grand total row further down.
+function build_subtotal_row(columns, label, totals_map, is_arabic) {
     const qty_idx = columns.findIndex((c) => c.fieldname === "waste_water_treated_volume");
-    const offspec_idx = columns.findIndex((c) => c.fieldname === "daily_off_spec");
     const label_span = Math.max(qty_idx, 1);
 
     const cells = [];
@@ -376,10 +381,8 @@ function build_subtotal_row(columns, label, vol_total, offspec_total, is_arabic)
 
     for (let idx = label_span; idx < columns.length; idx++) {
         const col = columns[idx];
-        if (idx === qty_idx) {
-            cells.push(`<td style="text-align:right"><b>${format_total_value(vol_total, col)}</b></td>`);
-        } else if (offspec_idx !== -1 && idx === offspec_idx) {
-            cells.push(`<td style="text-align:right"><b>${format_total_value(offspec_total, col)}</b></td>`);
+        if (totals_map.hasOwnProperty(col.fieldname)) {
+            cells.push(`<td style="text-align:right"><b>${format_total_value(totals_map[col.fieldname], col)}</b></td>`);
         } else {
             cells.push(`<td></td>`);
         }
@@ -408,20 +411,32 @@ function build_body_rows(columns, data, is_arabic) {
         .join("");
 }
 
-// Renders daily rows in order, inserting a bold subtotal row (QTY + Daily
-// Off-Spec only) every time the Project + Unit + Month key changes.
+// Renders daily rows in order, inserting a bold subtotal row every time
+// the Project + Unit + Month key changes. Sums QTY (waste_water_treated_volume),
+// Daily Off-Spec, and every chemical qty column (col.group === "chemical") -
+// nothing else is subtotalled. Columns that aren't present (e.g. Daily
+// Off-Spec when hide_calculation_and_amount is on) are simply skipped.
 function build_body_rows_with_monthly_subtotals(columns, data, is_arabic) {
+    const subtotal_fieldnames = columns
+        .filter((c) => c.fieldname === "waste_water_treated_volume" || c.fieldname === "daily_off_spec" || c.group === "chemical")
+        .map((c) => c.fieldname);
+
     let html = "";
     let group_key = null;
     let month_label = "";
-    let vol_sum = 0;
-    let offspec_sum = 0;
+    let sums = {};
     let row_idx = 0;
+
+    const reset_sums = () => {
+        sums = {};
+        subtotal_fieldnames.forEach((f) => (sums[f] = 0));
+    };
+    reset_sums();
 
     const flush_group = () => {
         if (group_key === null) return;
         const label = is_arabic ? `إجمالي - ${month_label}` : `Total - ${month_label}`;
-        html += build_subtotal_row(columns, label, vol_sum, offspec_sum, is_arabic);
+        html += build_subtotal_row(columns, label, sums, is_arabic);
     };
 
     data.forEach((row) => {
@@ -430,14 +445,14 @@ function build_body_rows_with_monthly_subtotals(columns, data, is_arabic) {
 
         if (group_key !== null && key !== group_key) {
             flush_group();
-            vol_sum = 0;
-            offspec_sum = 0;
+            reset_sums();
         }
 
         group_key = key;
         month_label = get_month_label(row.date, is_arabic);
-        vol_sum += flt(row.waste_water_treated_volume);
-        offspec_sum += flt(row.daily_off_spec);
+        subtotal_fieldnames.forEach((f) => {
+            sums[f] += flt(row[f]);
+        });
 
         const cells = columns
             .map((col) => {
@@ -500,7 +515,13 @@ function render_print_window(columns, data, totals, filters, company, is_arabic,
     );
     const totals_row = columns
         .map((col, idx) => {
-            if (totals && totals.hasOwnProperty(col.fieldname) && (col.fieldname === "waste_water_treated_volume" || col.fieldname === "daily_off_spec")) {
+            const is_summable =
+                totals &&
+                totals.hasOwnProperty(col.fieldname) &&
+                (col.fieldname === "waste_water_treated_volume" ||
+                    col.fieldname === "daily_off_spec" ||
+                    col.group === "chemical");
+            if (is_summable) {
                 return `<td style="text-align:right;white-space:nowrap"><b>${format_total_value(
                     totals[col.fieldname],
                     col

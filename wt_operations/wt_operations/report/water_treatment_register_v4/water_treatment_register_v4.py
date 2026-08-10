@@ -478,7 +478,7 @@ def get_data(filters, ctx):
             "unit": dor.unit,
             "date": dor.date,
             "waste_water_treated_volume": dor.waste_water_treated_volume,
-            "energy_consumtion": dor.energy_consumtion,
+            "energy_consumtion": dor.energy_consumtion*dor.waste_water_treated_volume or 0,
             "running_hours": dor.running_hours,
         }
 
@@ -820,11 +820,17 @@ def get_print_data(filters=None):
     if filters.get("hide_zero_qty_chemical_columns", 1):
         columns = prune_zero_qty_chemical_columns(columns, data)
 
+    # totals = {}
+    # for col in columns:
+    #     if col.get("fieldtype") in ("Float", "Currency"):
+    #         fieldname = col.get("fieldname")
+    #         print("Calculating total for fieldname:", fieldname)
+    #         totals[fieldname] = flt(sum(flt(row.get(fieldname)) for row in data))
+    
     totals = {}
     for col in columns:
         if col.get("fieldtype") in ("Float", "Currency"):
             fieldname = col.get("fieldname")
-            print("Calculating total for fieldname:", fieldname)
             totals[fieldname] = flt(sum(flt(row.get(fieldname)) for row in data))
 
     default_company = frappe.defaults.get_global_default("company")

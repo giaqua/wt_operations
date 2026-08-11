@@ -643,7 +643,7 @@ def get_data(filters, ctx):
                     c = chem_by_name.get(chemical)
                     if not c:
                         continue
-                    qty = c.get(CHEMICAL_QTY_FIELD_DENSITY) if ctx.show_density else c.get(CHEMICAL_QTY_FIELD)
+                    qty = c.get(CHEMICAL_QTY_FIELD_DENSITY) if filters.get("show_density") else c.get(CHEMICAL_QTY_FIELD)
                     if qty is not None:
                         total_qty = (total_qty or 0) + flt(qty)
                 row[chemical_group_fieldname(display_name)] = total_qty

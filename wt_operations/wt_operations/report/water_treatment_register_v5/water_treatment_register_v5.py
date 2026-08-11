@@ -584,7 +584,7 @@ def get_data(filters, ctx):
             "unit": dor.unit,
             "date": dor.date,
             "waste_water_treated_volume": dor.waste_water_treated_volume,
-            "energy_consumtion": dor.energy_consumtion,
+            "energy_consumtion": dor.energy_consumtion*dor.waste_water_treated_volume if dor.energy_consumtion else 0,
             "running_hours": dor.running_hours,
             "fresh_water_consumption": fresh_water_map.get(dor.name),
         }

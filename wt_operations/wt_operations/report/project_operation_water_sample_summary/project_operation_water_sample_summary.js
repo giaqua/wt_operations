@@ -28,13 +28,13 @@ frappe.query_reports["Project Operation Water Sample Summary"] = {
             label: __("Site"),
             fieldtype: "Link",
             options: "Project",
-            get_query: function() {
-                return {
-                    filters: {
-                        status: "Active"
-                    }
-                };
-            }
+            // get_query: function() {
+            //     return {
+            //         filters: {
+            //             status: "Active"
+            //         }
+            //     };
+            // }
         },
         {
             fieldname: "sample_type",

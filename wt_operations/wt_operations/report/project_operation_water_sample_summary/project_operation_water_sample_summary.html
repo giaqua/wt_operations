@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Water Sample Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            color: #333;
+        }
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #007bff;
+            margin: 0;
+        }
+        .header .subtitle {
+            color: #666;
+            margin-top: 5px;
+        }
+        .filters-summary {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #007bff;
+        }
+        .sample-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        .sample-table th {
+            background: #007bff;
+            color: white;
+            padding: 10px;
+            text-align: left;
+        }
+        .sample-table td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .sample-table tr:hover {
+            background: #f5f5f5;
+        }
+        .status-completed {
+            color: green;
+            font-weight: bold;
+        }
+        .status-draft {
+            color: orange;
+            font-weight: bold;
+        }
+        .status-submitted {
+            color: blue;
+            font-weight: bold;
+        }
+        .status-cancelled {
+            color: red;
+            font-weight: bold;
+        }
+        .parameter-details {
+            margin-top: 30px;
+            page-break-before: always;
+        }
+        .parameter-details h2 {
+            color: #007bff;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .param-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        .param-table th {
+            background: #f8f9fa;
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        .param-table td {
+            padding: 8px;
+            border: 1px solid #ddd;
+        }
+        .param-table .highlight {
+            background: #fff3cd;
+        }
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }
+        .sample-detail-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .attachment-image {
+            max-width: 300px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        @media print {
+            body {
+                margin: 20px;
+                font-size: 12px;
+            }
+            .sample-table th {
+                background: #007bff !important;
+                color: white !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .status-completed {
+                color: green !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .header h1 {
+                color: #007bff !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .filters-summary {
+                background: #f8f9fa !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Water Sample Report</h1>
+        <div class="subtitle">{{ report_title or "Project Operation Water Sample" }}</div>
+        <div style="margin-top: 10px; font-size: 14px;">
+            Generated: {{ report_date }}
+        </div>
+    </div>
+
+    {% if filters_summary %}
+    <div class="filters-summary">
+        <strong>Filters Applied:</strong> {{ filters_summary }}
+    </div>
+    {% endif %}
+
+    <div style="margin: 20px 0;">
+        <strong>Total Samples:</strong> {{ total_samples }}
+    </div>
+
+    <table class="sample-table">
+        <thead>
+            <tr>
+                <th>Sample ID</th>
+                <th>Sampling Date</th>
+                <th>Site</th>
+                <th>Type</th>
+                <th>Water Source</th>
+                <th>Status</th>
+                <th>Responsible</th>
+                <th>Lab Receiving</th>
+                <th>Result Shared</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sample in data %}
+            <tr>
+                <td><strong>{{ sample.sample_id }}</strong></td>
+                <td>{{ sample.sampling_date }}</td>
+                <td>{{ sample.site }}</td>
+                <td>{{ sample.sample_type }}</td>
+                <td>{{ sample.water_source }}</td>
+                <td>
+                    <span class="status-{{ sample.workflow_state.lower() }}">
+                        {{ sample.workflow_state }}
+                    </span>
+                </td>
+                <td>{{ sample.responsible }}</td>
+                <td>{{ sample.lab_receiving_date }}</td>
+                <td>{{ sample.result_shared_date or 'N/A' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if data and data|length > 0 %}
+    <!-- Parameter Details Section -->
+    <div class="parameter-details">
+        <h2>Detailed Parameter Results</h2>
+        {% for sample in data %}
+        <div class="sample-detail-section">
+            <h3 style="color: #007bff; margin-top: 0;">
+                Sample: {{ sample.sample_id }} 
+                <span style="font-size: 14px; color: #666; font-weight: normal;">
+                    ({{ sample.sampling_date }})
+                </span>
+            </h3>
+            
+            {% if sample.parameter_results and sample.parameter_results|length > 0 %}
+            <table class="param-table">
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Unit</th>
+                        <th>Inlet Result</th>
+                        <th>Contract Limit</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for param, result in sample.parameter_results.items() %}
+                    <tr>
+                        <td>{{ param }}</td>
+                        <td>{{ result.unit }}</td>
+                        <td>{{ result.inlet }}</td>
+                        <td>{{ result.contract_inlet }}</td>
+                        <td>
+                            {% if result.inlet <= result.contract_inlet %}
+                                <span style="color: green;">✓ Pass</span>
+                            {% else %}
+                                <span style="color: red;">✗ Fail</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p><em>No parameter results available for this sample.</em></p>
+            {% endif %}
+
+            {% if sample.attachment %}
+            <div style="margin-top: 10px;">
+                <strong>Attachment:</strong><br>
+                <img src="{{ sample.attachment }}" alt="Sample Attachment" class="attachment-image">
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="footer">
+        <p>This report is generated automatically by GiaquaTech Water Sample System</p>
+        <p>Report ID: {{ report_id or 'N/A' }} | Generated: {{ report_date }}</p>
+    </div>
+</body>
+</html>

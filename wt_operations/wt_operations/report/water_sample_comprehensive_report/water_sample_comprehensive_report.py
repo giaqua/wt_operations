@@ -13,13 +13,27 @@ from frappe.utils.pdf import get_pdf
 
 def execute(filters=None):
 	filters = filters or {}
-	columns = get_columns()
 	data = get_data(filters)
-	return columns, data
+	columns, rows = get_pivoted_columns_and_rows(data)
+	return columns, rows
 
 
-def get_columns():
-	return [
+def param_fieldname(param):
+	"""Turns a parameter name like 'Turbidity.' or 'pH' into a safe dict key,
+	e.g. 'param_turbidity', 'param_ph'."""
+	import re
+
+	slug = re.sub(r"[^0-9a-zA-Z]+", "_", param.strip().lower()).strip("_")
+	return "param_{0}".format(slug)
+
+
+def get_pivoted_columns_and_rows(data):
+	"""Builds the report grid as one row per SAMPLE, with one column per
+	distinct PARAMETER (e.g. COD, pH, TSS, ...) instead of one row per
+	(sample x parameter) reading."""
+	parameters = sorted({row.get("parameter") for row in data if row.get("parameter")})
+
+	columns = [
 		{"label": _("Sample ID"), "fieldname": "sample_id", "fieldtype": "Link",
 			"options": "Project Operation Water Sample", "width": 110},
 		{"label": _("Site/Project"), "fieldname": "site", "fieldtype": "Link",
@@ -28,17 +42,45 @@ def get_columns():
 		{"label": _("Sample Process Location"), "fieldname": "sample_process_location", "fieldtype": "Data", "width": 150},
 		{"label": _("Water Source"), "fieldname": "water_source", "fieldtype": "Data", "width": 90},
 		{"label": _("Sample Type"), "fieldname": "sample_type", "fieldtype": "Data", "width": 90},
-		{"label": _("Parameter"), "fieldname": "parameter", "fieldtype": "Data", "width": 100},
-		{"label": _("Unit"), "fieldname": "unit", "fieldtype": "Data", "width": 70},
-		{"label": _("Result"), "fieldname": "inlet", "fieldtype": "Float", "width": 90, "precision": 2},
-		{"label": _("Contract Limit"), "fieldname": "contract_inlet", "fieldtype": "Float", "width": 100, "precision": 2},
-		{"label": _("Compliance"), "fieldname": "compliance_status", "fieldtype": "Data", "width": 90},
 		{"label": _("Workflow State"), "fieldname": "workflow_state", "fieldtype": "Data", "width": 100},
-		{"label": _("Status"), "fieldname": "status", "fieldtype": "Data", "width": 90},
-		{"label": _("Responsible"), "fieldname": "responsible", "fieldtype": "Link",
-			"options": "User", "width": 130},
+		# {"label": _("Status"), "fieldname": "status", "fieldtype": "Data", "width": 90},
+		# {"label": _("Responsible"), "fieldname": "responsible", "fieldtype": "Link",
+		# 	"options": "User", "width": 130},
 		{"label": _("Result Shared"), "fieldname": "result_shared_date", "fieldtype": "Date", "width": 100},
 	]
+	for param in parameters:
+		columns.append({
+			"label": param,
+			"fieldname": param_fieldname(param),
+			"fieldtype": "Float",
+			"width": 95,
+			"precision": 2,
+		})
+
+	from collections import OrderedDict
+
+	samples = OrderedDict()
+	for row in data:
+		sid = row["sample_id"]
+		if sid not in samples:
+			samples[sid] = {
+				"sample_id": sid,
+				"site": row.get("site"),
+				"sampling_date": row.get("sampling_date"),
+				"sample_process_location": row.get("sample_process_location"),
+				"water_source": row.get("water_source"),
+				"sample_type": row.get("sample_type"),
+				"workflow_state": row.get("workflow_state"),
+				"status": row.get("status"),
+				"responsible": row.get("responsible"),
+				"result_shared_date": row.get("result_shared_date"),
+			}
+		samples[sid][param_fieldname(row["parameter"])] = row.get("inlet")
+
+	rows = list(samples.values())
+	rows.sort(key=lambda r: (r.get("sampling_date") or frappe.utils.getdate("1900-01-01")), reverse=True)
+
+	return columns, rows
 
 
 def get_conditions(filters):
@@ -154,6 +196,67 @@ def get_compliance_status(row):
 	return "Pass"
 
 
+def build_pivot(data):
+	"""Pivots the flat (sample x parameter) rows into a wide format:
+	one row per sample, one column per parameter.
+	Returns (months, parameters) where:
+	  parameters = sorted list of distinct parameter names (used as column titles)
+	  months = [ { month_label: 'April 2026', samples: [
+			{ sample_id, site, sampling_date, ..., values: { 'COD': {inlet, unit, compliance_status}, ... } }
+	  ] } ] sorted chronologically."""
+	from collections import OrderedDict
+
+	parameters = sorted({row.get("parameter") for row in data if row.get("parameter")})
+
+	months = OrderedDict()
+	for row in data:
+		d = row.get("sampling_date")
+		if d:
+			dt = frappe.utils.getdate(d) if isinstance(d, str) else d
+			month_key = dt.strftime("%Y-%m")
+			month_label = dt.strftime("%B %Y")
+		else:
+			month_key = "0000-00"
+			month_label = "No Date"
+
+		if month_key not in months:
+			months[month_key] = {"month_label": month_label, "samples": OrderedDict()}
+
+		sid = row["sample_id"]
+		if sid not in months[month_key]["samples"]:
+			months[month_key]["samples"][sid] = {
+				"sample_id": sid,
+				"site": row.get("site"),
+				"sampling_date": row.get("sampling_date"),
+				"sample_process_location": row.get("sample_process_location"),
+				"water_source": row.get("water_source"),
+				"sample_type": row.get("sample_type"),
+				"workflow_state": row.get("workflow_state"),
+				"responsible": row.get("responsible"),
+				"values": {},
+			}
+		months[month_key]["samples"][sid]["values"][row["parameter"]] = {
+			"inlet": row.get("inlet"),
+			"unit": row.get("unit"),
+			"compliance_status": row.get("compliance_status"),
+		}
+
+	month_list = []
+	for month_key in sorted(months.keys()):
+		entry = months[month_key]
+		samples = list(entry["samples"].values())
+		# fill every parameter for every sample (defaulting to None) so the
+		# template can use plain subscript access - Frappe's sandboxed Jinja
+		# blocks calling dict.get() directly inside templates
+		for s in samples:
+			for param in parameters:
+				s["values"].setdefault(param, None)
+		entry["samples"] = samples
+		month_list.append(entry)
+
+	return month_list, parameters
+
+
 # ---------------------------------------------------------------------------
 # Print (PDF) - server-side generation, triggered from a page button
 # ---------------------------------------------------------------------------
@@ -163,6 +266,10 @@ def get_compliance_status(row):
 # It builds the PDF server-side and hands the browser back base64 bytes, which
 # the client turns into a blob and opens in a new tab with the browser's native
 # print dialog triggered automatically.
+#
+# The PDF groups all results by month (e.g. "April 2026") with every sample
+# for that month listed underneath, and pivots parameters into columns (one
+# column per parameter, e.g. COD / pH / TSS / ...) instead of one row each.
 
 @frappe.whitelist()
 def get_print_pdf_base64(filters=None):
@@ -170,12 +277,16 @@ def get_print_pdf_base64(filters=None):
 
 	filters = json.loads(filters) if filters else {}
 	data = get_data(filters)
+	months, parameters = build_pivot(data)
 
 	html = frappe.render_template(
 		"wt_operations/wt_operations/report/water_sample_comprehensive_report/print_template.html",
 		{
-			"data": data,
+			"months": months,
+			"parameters": parameters,
 			"filters": filters,
+			"total_readings": len(data),
+			"exceed_count": len([r for r in data if r.get("compliance_status") == "Exceeds"]),
 			"generated_on": frappe.utils.now_datetime().strftime("%Y-%m-%d %H:%M"),
 		},
 	)
@@ -190,12 +301,16 @@ def download_print_pdf(filters=None):
 	'save as PDF' link somewhere instead of the print-dialog flow above."""
 	filters = json.loads(filters) if filters else {}
 	data = get_data(filters)
+	months, parameters = build_pivot(data)
 
 	html = frappe.render_template(
 		"wt_operations/wt_operations/report/water_sample_comprehensive_report/print_template.html",
 		{
-			"data": data,
+			"months": months,
+			"parameters": parameters,
 			"filters": filters,
+			"total_readings": len(data),
+			"exceed_count": len([r for r in data if r.get("compliance_status") == "Exceeds"]),
 			"generated_on": frappe.utils.now_datetime().strftime("%Y-%m-%d %H:%M"),
 		},
 	)
@@ -214,7 +329,7 @@ def download_print_pdf(filters=None):
 def download_excel(filters=None):
 	filters = json.loads(filters) if filters else {}
 	data = get_data(filters)
-	columns = get_columns()
+	months, parameters = build_pivot(data)
 
 	from openpyxl import Workbook
 	from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
@@ -225,12 +340,18 @@ def download_excel(filters=None):
 	ws.title = "Water Sample Report"
 
 	header_fill = PatternFill(start_color="1F4E78", end_color="1F4E78", fill_type="solid")
+	month_fill = PatternFill(start_color="12324F", end_color="12324F", fill_type="solid")
 	header_font = Font(color="FFFFFF", bold=True, size=10)
 	title_font = Font(bold=True, size=14, color="1F4E78")
 	thin = Side(style="thin", color="B7B7B7")
 	border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
-	ncols = len(columns)
+	fixed_cols = ["Sample ID", "Date", "Location", "Source", "Type", "State", "Responsible"]
+	all_cols = fixed_cols + parameters
+	ncols = len(all_cols)
+
+	fail_fill = PatternFill(start_color="FCE4E4", end_color="FCE4E4", fill_type="solid")
+	pass_fill = PatternFill(start_color="E4F7E4", end_color="E4F7E4", fill_type="solid")
 
 	ws.merge_cells(start_row=1, start_column=1, end_row=1, end_column=ncols)
 	title_cell = ws.cell(row=1, column=1, value="Water Sample Comprehensive Report")
@@ -245,36 +366,53 @@ def download_excel(filters=None):
 	sub_cell.alignment = Alignment(horizontal="center")
 	sub_cell.font = Font(italic=True, size=9, color="666666")
 
-	header_row = 4
-	for idx, col in enumerate(columns, start=1):
-		cell = ws.cell(row=header_row, column=idx, value=col["label"])
-		cell.fill = header_fill
-		cell.font = header_font
-		cell.alignment = Alignment(horizontal="center", vertical="center")
-		cell.border = border
-
-	fail_fill = PatternFill(start_color="FCE4E4", end_color="FCE4E4", fill_type="solid")
-	pass_fill = PatternFill(start_color="E4F7E4", end_color="E4F7E4", fill_type="solid")
-
-	row_num = header_row + 1
-	for row in data:
-		for idx, col in enumerate(columns, start=1):
-			value = row.get(col["fieldname"])
-			cell = ws.cell(row=row_num, column=idx, value=value)
-			cell.border = border
-			if col["fieldname"] == "compliance_status":
-				if value == "Exceeds":
-					cell.fill = fail_fill
-					cell.font = Font(color="C00000", bold=True)
-				elif value == "Pass":
-					cell.fill = pass_fill
-					cell.font = Font(color="1E7B1E", bold=True)
+	row_num = 4
+	for m in months:
+		ws.merge_cells(start_row=row_num, start_column=1, end_row=row_num, end_column=ncols)
+		month_cell = ws.cell(row=row_num, column=1, value=m["month_label"])
+		month_cell.fill = month_fill
+		month_cell.font = Font(color="FFFFFF", bold=True, size=11)
+		month_cell.alignment = Alignment(horizontal="left", vertical="center")
 		row_num += 1
 
-	for idx, col in enumerate(columns, start=1):
-		ws.column_dimensions[get_column_letter(idx)].width = max(12, (col.get("width", 100) / 7))
+		header_row = row_num
+		for idx, col_label in enumerate(all_cols, start=1):
+			cell = ws.cell(row=header_row, column=idx, value=col_label)
+			cell.fill = header_fill
+			cell.font = header_font
+			cell.alignment = Alignment(horizontal="center", vertical="center")
+			cell.border = border
+		row_num += 1
 
-	ws.freeze_panes = "A{0}".format(header_row + 1)
+		for s in m["samples"]:
+			fixed_values = [
+				s["sample_id"], s["sampling_date"], s["sample_process_location"],
+				s["water_source"], s["sample_type"], s["workflow_state"], s["responsible"],
+			]
+			for idx, value in enumerate(fixed_values, start=1):
+				cell = ws.cell(row=row_num, column=idx, value=value)
+				cell.border = border
+
+			for offset, param in enumerate(parameters, start=1):
+				idx = len(fixed_cols) + offset
+				v = s["values"].get(param)
+				cell = ws.cell(row=row_num, column=idx, value=(v["inlet"] if v else None))
+				cell.border = border
+				if v:
+					if v["compliance_status"] == "Exceeds":
+						cell.fill = fail_fill
+						cell.font = Font(color="C00000", bold=True)
+					elif v["compliance_status"] == "Pass":
+						cell.fill = pass_fill
+						cell.font = Font(color="1E7B1E", bold=True)
+			row_num += 1
+
+		row_num += 1  # blank spacer row between months
+
+	for idx in range(1, ncols + 1):
+		ws.column_dimensions[get_column_letter(idx)].width = 16
+
+	ws.freeze_panes = "A5"
 
 	buffer = io.BytesIO()
 	wb.save(buffer)
@@ -302,36 +440,16 @@ def download_monthly_pdf(month, year, site=None):
 		filters["site"] = site
 
 	data = get_data(filters)
+	months, parameters = build_pivot(data)
 
-	samples = {}
-	order = []
-	for row in data:
-		sid = row["sample_id"]
-		if sid not in samples:
-			samples[sid] = {
-				"sample_id": sid,
-				"site": row.get("site"),
-				"sampling_date": row.get("sampling_date"),
-				"sample_process_location": row.get("sample_process_location"),
-				"water_source": row.get("water_source"),
-				"sample_type": row.get("sample_type"),
-				"workflow_state": row.get("workflow_state"),
-				"responsible": row.get("responsible"),
-				"parameters": [],
-			}
-			order.append(sid)
-		samples[sid]["parameters"].append(row)
-
-	grouped = [samples[sid] for sid in order]
 	total_readings = len(data)
 	exceed_count = len([r for r in data if r.get("compliance_status") == "Exceeds"])
 
 	html = frappe.render_template(
-		"wt_operations/wt_operations/report/water_sample_comprehensive_report/monthly_print_template.html",
+		"wt_operations/wt_operations/report/water_sample_comprehensive_report/print_template.html",
 		{
-			"samples": grouped,
-			"month_label": "{0}-{1:02d}".format(year, month),
-			"site": site,
+			"months": months,
+			"parameters": parameters,
 			"total_readings": total_readings,
 			"exceed_count": exceed_count,
 			"generated_on": frappe.utils.now_datetime().strftime("%Y-%m-%d %H:%M"),

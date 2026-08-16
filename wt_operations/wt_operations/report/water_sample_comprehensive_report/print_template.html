@@ -5,10 +5,20 @@
 	.header { text-align: center; margin-bottom: 10px; }
 	.header h1 { font-size: 18px; margin: 0; color: #1F4E78; }
 	.header p { margin: 2px 0; font-size: 10px; color: #666; }
-	table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-	th { background: #1F4E78; color: #fff; padding: 5px; font-size: 10px; text-align: left; }
-	td { padding: 4px 5px; border: 1px solid #ddd; font-size: 10px; }
-	tr:nth-child(even) { background: #f7f9fb; }
+	.summary { margin: 10px 0; padding: 8px; background: #f0f4f8; border: 1px solid #d0dae3; font-size: 10px; }
+
+	.month-section { margin-top: 16px; page-break-before: auto; }
+	.month-title {
+		font-size: 14px; font-weight: bold; color: #fff; background: #12324f;
+		padding: 6px 10px; margin: 0 0 8px 0;
+	}
+
+	table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+	th { background: #1F4E78; color: #fff; padding: 4px; font-size: 9px; text-align: center; }
+	td { padding: 3px 4px; border: 1px solid #ddd; font-size: 9px; text-align: center; }
+	td.left { text-align: left; }
+	tr:nth-child(even) td { background: #f7f9fb; }
+
 	.exceeds { background: #fce4e4 !important; color: #c00000; font-weight: bold; }
 	.pass { color: #1e7b1e; font-weight: bold; }
 	.footer { margin-top: 15px; font-size: 9px; color: #888; text-align: right; }
@@ -20,45 +30,54 @@
 		<p>Generated on {{ generated_on }}</p>
 	</div>
 
-	<table>
-		<thead>
-			<tr>
-				<th>Sample ID</th>
-				<th>Site</th>
-				<th>Date</th>
-				<th>Sample Process Location</th>
-				<th>Source</th>
-				<th>Type</th>
-				<th>Parameter</th>
-				<th>Unit</th>
-				<th>Result</th>
-				<th>Limit</th>
-				<th>Compliance</th>
-				<th>State</th>
-				<th>Responsible</th>
-			</tr>
-		</thead>
-		<tbody>
-			{% for row in data %}
-			<tr>
-				<td>{{ row.sample_id }}</td>
-				<td>{{ row.site or "" }}</td>
-				<td>{{ row.sampling_date or "" }}</td>
-				<td>{{ row.sample_process_location or "" }}</td>
-				<td>{{ row.water_source or "" }}</td>
-				<td>{{ row.sample_type or "" }}</td>
-				<td>{{ row.parameter }}</td>
-				<td>{{ row.unit }}</td>
-				<td>{{ row.inlet }}</td>
-				<td>{{ row.contract_inlet }}</td>
-				<td class="{{ 'exceeds' if row.compliance_status == 'Exceeds' else 'pass' }}">{{ row.compliance_status }}</td>
-				<td>{{ row.workflow_state or "" }}</td>
-				<td>{{ row.responsible or "" }}</td>
-			</tr>
-			{% endfor %}
-		</tbody>
-	</table>
+	<div class="summary">
+		Total Readings: {{ total_readings }} &nbsp;|&nbsp; Exceeding Limits: {{ exceed_count }}
+	</div>
 
-	<div class="footer">Total Records: {{ data|length }}</div>
+	{% for m in months %}
+	<div class="month-section">
+		<h2 class="month-title">{{ m.month_label }}</h2>
+
+		<table>
+			<thead>
+				<tr>
+					<th>Sample ID</th>
+					<th>Date</th>
+					<th>Location</th>
+					<th>Source</th>
+					<th>Type</th>
+					<th>State</th>
+					<th>Responsible</th>
+					{% for param in parameters %}
+					<th>{{ param }}</th>
+					{% endfor %}
+				</tr>
+			</thead>
+			<tbody>
+				{% for s in m.samples %}
+				<tr>
+					<td class="left">{{ s.sample_id }}</td>
+					<td>{{ s.sampling_date }}</td>
+					<td class="left">{{ s.sample_process_location or "-" }}</td>
+					<td>{{ s.water_source or "-" }}</td>
+					<td>{{ s.sample_type or "-" }}</td>
+					<td>{{ s.workflow_state or "-" }}</td>
+					<td class="left">{{ s.responsible or "-" }}</td>
+					{% for param in parameters %}
+					{% set v = s.values[param] %}
+					{% if v %}
+					<td class="{{ 'exceeds' if v.compliance_status == 'Exceeds' else 'pass' }}">{{ v.inlet }}</td>
+					{% else %}
+					<td>-</td>
+					{% endif %}
+					{% endfor %}
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+	{% endfor %}
+
+	<div class="footer">Total Records: {{ total_readings }}</div>
 </body>
 </html>

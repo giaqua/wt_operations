@@ -1,0 +1,57 @@
+<html>
+<head>
+<style>
+	body { font-family: Arial, sans-serif; font-size: 11px; color: #222; }
+	.header { text-align: center; margin-bottom: 10px; }
+	.header h1 { font-size: 18px; margin: 0; color: #1F4E78; }
+	.header p { margin: 2px 0; font-size: 10px; color: #666; }
+	.summary { margin: 10px 0; padding: 8px; background: #f0f4f8; border: 1px solid #d0dae3; font-size: 10px; }
+	.sample-block { margin-bottom: 14px; page-break-inside: avoid; }
+	.sample-block h3 { font-size: 12px; background: #1F4E78; color: #fff; padding: 5px 8px; margin: 0; }
+	.sample-meta { font-size: 9.5px; color: #444; padding: 4px 8px; background: #eef2f6; }
+	table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+	th { background: #dbe5ee; padding: 4px; font-size: 9.5px; text-align: left; }
+	td { padding: 3px 4px; border: 1px solid #ddd; font-size: 9.5px; }
+	.exceeds { background: #fce4e4; color: #c00000; font-weight: bold; }
+	.pass { color: #1e7b1e; font-weight: bold; }
+</style>
+</head>
+<body>
+	<div class="header">
+		<h1>Water Sample Monthly Detailed Report</h1>
+		<p>Month: {{ month_label }}{% if site %} | Site: {{ site }}{% endif %}</p>
+		<p>Generated on {{ generated_on }}</p>
+	</div>
+
+	<div class="summary">
+		Total Readings: {{ total_readings }} &nbsp;|&nbsp; Exceeding Limits: {{ exceed_count }}
+	</div>
+
+	{% for s in samples %}
+	<div class="sample-block">
+		<h3>{{ s.sample_id }} &mdash; {{ s.sampling_date }}</h3>
+		<div class="sample-meta">
+			Site: {{ s.site or "-" }} | Location: {{ s.sample_process_location or "-" }} |
+			Source: {{ s.water_source or "-" }} | Type: {{ s.sample_type or "-" }} |
+			State: {{ s.workflow_state or "-" }} | Responsible: {{ s.responsible or "-" }}
+		</div>
+		<table>
+			<thead>
+				<tr><th>Parameter</th><th>Unit</th><th>Result</th><th>Limit</th><th>Compliance</th></tr>
+			</thead>
+			<tbody>
+				{% for p in s.parameters %}
+				<tr>
+					<td>{{ p.parameter }}</td>
+					<td>{{ p.unit }}</td>
+					<td>{{ p.inlet }}</td>
+					<td>{{ p.contract_inlet }}</td>
+					<td class="{{ 'exceeds' if p.compliance_status == 'Exceeds' else 'pass' }}">{{ p.compliance_status }}</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+	{% endfor %}
+</body>
+</html>

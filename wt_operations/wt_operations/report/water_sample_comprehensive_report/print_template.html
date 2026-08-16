@@ -1,0 +1,64 @@
+<html>
+<head>
+<style>
+	body { font-family: Arial, sans-serif; font-size: 11px; color: #222; }
+	.header { text-align: center; margin-bottom: 10px; }
+	.header h1 { font-size: 18px; margin: 0; color: #1F4E78; }
+	.header p { margin: 2px 0; font-size: 10px; color: #666; }
+	table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+	th { background: #1F4E78; color: #fff; padding: 5px; font-size: 10px; text-align: left; }
+	td { padding: 4px 5px; border: 1px solid #ddd; font-size: 10px; }
+	tr:nth-child(even) { background: #f7f9fb; }
+	.exceeds { background: #fce4e4 !important; color: #c00000; font-weight: bold; }
+	.pass { color: #1e7b1e; font-weight: bold; }
+	.footer { margin-top: 15px; font-size: 9px; color: #888; text-align: right; }
+</style>
+</head>
+<body>
+	<div class="header">
+		<h1>Water Sample Comprehensive Report</h1>
+		<p>Generated on {{ generated_on }}</p>
+	</div>
+
+	<table>
+		<thead>
+			<tr>
+				<th>Sample ID</th>
+				<th>Site</th>
+				<th>Date</th>
+				<th>Sample Process Location</th>
+				<th>Source</th>
+				<th>Type</th>
+				<th>Parameter</th>
+				<th>Unit</th>
+				<th>Result</th>
+				<th>Limit</th>
+				<th>Compliance</th>
+				<th>State</th>
+				<th>Responsible</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for row in data %}
+			<tr>
+				<td>{{ row.sample_id }}</td>
+				<td>{{ row.site or "" }}</td>
+				<td>{{ row.sampling_date or "" }}</td>
+				<td>{{ row.sample_process_location or "" }}</td>
+				<td>{{ row.water_source or "" }}</td>
+				<td>{{ row.sample_type or "" }}</td>
+				<td>{{ row.parameter }}</td>
+				<td>{{ row.unit }}</td>
+				<td>{{ row.inlet }}</td>
+				<td>{{ row.contract_inlet }}</td>
+				<td class="{{ 'exceeds' if row.compliance_status == 'Exceeds' else 'pass' }}">{{ row.compliance_status }}</td>
+				<td>{{ row.workflow_state or "" }}</td>
+				<td>{{ row.responsible or "" }}</td>
+			</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+
+	<div class="footer">Total Records: {{ data|length }}</div>
+</body>
+</html>

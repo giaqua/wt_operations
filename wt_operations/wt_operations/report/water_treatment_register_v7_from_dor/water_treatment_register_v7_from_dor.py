@@ -371,6 +371,45 @@ def get_fresh_water_consumption_map(dor_names):
     return result
 
 
+def get_project_names_map(project_codes):
+    """project code -> project_name, for display purposes only (print/Excel
+    output). Falls back to the project code itself if the Project doesn't
+    exist or has no project_name set."""
+    project_codes = [p for p in (project_codes or []) if p]
+    if not project_codes:
+        return {}
+
+    rows = frappe.get_all(
+        "Project",
+        filters={"name": ["in", project_codes]},
+        fields=["name", "project_name"],
+    )
+    return {r.name: (r.project_name or r.name) for r in rows}
+
+
+def get_single_project_title_label(filters):
+    """When the report is filtered to a single Project, resolve its
+    project_name for use in the print/Excel title. Returns "" when no
+    project filter is set."""
+    project = filters.get("project")
+    if not project:
+        return ""
+    return frappe.db.get_value("Project", project, "project_name") or project
+
+
+def apply_project_display_names(data):
+    """Mutates `data` in place, replacing each row's `project` (a Project
+    code/Link value) with the resolved project_name, for print/Excel
+    display only. Safe to call as the very last step before rendering,
+    since nothing downstream (off-spec calc, totals, etc.) reads
+    row['project'] after this point."""
+    project_codes = list({row.get("project") for row in data if row.get("project")})
+    names_map = get_project_names_map(project_codes)
+    for row in data:
+        if row.get("project") in names_map:
+            row["project"] = names_map[row["project"]]
+
+
 def get_influent_parameter_map(dor_names):
     """dor.name -> {parameter: actual_value}, built from Influent
     Parameters Table rows attached directly to that DOR (parameter values
@@ -926,6 +965,11 @@ def get_print_data(filters=None):
             fieldname = col.get("fieldname")
             totals[fieldname] = flt(sum(flt(row.get(fieldname)) for row in data))
 
+    # Display-only: swap Project code for Project name in the printed rows.
+    # Must happen AFTER totals are computed (project isn't a summable
+    # field anyway) and is the last mutation of `data` before rendering.
+    apply_project_display_names(data)
+
     default_company = frappe.defaults.get_global_default("company")
     company = {}
     if default_company:
@@ -942,6 +986,10 @@ def get_print_data(filters=None):
             "company_logo": company.get("company_logo"),
         },
         "filters": filters,
+        # Resolved Project name (not code) for a single-project filter,
+        # used by the print JS to append to the report title. Empty string
+        # when no project filter is set (i.e. report spans multiple projects).
+        "project_name": get_single_project_title_label(filters),
     }
 
 
@@ -1034,7 +1082,7 @@ def try_embed_company_logo(ws, logo_url):
         frappe.log_error(frappe.get_traceback(), "Water Treatment Register - Excel logo embed failed")
 
 
-def build_water_treatment_workbook(columns, data, filters, company, add_monthly_subtotals):
+def build_water_treatment_workbook(columns, data, filters, company, add_monthly_subtotals, project_name=""):
     from openpyxl import Workbook
     from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
     from openpyxl.utils import get_column_letter
@@ -1048,6 +1096,8 @@ def build_water_treatment_workbook(columns, data, filters, company, add_monthly_
         if add_monthly_subtotals
         else "Water Treatment Register"
     )
+    if project_name:
+        title = "{0} - {1}".format(title, project_name)
 
     wb = Workbook()
     ws = wb.active
@@ -1252,6 +1302,10 @@ def download_excel(filters=None, add_monthly_subtotals=0):
     if not data:
         frappe.throw(_("No data to export. Please adjust your filters."))
 
+    # Display-only: swap Project code for Project name in the exported
+    # rows, same as get_print_data.
+    apply_project_display_names(data)
+
     default_company = frappe.defaults.get_global_default("company")
     company = {}
     if default_company:
@@ -1259,7 +1313,10 @@ def download_excel(filters=None, add_monthly_subtotals=0):
             "Company", default_company, ["company_name", "company_logo"], as_dict=True
         ) or {}
 
-    workbook_stream = build_water_treatment_workbook(columns, data, filters, company, add_monthly_subtotals)
+    project_name = get_single_project_title_label(filters)
+    workbook_stream = build_water_treatment_workbook(
+        columns, data, filters, company, add_monthly_subtotals, project_name
+    )
 
     frappe.response["filename"] = get_excel_export_filename(filters, add_monthly_subtotals)
     frappe.response["filecontent"] = workbook_stream.getvalue()

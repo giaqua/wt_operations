@@ -309,7 +309,7 @@ function print_water_treatment_register(report, filter_overrides, options) {
                 return;
             }
 
-            const { columns, data, totals, company, filters: server_filters, ctx } = r.message;
+            const { columns, data, totals, company, filters: server_filters, ctx, project_name } = r.message;
 
             if (!data || !data.length) {
                 frappe.msgprint(__("No data to print. Please adjust your filters."));
@@ -325,7 +325,8 @@ function print_water_treatment_register(report, filter_overrides, options) {
                 company || {},
                 is_arabic,
                 !!opts.add_monthly_subtotals,
-                ctx || {}
+                ctx || {},
+                project_name
             );
         },
         error: function () {
@@ -550,12 +551,22 @@ function build_body_rows_with_monthly_subtotals(columns, data, is_arabic) {
     return html;
 }
 
-function render_print_window(columns, data, totals, filters, company, is_arabic, add_monthly_subtotals, ctx) {
+function render_print_window(
+    columns,
+    data,
+    totals,
+    filters,
+    company,
+    is_arabic,
+    add_monthly_subtotals,
+    ctx,
+    project_name
+) {
     const logo_url = company.company_logo ? frappe.urllib.get_full_url(company.company_logo) : "";
     const company_name = company.company_name || "";
     const is_monthly = !!filters.group_by_month;
 
-    const title = is_arabic
+    const base_title = is_arabic
         ? is_monthly
             ? "سجل معالجة المياه (ملخص شهري)"
             : add_monthly_subtotals
@@ -566,6 +577,13 @@ function render_print_window(columns, data, totals, filters, company, is_arabic,
         : add_monthly_subtotals
         ? "Water Treatment Register (Detailed, with Monthly Totals)"
         : "Water Treatment Register";
+
+    // Append the selected project's name (resolved server-side in
+    // get_print_data) so the title reads e.g. "Water Treatment Register -
+    // Acme Site 1" whenever a single project is filtered. Falls back to
+    // the base title untouched when no project filter is set.
+    const title = project_name ? `${base_title} - ${project_name}` : base_title;
+
     const date_range_label = is_arabic ? "الفترة" : "Period";
     const date_range = `${frappe.datetime.str_to_user(filters.from_date)} - ${frappe.datetime.str_to_user(filters.to_date)}`;
     const generated_label = is_arabic ? "تاريخ الطباعة" : "Generated on";

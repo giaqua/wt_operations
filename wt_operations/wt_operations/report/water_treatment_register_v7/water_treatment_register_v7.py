@@ -104,6 +104,23 @@
 #     every matching child row across all DORs in range in a single query,
 #     summing `actual` per DOR (in case more than one parameter under that
 #     purpose ever appears on the same DOR).
+#
+# Project display name (print / Excel only):
+#   - `Daily Operation Report.project` is a Link to Project, so report rows
+#     naturally carry the Project *docname* (e.g. "PROJ-0007"), and the
+#     on-screen query-report grid renders that Link field as usual.
+#   - The custom print view and Excel export, however, build their own
+#     plain-text tables from the raw row dicts - so without intervention
+#     they'd print the docname verbatim instead of a human-readable name.
+#   - `get_project_display_map()` resolves Project docname -> Project.
+#     project_name once per request (batched, not per-row), and both
+#     `get_print_data()` and `download_excel()` substitute that name into
+#     each row's `project` value before handing rows off to the print/Excel
+#     builders. The on-screen report grid is untouched (it never goes
+#     through get_print_data/download_excel).
+#   - The resolved name for the currently-filtered Project (if any) is also
+#     returned/used to suffix the print/Excel title, e.g.
+#     "Water Treatment Register - Acme Site 1".
 
 import os
 from io import BytesIO
@@ -233,6 +250,25 @@ def get_chemical_item_names(chemicals):
         }
 
     return {r.name: (item_names.get(r.stock_item) or r.name) for r in chem_rows}
+
+
+def get_project_display_map(project_ids):
+    """Map Project (docname) -> Project.project_name, for display in the
+    custom print view and Excel export ONLY. Falls back to the docname
+    itself if the project doesn't exist or project_name is blank.
+
+    Batched: one query for however many distinct project docnames appear
+    in the current result set, rather than a query per row."""
+    project_ids = list({p for p in (project_ids or []) if p})
+    if not project_ids:
+        return {}
+
+    rows = frappe.get_all(
+        "Project",
+        filters={"name": ["in", project_ids]},
+        fields=["name", "project_name"],
+    )
+    return {r.name: (r.project_name or r.name) for r in rows}
 
 
 def get_selected_parameters(filters):
@@ -931,6 +967,23 @@ def get_print_data(filters=None):
     if filters.get("hide_zero_qty_chemical_columns", 1):
         columns = prune_zero_qty_chemical_columns(columns, data)
 
+    # Resolve Project docname -> Project Name for display, both in the
+    # "Project" column (when shown) and for the print title suffix. Only
+    # affects this print payload - the on-screen report grid still shows
+    # the Link field as usual.
+    project_map = get_project_display_map([row.get("project") for row in data])
+    for row in data:
+        if row.get("project") in project_map:
+            row["project"] = project_map[row["project"]]
+
+    project_name = None
+    if filters.get("project"):
+        project_name = (
+            project_map.get(filters.get("project"))
+            or frappe.db.get_value("Project", filters.get("project"), "project_name")
+            or filters.get("project")
+        )
+
     totals = {}
     for col in columns:
         if col.get("fieldtype") in ("Float", "Currency"):
@@ -953,6 +1006,7 @@ def get_print_data(filters=None):
             "company_logo": company.get("company_logo"),
         },
         "filters": filters,
+        "project_name": project_name,
     }
 
 
@@ -1045,7 +1099,7 @@ def try_embed_company_logo(ws, logo_url):
         frappe.log_error(frappe.get_traceback(), "Water Treatment Register - Excel logo embed failed")
 
 
-def build_water_treatment_workbook(columns, data, filters, company, add_monthly_subtotals):
+def build_water_treatment_workbook(columns, data, filters, company, add_monthly_subtotals, project_name=None):
     from openpyxl import Workbook
     from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
     from openpyxl.utils import get_column_letter
@@ -1059,6 +1113,11 @@ def build_water_treatment_workbook(columns, data, filters, company, add_monthly_
         if add_monthly_subtotals
         else "Water Treatment Register"
     )
+    # Suffix with the selected project's name (resolved by the caller -
+    # see get_project_display_map / download_excel) so the workbook title
+    # reads e.g. "Water Treatment Register - Acme Site 1".
+    if project_name:
+        title = "{0} - {1}".format(title, project_name)
 
     wb = Workbook()
     ws = wb.active
@@ -1263,6 +1322,21 @@ def download_excel(filters=None, add_monthly_subtotals=0):
     if not data:
         frappe.throw(_("No data to export. Please adjust your filters."))
 
+    # Resolve Project docname -> Project Name for display, both in the
+    # "Project" column (when shown) and for the workbook title suffix.
+    project_map = get_project_display_map([row.get("project") for row in data])
+    for row in data:
+        if row.get("project") in project_map:
+            row["project"] = project_map[row["project"]]
+
+    project_name = None
+    if filters.get("project"):
+        project_name = (
+            project_map.get(filters.get("project"))
+            or frappe.db.get_value("Project", filters.get("project"), "project_name")
+            or filters.get("project")
+        )
+
     default_company = frappe.defaults.get_global_default("company")
     company = {}
     if default_company:
@@ -1270,7 +1344,9 @@ def download_excel(filters=None, add_monthly_subtotals=0):
             "Company", default_company, ["company_name", "company_logo"], as_dict=True
         ) or {}
 
-    workbook_stream = build_water_treatment_workbook(columns, data, filters, company, add_monthly_subtotals)
+    workbook_stream = build_water_treatment_workbook(
+        columns, data, filters, company, add_monthly_subtotals, project_name=project_name
+    )
 
     frappe.response["filename"] = get_excel_export_filename(filters, add_monthly_subtotals)
     frappe.response["filecontent"] = workbook_stream.getvalue()

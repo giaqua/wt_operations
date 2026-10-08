@@ -165,3 +165,85 @@ def update_daily_operation_report_references(self):
 				waste_water_treated_volume += daily_report.waste_water_treated_volume
 			self.waste_water_treated_volume = waste_water_treated_volume
 			
+
+# Put this in your app, e.g. <your_app>/api/operation_costing.py
+# Method path used by the JS: <your_app>.api.operation_costing.fetch_cost_items
+# import frappe
+# from frappe import _
+from frappe.utils import flt, getdate
+
+
+@frappe.whitelist()
+def fetch_cost_items(operation_cost_type, project, start_date, end_date, company=None):
+    """Return one row per enabled Operation Cost Item of the given type,
+    with the GL amount of its account for the project and date range."""
+    if not (operation_cost_type and project and start_date and end_date):
+        frappe.throw(_("Cost Type, Project, Start Date and End Date are required"))
+
+    start_date, end_date = getdate(start_date), getdate(end_date)
+    if start_date > end_date:
+        frappe.throw(_("Start Date cannot be after End Date"))
+
+    items = frappe.get_all(
+        "Operation Cost Item",
+        filters={"operation_cost_type": operation_cost_type},
+        fields=["name", "operation_cost_item", "account", "disabled"],
+        order_by="creation asc",
+    )
+
+    rows, skipped = [], []
+    for item in items:
+        if item.disabled:
+            skipped.append({"item": item.name, "reason": _("Disabled")})
+            continue
+        if not item.account:
+            skipped.append({"item": item.name, "reason": _("No account set")})
+            continue
+
+        rows.append(
+            {
+                "cost_item": item.name,
+                "account": item.account,
+                "amount": get_account_amount(item.account, project, start_date, end_date, company),
+            }
+        )
+
+    return {"rows": rows, "skipped": skipped}
+
+
+def get_account_amount(account, project, start_date, end_date, company=None):
+    # Include child accounts if the linked account is a group
+    acc = frappe.db.get_value("Account", account, ["is_group", "lft", "rgt", "root_type"], as_dict=True)
+    if not acc:
+        return 0
+
+    conditions = [
+        "gle.is_cancelled = 0",
+        "gle.project = %(project)s",
+        "gle.posting_date BETWEEN %(start)s AND %(end)s",
+    ]
+    values = {"project": project, "start": start_date, "end": end_date, "account": account}
+
+    if acc.is_group:
+        conditions.append(
+            "gle.account IN (SELECT name FROM `tabAccount` WHERE lft >= %(lft)s AND rgt <= %(rgt)s)"
+        )
+        values.update(lft=acc.lft, rgt=acc.rgt)
+    else:
+        conditions.append("gle.account = %(account)s")
+
+    if company:
+        conditions.append("gle.company = %(company)s")
+        values["company"] = company
+
+    # Expense accounts: debit - credit. Income accounts would be the reverse.
+    result = frappe.db.sql(
+        f"""
+        SELECT SUM(gle.debit - gle.credit)
+        FROM `tabGL Entry` gle
+        WHERE {' AND '.join(conditions)}
+        """,
+        values,
+    )
+    amount = flt(result[0][0]) if result and result[0][0] else 0
+    return -amount if acc.root_type == "Income" else amount

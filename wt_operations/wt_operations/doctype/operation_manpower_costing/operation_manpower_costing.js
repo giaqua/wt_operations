@@ -11,6 +11,16 @@ frappe.ui.form.on("Operation Manpower Costing", {
                 }
             };
         });
+
+        if (frm.doc.docstatus !== 0) return;
+        frm.add_custom_button(__("Spare Parts & Maintenance"), () => {
+            fetch_cost_items(frm, "spare_parts_and_maintenance_cost_details");
+        }, __("Fetch Costs"));
+
+        frm.add_custom_button(__("(Other Costs)"), () => {
+            fetch_cost_items(frm, "housing_and_transportation_cost_details");
+        }, __("Fetch Costs"));
+
 	},
     project: function(frm) {
         filter_units_based_on_project(frm);
@@ -237,4 +247,69 @@ function start_backend_process(frm, dialog) {
             frappe.realtime.off("progress_update");
         }
     });
+}
+
+// Add to Operation Manpower Costing client script (or the doctype's .js file)
+
+// Map each child table to its Operation Cost Type.
+// Add more tables here (e.g. housing) using the exact Operation Cost Type name.
+const COST_TABLES = {
+    spare_parts_and_maintenance_cost_details: "Spare parts & maintenance Costs",
+    housing_and_transportation_cost_details: "Other Costs",
+};
+
+
+function fetch_cost_items(frm, table_field) {
+    if (!frm.doc.project || !frm.doc.start_date || !frm.doc.end_date) {
+        frappe.msgprint(__("Please set Project, Start Date and End Date first."));
+        return;
+    }
+
+    frappe.call({
+        method: "wt_operations.wt_operations.doctype.operation_manpower_costing.operation_manpower_costing.fetch_cost_items",
+        args: {
+            operation_cost_type: COST_TABLES[table_field],
+            project: frm.doc.project,
+            start_date: frm.doc.start_date,
+            end_date: frm.doc.end_date,
+            company: frm.doc.company || null, // remove if the doctype has no company field
+        },
+        freeze: true,
+        freeze_message: __("Fetching amounts from GL..."),
+        callback(r) {
+            if (!r.message) return;
+            const { rows, skipped } = r.message;
+
+            frm.clear_table(table_field);
+            rows.forEach((row) => {
+                const child = frm.add_child(table_field);
+                child.cost_item = row.cost_item;
+                child.amount = row.amount;
+            });
+            frm.refresh_field(table_field);
+
+            update_totals(frm, table_field);
+
+            let msg = __("{0} item(s) loaded.", [rows.length]);
+            if (skipped.length) {
+                msg += "<br><br><b>" + __("Skipped:") + "</b><ul>" +
+                    skipped.map((s) => `<li>${s.item} — ${s.reason}</li>`).join("") + "</ul>";
+            }
+            frappe.msgprint({ title: __("Fetch Costs"), message: msg, indicator: skipped.length ? "orange" : "green" });
+        },
+    });
+}
+
+function update_totals(frm, table_field) {
+    const total = (frm.doc[table_field] || []).reduce((s, d) => s + flt(d.amount), 0);
+    const volume = flt(frm.doc.waste_water_treated_volume);
+    const per_m3 = volume ? total / volume : 0;
+
+    if (table_field === "spare_parts_and_maintenance_cost_details") {
+        frm.set_value("spare_parts_and_maintenance_total", total);
+        frm.set_value("spare_parts_and_maintenance_cost_per_m3", per_m3);
+    } else if (table_field === "housing_and_transportation_cost_details") {
+        frm.set_value("housing_and_transportation_cost", total);
+        frm.set_value("housing_and_transportation_cost_per_m3", per_m3);
+    }
 }

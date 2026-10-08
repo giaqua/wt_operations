@@ -6,7 +6,10 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "operation_cost_item"
+  "operation_cost_item",
+  "operation_cost_type",
+  "account",
+  "disabled"
  ],
  "fields": [
   {
@@ -16,12 +19,32 @@
    "label": "Operation Cost Item",
    "reqd": 1,
    "unique": 1
+  },
+  {
+   "fieldname": "operation_cost_type",
+   "fieldtype": "Select",
+   "label": "Operation Cost Type",
+   "options": "\nSpare parts & maintenance Costs\nOther Costs",
+   "reqd": 1
+  },
+  {
+   "fieldname": "account",
+   "fieldtype": "Link",
+   "label": "Account",
+   "options": "Account",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "disabled",
+   "fieldtype": "Check",
+   "label": "Disabled"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-07-15 13:09:23.558480",
+ "modified": "2026-10-08 11:35:47.618347",
  "modified_by": "Administrator",
  "module": "WT Operations",
  "name": "Operation Cost Item",

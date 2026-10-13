@@ -26,7 +26,7 @@ import statistics
 
 import frappe
 from frappe import _
-from frappe.utils import add_days, cint, date_diff, flt, getdate, now_datetime
+from frappe.utils import add_days, cint, date_diff, flt, get_url, getdate, now_datetime
 
 CATEGORIES = ("chemical", "manpower", "spare_part", "other")
 CATEGORY_LABELS = {
@@ -118,9 +118,27 @@ def get_dashboard_data(filters=None):
 		"rows_truncated": len(detail) > DETAIL_LIMIT,
 		"row_count": len(detail),
 		"anomalies": find_anomalies(rows),
+		"project_monthly": get_project_monthly(rows),
 		"currency": frappe.defaults.get_global_default("currency"),
+		"company": get_company_info(),
 		"generated_at": now_datetime().strftime("%Y-%m-%d %H:%M"),
 	}
+
+
+def get_company_info():
+	"""Company name + absolute logo URL for the print header."""
+	company = frappe.defaults.get_user_default("company") or frappe.defaults.get_global_default("company")
+	info = {"name": company or "", "logo": ""}
+
+	if company:
+		company_doc = frappe.db.get_value("Company", company, ["company_name", "company_logo"], as_dict=True)
+		if company_doc:
+			info["name"] = company_doc.company_name or company
+			if company_doc.company_logo:
+				logo = company_doc.company_logo
+				info["logo"] = logo if logo.startswith("http") else get_url(logo)
+
+	return info
 
 
 # ------------------------------------------------------------
@@ -237,6 +255,32 @@ def get_overall(rows):
 	g["days_with_data"] = days_with_data
 	g["avg_daily_volume"] = flt(g["treated_water"] / days_with_data) if days_with_data else 0
 	return g
+
+
+def get_project_monthly(rows):
+	"""Month-by-month breakdown for every project (used by the print report)."""
+	by_project = {}
+	for row in rows:
+		by_project.setdefault(row["project"] or "", []).append(row)
+
+	result = []
+	for project, project_rows in by_project.items():
+		months = aggregate(
+			project_rows,
+			key_fn=lambda r: r["month_sort"],
+			label_fn=lambda r: {"month_sort": r["month_sort"], "month_label": r["month_label"]},
+		)
+		result.append(
+			{
+				"project": project,
+				"project_name": project_rows[0]["project_name"] or project or _("(No Project)"),
+				"months": months,
+				"total": get_overall(project_rows),
+			}
+		)
+
+	result.sort(key=lambda x: x["total"]["total_cost"], reverse=True)
+	return result
 
 
 # ------------------------------------------------------------

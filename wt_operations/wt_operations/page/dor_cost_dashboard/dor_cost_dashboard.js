@@ -13,7 +13,8 @@
 //   - Sections as tabs: Overview (KPIs + monthly charts), Trends (daily /
 //     volume), Projects (chart + table), Monthly, DOR Detail, Flagged Days (sortable,
 //     show-more, CSV export, links open in a new tab)
-//   - Print and "open in DOR Cost Analysis report" drill-down
+//   - "Print Full Report" (branded, A4 landscape: KPIs, all charts, all tables)
+//     and a "Report v3" button that opens DOR Cost Analysis v3 with the same filters
 //
 // All numbers come from get_dashboard_data() in dor_cost_dashboard.py
 // (same cost model as the report: SUM(cost) / SUM(volume)).
@@ -76,9 +77,11 @@ class DORCostDashboard {
 	// --------------------------------------------------------
 	make_actions() {
 		this.page.set_primary_action(__("Refresh"), () => this.refresh(), "refresh");
-		this.page.add_menu_item(__("Print"), () => window.print());
+		this.page.add_inner_button(__("Print Full Report"), () => this.print_full_report());
+		this.page.add_inner_button(__("Report v3"), () => this.open_report());
+		this.page.add_menu_item(__("Print Full Report"), () => this.print_full_report());
 		this.page.add_menu_item(__("Export Current Table (CSV)"), () => this.export_csv());
-		this.page.add_menu_item(__("Open in Cost Analysis Report"), () => this.open_report());
+		this.page.add_menu_item(__("Open DOR Cost Analysis v3 Report"), () => this.open_report());
 	}
 
 	make_filters() {
@@ -130,7 +133,7 @@ class DORCostDashboard {
 			label: __("Show"),
 			fieldtype: "Select",
 			options: ["Both", "Cost Only", "Cost per M3 Only"].join("\n"),
-			default: "Both",
+			default: "Cost Only",
 			change: client,
 		});
 		add({
@@ -876,6 +879,449 @@ class DORCostDashboard {
 		if (f.project) route_options.project = f.project;
 		frappe.route_options = route_options;
 		frappe.set_route("query-report", REPORT_NAME);
+	}
+
+	// --------------------------------------------------------
+	// Full professional print (opens a print preview in a new tab)
+	// --------------------------------------------------------
+	print_full_report() {
+		const d = this.data;
+		if (!d || !d.kpis) {
+			frappe.show_alert({ message: __("Nothing to print - no data for the selected filters"), indicator: "orange" });
+			return;
+		}
+
+		const w = window.open("", "_blank");
+		if (!w) {
+			frappe.msgprint(__("Please allow pop-ups for this site to open the print preview."));
+			return;
+		}
+		w.document.write(this.build_print_html());
+		w.document.close();
+	}
+
+	svg_nice_max(v) {
+		if (!(v > 0)) return 1;
+		const exp = Math.pow(10, Math.floor(Math.log10(v)));
+		const f = v / exp;
+		const nf = f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10;
+		return nf * exp;
+	}
+
+	svg_num(v) {
+		v = flt(v);
+		if (Math.abs(v) >= 10000) return (v / 1000).toFixed(0) + "k";
+		if (Math.abs(v) >= 1000) return (v / 1000).toFixed(1) + "k";
+		return String(Math.round(v * 1000) / 1000);
+	}
+
+	svg_trunc(text, n) {
+		text = String(text == null ? "" : text);
+		return text.length > n ? text.slice(0, n - 1) + "…" : text;
+	}
+
+	svg_grid(w, h, m, max) {
+		let out = "";
+		const steps = 5;
+		for (let i = 0; i <= steps; i++) {
+			const val = (max / steps) * i;
+			const y = m.t + (h - m.t - m.b) * (1 - i / steps);
+			out += `<line x1="${m.l}" y1="${y}" x2="${w - m.r}" y2="${y}" stroke="#e3e8ec" stroke-width="1"/>`;
+			out += `<text x="${m.l - 6}" y="${y + 3}" text-anchor="end" font-size="9" fill="#6b7c85">${this.svg_num(val)}</text>`;
+		}
+		return out;
+	}
+
+	svg_wrap(w, h, inner) {
+		return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;font-family:Segoe UI,Arial,sans-serif">${inner}</svg>`;
+	}
+
+	svg_stacked({ labels, series, target, width = 520, height = 240 }) {
+		const rotate = labels.length > 6;
+		const m = { l: 44, r: 8, t: 10, b: rotate ? 58 : 28 };
+		const totals = labels.map((l, i) => series.reduce((s, x) => s + flt(x.values[i]), 0));
+		const max = this.svg_nice_max(Math.max(0, flt(target), ...totals));
+		const ph = height - m.t - m.b;
+		const slot = (width - m.l - m.r) / Math.max(labels.length, 1);
+		const bar = Math.min(slot * 0.62, 56);
+
+		let out = this.svg_grid(width, height, m, max);
+		labels.forEach((label, i) => {
+			const x = m.l + slot * i + (slot - bar) / 2;
+			let y = m.t + ph;
+			series.forEach((s) => {
+				const bh = (flt(s.values[i]) / max) * ph;
+				if (bh > 0) {
+					y -= bh;
+					out += `<rect x="${x}" y="${y}" width="${bar}" height="${bh}" fill="${s.color}"/>`;
+				}
+			});
+			const lx = m.l + slot * i + slot / 2;
+			const ly = height - m.b + 12;
+			out += rotate
+				? `<text transform="translate(${lx},${ly}) rotate(-38)" text-anchor="end" font-size="9" fill="#44525b">${this.esc(label)}</text>`
+				: `<text x="${lx}" y="${ly}" text-anchor="middle" font-size="9" fill="#44525b">${this.esc(label)}</text>`;
+		});
+		if (target) {
+			const ty = m.t + ph * (1 - flt(target) / max);
+			out += `<line x1="${m.l}" y1="${ty}" x2="${width - m.r}" y2="${ty}" stroke="#e24c4c" stroke-width="1.2" stroke-dasharray="5 3"/>`;
+		}
+		return this.svg_wrap(width, height, out);
+	}
+
+	svg_line({ labels, series, target, width = 1060, height = 230 }) {
+		const m = { l: 44, r: 10, t: 10, b: 28 };
+		const all = series.flatMap((s) => s.values.map((v) => flt(v)));
+		const max = this.svg_nice_max(Math.max(0, flt(target), ...all));
+		const pw = width - m.l - m.r;
+		const ph = height - m.t - m.b;
+		const n = labels.length;
+		const x = (i) => m.l + (n > 1 ? (pw * i) / (n - 1) : pw / 2);
+		const y = (v) => m.t + ph * (1 - flt(v) / max);
+
+		let out = this.svg_grid(width, height, m, max);
+		const step = Math.max(1, Math.ceil(n / 12));
+		labels.forEach((label, i) => {
+			if (i % step === 0) {
+				out += `<text x="${x(i)}" y="${height - m.b + 14}" text-anchor="middle" font-size="9" fill="#44525b">${this.esc(label)}</text>`;
+			}
+		});
+		series.forEach((s) => {
+			const pts = s.values.map((v, i) => `${x(i)},${y(v)}`).join(" ");
+			out += `<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="1.8" ${
+				s.dash ? `stroke-dasharray="${s.dash}"` : ""
+			}/>`;
+			if (n <= 31 && !s.dash) {
+				s.values.forEach((v, i) => {
+					out += `<circle cx="${x(i)}" cy="${y(v)}" r="2.2" fill="${s.color}"/>`;
+				});
+			}
+		});
+		if (target) {
+			const ty = y(target);
+			out += `<line x1="${m.l}" y1="${ty}" x2="${width - m.r}" y2="${ty}" stroke="#e24c4c" stroke-width="1.2" stroke-dasharray="5 3"/>`;
+		}
+		return this.svg_wrap(width, height, out);
+	}
+
+	svg_donut(values, colors, size = 170) {
+		const total = values.reduce((a, b) => a + flt(b), 0);
+		if (!(total > 0)) return "";
+		const r = size / 2;
+		const ro = r - 4;
+		const ri = ro * 0.58;
+		const pt = (rad, ang) => [r + rad * Math.cos(ang), r + rad * Math.sin(ang)];
+		let a0 = -Math.PI / 2;
+		let out = "";
+		values.forEach((v, i) => {
+			const frac = flt(v) / total;
+			if (frac <= 0) return;
+			if (frac >= 0.9999) {
+				out += `<circle cx="${r}" cy="${r}" r="${(ro + ri) / 2}" fill="none" stroke="${colors[i]}" stroke-width="${ro - ri}"/>`;
+				return;
+			}
+			const a1 = a0 + frac * 2 * Math.PI;
+			const large = frac > 0.5 ? 1 : 0;
+			const [x0, y0] = pt(ro, a0);
+			const [x1, y1] = pt(ro, a1);
+			const [x2, y2] = pt(ri, a1);
+			const [x3, y3] = pt(ri, a0);
+			out += `<path d="M${x0},${y0} A${ro},${ro} 0 ${large} 1 ${x1},${y1} L${x2},${y2} A${ri},${ri} 0 ${large} 0 ${x3},${y3} Z" fill="${colors[i]}"/>`;
+			a0 = a1;
+		});
+		return `<svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg" style="width:${size}px;height:${size}px">${out}</svg>`;
+	}
+
+	print_table(id, title, note) {
+		return this.print_table_from(this.tables && this.tables[id], title, note, false);
+	}
+
+	print_table_from(t, title, note, flow) {
+		if (!t || !t.rows || !t.rows.length) return "";
+
+		const cols = t.columns;
+		const align = (c) => (c.kind === "text" || c.kind === "html" ? "" : "pr-r");
+		const text_cell = (c, row) => {
+			if (c.kind === "html") {
+				return c.key === "date" ? this.esc(this.user_date(row.date)) : this.esc(c.raw ? c.raw(row) : "");
+			}
+			return this.cell(c, row);
+		};
+
+		const head = cols.map((c) => `<th class="${align(c)} ${c.m3 ? "pr-m3" : ""}">${c.label}</th>`).join("");
+		const body = t.rows
+			.map(
+				(row) =>
+					`<tr>${cols
+						.map((c) => `<td class="${align(c)} ${c.m3 ? "pr-m3" : ""}">${text_cell(c, row)}</td>`)
+						.join("")}</tr>`
+			)
+			.join("");
+
+		let foot = "";
+		if (t.total_row) {
+			foot = `<tfoot><tr>${cols
+				.map((c, i) => {
+					const label_first = i === 0 && !["num", "cur", "m3"].includes(c.kind);
+					const content = label_first ? __("Total") : this.total_cell(c, t.total_row);
+					return `<td class="${align(c)} ${c.m3 ? "pr-m3" : ""}">${content}</td>`;
+				})
+				.join("")}</tr></tfoot>`;
+		}
+
+		return `
+			<div class="pr-section pr-table-section${flow ? " pr-flow" : ""}">
+				<h2>${title}<span class="pr-count">${t.rows.length}</span></h2>
+				${note ? `<div class="pr-note">${note}</div>` : ""}
+				<table class="pr-table"><thead><tr>${head}</tr></thead><tbody>${body}</tbody>${foot}</table>
+			</div>`;
+	}
+
+	build_print_html() {
+		const d = this.data;
+		const k = d.kpis;
+		const company = d.company || {};
+		const target = this.target();
+		const f = this.get_filters();
+		const p = d.period;
+		const esc = (v) => this.esc(v);
+
+		// ---- filter line
+		const project_name = f.project && d.projects.length ? d.projects[0].project_name : "";
+		const bits = [
+			`${__("Period")}: <b>${this.user_date(p.from_date)}</b> &rarr; <b>${this.user_date(p.to_date)}</b> (${__("{0} days", [p.days])})`,
+		];
+		if (f.project) {
+			const extra = project_name && project_name !== f.project ? ` &ndash; ${esc(project_name)}` : "";
+			bits.push(`${__("Project")}: <b>${esc(f.project)}${extra}</b>`);
+		}
+		if (d.previous_period) {
+			bits.push(
+				`${__("Compared with")} ${this.user_date(d.previous_period.from_date)} &rarr; ${this.user_date(d.previous_period.to_date)}`
+			);
+		}
+		if (target) bits.push(`${__("Target Cost / M3")}: <b>${this.fmt_m3(target)}</b>`);
+		if (f.exclude_zero) bits.push(__("Zero treated water days excluded"));
+		const filter_line = bits.join(" &nbsp;|&nbsp; ");
+
+		// ---- charts
+		const cat_series = (rows) =>
+			CATS.map((c) => ({
+				name: __(c.label),
+				color: c.color,
+				values: rows.map((r) => r[`${c.key}_cost_per_m3`]),
+			}));
+		const legend = (items, with_target) =>
+			`<div class="pr-legend">${items
+				.map((i) => `<span><i style="background:${i.color}"></i>${esc(i.name)}</span>`)
+				.join("")}${with_target && target ? `<span><i class="pr-dash"></i>${__("Target")}</span>` : ""}</div>`;
+		const cat_legend = legend(
+			CATS.map((c) => ({ name: __(c.label), color: c.color })),
+			true
+		);
+
+		const months = d.monthly.map((m) => m.month_label);
+		const monthly_svg = this.svg_stacked({ labels: months, series: cat_series(d.monthly), target });
+		const volume_svg = this.svg_stacked({
+			labels: months,
+			series: [{ name: __("Treated Water (M3)"), color: "#1976a8", values: d.monthly.map((m) => m.treated_water) }],
+		});
+
+		const daily = d.daily;
+		const avg7 = daily.map((x, i) => {
+			const win = daily.slice(Math.max(0, i - 6), i + 1);
+			const cost = win.reduce((s, y) => s + y.total_cost, 0);
+			const vol = win.reduce((s, y) => s + y.treated_water, 0);
+			return vol ? cost / vol : 0;
+		});
+		const daily_svg = this.svg_line({
+			labels: daily.map((x) => moment(x.date).format("DD MMM")),
+			series: [
+				{ name: __("Total Cost / M3"), color: "#1976a8", values: daily.map((x) => x.total_cost_per_m3) },
+				{ name: __("7-day average"), color: "#f0a030", values: avg7, dash: "4 3" },
+			],
+			target,
+		});
+		const daily_legend = legend(
+			[
+				{ name: __("Total Cost / M3"), color: "#1976a8" },
+				{ name: __("7-day average"), color: "#f0a030" },
+			],
+			true
+		);
+
+		const top = d.projects.slice(0, 12);
+		const projects_svg = this.svg_stacked({
+			labels: top.map((x) => this.svg_trunc(x.project_name, 16)),
+			series: cat_series(top),
+			target,
+		});
+
+		const mix_values = CATS.map((c) => k[`${c.key}_cost`]);
+		const donut = this.svg_donut(
+			mix_values,
+			CATS.map((c) => c.color)
+		);
+		const mix_rows = CATS.map((c) => {
+			const cost = k[`${c.key}_cost`];
+			const share = k.total_cost ? (cost / k.total_cost) * 100 : 0;
+			return `<tr><td><i class="pr-dot" style="background:${c.color}"></i>${__(c.label)}</td><td class="pr-r">${this.fmt_cur(cost)}</td><td class="pr-r">${share.toFixed(1)}%</td></tr>`;
+		}).join("");
+
+		// ---- tables
+		const a = d.anomalies;
+		const flagged_note = a.items.length
+			? __("DORs with Total Cost / M3 above {0} (average + 2 standard deviations). Main driver = category furthest above its own average.", [
+					this.fmt_m3(a.threshold),
+			  ])
+			: "";
+
+		// Monthly breakdown for every project, one table per project
+		const pm = d.project_monthly || [];
+		const pm_cols = [
+			{ key: "month_sort", label: __("Month"), kind: "html", raw: (r) => r.month_label },
+			{ key: "dor_count", label: __("DORs"), kind: "int" },
+			...this.value_columns(),
+		];
+		const project_monthly_html = pm.length
+			? `<div class="pr-section pr-table-section"><h2>${__("Monthly Summary by Project")}<span class="pr-count">${pm.length}</span></h2></div>` +
+			  pm
+					.map((x) =>
+						this.print_table_from(
+							{ columns: pm_cols, rows: x.months, total_row: x.total },
+							esc(x.project_name),
+							"",
+							true
+						)
+					)
+					.join("")
+			: "";
+
+		const tables_html =
+			this.print_table("projects", __("Projects")) +
+			this.print_table("monthly", __("Monthly Summary")) +
+			project_monthly_html +
+			this.print_table("flagged", __("Flagged Days"), flagged_note);
+
+		const logo = company.logo ? `<img src="${esc(company.logo)}" class="pr-logo"/>` : "";
+		const user = frappe.session.user_fullname || frappe.session.user || "";
+
+		return `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<title>${__("DOR Cost Dashboard")}</title>
+<style>
+	@page { size: A4 landscape; margin: 10mm 9mm 14mm; }
+	:root { --dark: #0b3d5c; --blue: #1976a8; --light: #eaf4fa; --accent: #2e9e6f; }
+	* { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+	body { font-family: "Segoe UI", Arial, sans-serif; color: #222; margin: 0; font-size: 11px; }
+
+	.pr-header { display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, var(--dark), var(--blue)); color: #fff; padding: 12px 18px; border-radius: 8px; margin-bottom: 10px; }
+	.pr-header .left { display: flex; align-items: center; gap: 12px; }
+	.pr-logo { max-height: 42px; max-width: 130px; background: #fff; padding: 4px 8px; border-radius: 6px; }
+	.pr-company { font-size: 16px; font-weight: 600; }
+	.pr-sub { font-size: 11px; opacity: .9; margin-top: 2px; }
+	.pr-header .right { text-align: right; }
+	.pr-title { font-size: 19px; font-weight: 700; }
+	.pr-meta { font-size: 10px; opacity: .9; margin-top: 4px; }
+
+	.pr-filter { background: var(--light); border-left: 4px solid var(--blue); padding: 7px 12px; font-size: 11px; color: var(--dark); border-radius: 4px; margin-bottom: 12px; }
+
+	.pr-section { margin-bottom: 14px; }
+	.pr-section h2 { font-size: 13px; color: var(--dark); border-bottom: 2px solid var(--blue); padding-bottom: 4px; margin: 0 0 10px; display: flex; align-items: center; gap: 8px; }
+	.pr-count { font-size: 10px; font-weight: 400; color: #6b7c85; background: #f1f4f6; border-radius: 10px; padding: 1px 8px; }
+	.pr-note { font-size: 10px; color: #6b7c85; margin: -4px 0 8px; }
+
+	.dd-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+	.dd-kpi { border: 1px solid #e0e6ea; border-top: 3px solid var(--blue); border-radius: 6px; padding: 8px 12px; break-inside: avoid; }
+	.dd-kpi-over { background: #fdf0f0; }
+	.dd-kpi-label { font-size: 9px; text-transform: uppercase; letter-spacing: .5px; color: #6b7c85; margin-bottom: 3px; }
+	.dd-kpi-value { font-size: 17px; font-weight: 700; color: var(--dark); }
+	.dd-kpi-foot { display: flex; gap: 8px; align-items: center; margin-top: 4px; font-size: 9.5px; flex-wrap: wrap; }
+	.dd-kpi-sub { color: #6b7c85; }
+	.dd-delta { font-weight: 700; }
+	.dd-good, .dd-good-text { color: #1f8a5b; }
+	.dd-bad, .dd-bad-text { color: #c0392b; }
+	.dd-na { color: #8a97a0; }
+	.dd-over { color: #c0392b; font-weight: 700; }
+
+	.pr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+	.pr-card { border: 1px solid #e0e6ea; border-radius: 6px; padding: 8px 10px; break-inside: avoid; }
+	.pr-card.wide { grid-column: 1 / -1; }
+	.pr-card h3 { font-size: 11px; margin: 0 0 6px; color: var(--dark); }
+	.pr-legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 9.5px; color: #44525b; margin-top: 4px; }
+	.pr-legend i, .pr-dot { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; }
+	.pr-dash { border-top: 2px dashed #e24c4c; background: none !important; height: 0 !important; border-radius: 0 !important; }
+	.pr-mix { display: flex; align-items: center; gap: 16px; }
+	.pr-mix table { border-collapse: collapse; font-size: 10.5px; flex: 1; }
+	.pr-mix td { padding: 4px 6px; border-bottom: 1px solid #e6ebee; }
+
+	.pr-table-section { page-break-before: always; }
+	.pr-table-section ~ .pr-table-section { page-break-before: always; }
+	.pr-table-section.pr-flow { page-break-before: auto; break-inside: avoid; margin-bottom: 12px; }
+	table.pr-table { width: 100%; border-collapse: collapse; font-size: 8.5px; }
+	.pr-table thead { display: table-header-group; }
+	.pr-table tfoot { display: table-row-group; }
+	.pr-table th { background: var(--dark); color: #fff; padding: 5px 6px; text-align: left; font-weight: 600; }
+	.pr-table td { padding: 4px 6px; border-bottom: 1px solid #e6ebee; white-space: nowrap; }
+	.pr-table tbody tr:nth-child(even) { background: #f7fafc; }
+	.pr-table tr { page-break-inside: avoid; }
+	.pr-r { text-align: right !important; }
+	.pr-table td.pr-m3 { color: var(--blue); background: #f4fafd; font-weight: 600; }
+	.pr-table tfoot td { background: var(--light); font-weight: 700; color: var(--dark); border-top: 2px solid var(--blue); }
+	.pr-table tfoot td.pr-m3 { background: var(--blue); color: #fff; }
+
+	.pr-footer { position: fixed; bottom: 0; left: 0; right: 0; font-size: 9px; color: #8a97a0; display: flex; justify-content: space-between; border-top: 1px solid #e0e6ea; padding-top: 4px; background: #fff; }
+</style>
+</head>
+<body>
+	<div class="pr-header">
+		<div class="left">
+			${logo}
+			<div>
+				<div class="pr-company">${esc(company.name || "")}</div>
+				<div class="pr-sub">${__("Water Treatment Operations")}</div>
+			</div>
+		</div>
+		<div class="right">
+			<div class="pr-title">${__("DOR Cost Dashboard Report")}</div>
+			<div class="pr-meta">${__("Generated")}: ${esc(d.generated_at)}${user ? ` &nbsp;|&nbsp; ${esc(user)}` : ""}</div>
+		</div>
+	</div>
+
+	<div class="pr-filter">${filter_line}</div>
+
+	<div class="pr-section">
+		<h2>${__("Key Performance Indicators")}</h2>
+		<div class="dd-kpis">${this.$body.find(".dd-kpis").html()}</div>
+	</div>
+
+	<div class="pr-section">
+		<h2>${__("Cost Analysis")}</h2>
+		<div class="pr-grid">
+			<div class="pr-card"><h3>${__("Monthly Cost / M3 by Category")}</h3>${monthly_svg}${cat_legend}</div>
+			<div class="pr-card"><h3>${__("Cost Mix")}</h3>
+				<div class="pr-mix">${donut}<table>${mix_rows}</table></div>
+			</div>
+			<div class="pr-card wide"><h3>${__("Daily Total Cost / M3 (with 7-day average)")}</h3>${daily_svg}${daily_legend}</div>
+			<div class="pr-card"><h3>${__("Monthly Treated Water (M3)")}</h3>${volume_svg}</div>
+			<div class="pr-card"><h3>${d.projects.length > 12 ? __("Project Comparison - Cost / M3 (top 12 by cost)") : __("Project Comparison - Cost / M3")}</h3>${projects_svg}${cat_legend}</div>
+		</div>
+	</div>
+
+	${tables_html}
+
+	<div class="pr-footer">
+		<span>${esc(company.name || "")} &mdash; ${__("DOR Cost Dashboard Report")}</span>
+		<span>${this.user_date(p.from_date)} &rarr; ${this.user_date(p.to_date)}</span>
+	</div>
+
+	<script>
+		window.onload = function () { setTimeout(function () { window.print(); }, 300); };
+	</script>
+</body>
+</html>`;
 	}
 
 	// --------------------------------------------------------

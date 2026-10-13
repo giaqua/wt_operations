@@ -22,7 +22,7 @@
 
 const API =
 	"wt_operations.wt_operations.page.dor_cost_dashboard.dor_cost_dashboard.get_dashboard_data";
-const REPORT_NAME = "DOR Cost Analysis v3";
+const REPORT_NAME = "DOR Cost Analysis V3";
 
 const CATS = [
 	{ key: "chemical", label: "Chemical", color: "#1976a8" },
@@ -869,16 +869,17 @@ class DORCostDashboard {
 
 	open_report() {
 		const f = this.get_filters();
-		const route_options = {
-			from_date: f.from_date,
-			to_date: f.to_date,
-			exclude_zero_volume: f.exclude_zero,
-			display: this.display(),
-			group_by: "None",
-		};
-		if (f.project) route_options.project = f.project;
-		frappe.route_options = route_options;
-		frappe.set_route("query-report", REPORT_NAME);
+		const q = (k, v) => `${k}=${encodeURIComponent(v)}`;
+		const params = [
+			q("from_date", f.from_date),
+			q("to_date", f.to_date),
+			q("display", this.display()),
+		];
+		if (f.project) params.push(q("project", f.project));
+		if (f.exclude_zero) params.push(q("exclude_zero_volume", 1));
+
+		const url = `/app/query-report/${encodeURIComponent(REPORT_NAME)}?${params.join("&")}`;
+		window.open(url, "_blank");
 	}
 
 	// --------------------------------------------------------
@@ -1169,12 +1170,6 @@ class DORCostDashboard {
 		}).join("");
 
 		// ---- tables
-		const a = d.anomalies;
-		const flagged_note = a.items.length
-			? __("DORs with Total Cost / M3 above {0} (average + 2 standard deviations). Main driver = category furthest above its own average.", [
-					this.fmt_m3(a.threshold),
-			  ])
-			: "";
 
 		// Monthly breakdown for every project, one table per project
 		const pm = d.project_monthly || [];
@@ -1200,8 +1195,7 @@ class DORCostDashboard {
 		const tables_html =
 			this.print_table("projects", __("Projects")) +
 			this.print_table("monthly", __("Monthly Summary")) +
-			project_monthly_html +
-			this.print_table("flagged", __("Flagged Days"), flagged_note);
+			project_monthly_html;
 
 		const logo = company.logo ? `<img src="${esc(company.logo)}" class="pr-logo"/>` : "";
 		const user = frappe.session.user_fullname || frappe.session.user || "";

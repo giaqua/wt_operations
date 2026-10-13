@@ -1,0 +1,913 @@
+// ============================================================
+// DOR Cost Dashboard - Frappe Desk Page
+// Route: /app/dor-cost-dashboard
+//
+// Features
+//   - Period presets or custom range, project filter, exclude zero
+//     volume, compare with previous period, target Cost / M3,
+//     Cost / Cost per M3 / Both display toggle
+//   - KPI cards with delta vs previous period, share of cost,
+//     peak / best day
+//   - Charts: monthly cost/M3 by category (stacked), cost mix (donut),
+//     daily trend + 7-day average, project comparison, monthly volume
+//   - Tabs: Projects, Monthly, DOR Detail, Flagged Days (sortable,
+//     show-more, CSV export, links open in a new tab)
+//   - Print and "open in DOR Cost Analysis report" drill-down
+//
+// All numbers come from get_dashboard_data() in dor_cost_dashboard.py
+// (same cost model as the report: SUM(cost) / SUM(volume)).
+// ============================================================
+
+const API =
+	"wt_operations.wt_operations.page.dor_cost_dashboard.dor_cost_dashboard.get_dashboard_data";
+const REPORT_NAME = "DOR Cost Analysis v3";
+
+const CATS = [
+	{ key: "chemical", label: "Chemical", color: "#1976a8" },
+	{ key: "manpower", label: "Manpower", color: "#2e9e6f" },
+	{ key: "spare_part", label: "Spare Part", color: "#f0a030" },
+	{ key: "other", label: "Other", color: "#8e6bbf" },
+];
+
+const PRESETS = [
+	"Last 30 Days",
+	"This Month",
+	"Last Month",
+	"Last 3 Months",
+	"Year to Date",
+	"Last 12 Months",
+	"Custom",
+];
+
+frappe.pages["dor-cost-dashboard"].on_page_load = function (wrapper) {
+	frappe.dor_cost_dashboard = new DORCostDashboard(wrapper);
+};
+
+class DORCostDashboard {
+	constructor(wrapper) {
+		this.wrapper = wrapper;
+		this.page = frappe.ui.make_app_page({
+			parent: wrapper,
+			title: __("DOR Cost Dashboard"),
+			single_column: true,
+		});
+
+		this.data = null;
+		this.currency = frappe.defaults.get_default("currency") || "";
+		this.active_tab = "projects";
+		this.sort = {};
+		this.limit = {};
+		this.silent = false;
+		this.req_id = 0;
+		this.current_table = null;
+
+		this.refresh_debounced = frappe.utils.debounce(() => this.refresh(), 300);
+
+		this.inject_css();
+		this.make_actions();
+		this.make_filters();
+		this.make_layout();
+		this.apply_preset("Last 30 Days");
+	}
+
+	// --------------------------------------------------------
+	// Setup
+	// --------------------------------------------------------
+	make_actions() {
+		this.page.set_primary_action(__("Refresh"), () => this.refresh(), "refresh");
+		this.page.add_menu_item(__("Print"), () => window.print());
+		this.page.add_menu_item(__("Export Current Table (CSV)"), () => this.export_csv());
+		this.page.add_menu_item(__("Open in Cost Analysis Report"), () => this.open_report());
+	}
+
+	make_filters() {
+		this.f = {};
+		const server = () => this.refresh_debounced();
+		const client = () => this.data && this.render();
+
+		const add = (df) => {
+			this.f[df.fieldname] = this.page.add_field(df);
+		};
+
+		add({
+			fieldname: "preset",
+			label: __("Period"),
+			fieldtype: "Select",
+			options: PRESETS.join("\n"),
+			default: "Last 30 Days",
+			change: () => {
+				if (!this.silent) this.apply_preset(this.f.preset.get_value());
+			},
+		});
+		add({
+			fieldname: "from_date",
+			label: __("From"),
+			fieldtype: "Date",
+			change: () => this.on_date_change(),
+		});
+		add({
+			fieldname: "to_date",
+			label: __("To"),
+			fieldtype: "Date",
+			change: () => this.on_date_change(),
+		});
+		add({
+			fieldname: "project",
+			label: __("Project"),
+			fieldtype: "Link",
+			options: "Project",
+			change: server,
+		});
+		add({
+			fieldname: "target",
+			label: __("Target Cost / M3"),
+			fieldtype: "Float",
+			change: client,
+		});
+		add({
+			fieldname: "display",
+			label: __("Show"),
+			fieldtype: "Select",
+			options: ["Both", "Cost Only", "Cost per M3 Only"].join("\n"),
+			default: "Both",
+			change: client,
+		});
+		add({
+			fieldname: "exclude_zero",
+			label: __("Exclude Zero Treated Water"),
+			fieldtype: "Check",
+			default: 0,
+			change: server,
+		});
+		add({
+			fieldname: "compare",
+			label: __("Compare Previous Period"),
+			fieldtype: "Check",
+			default: 1,
+			change: server,
+		});
+	}
+
+	make_layout() {
+		this.$body = $(`
+			<div class="dd-root">
+				<div class="dd-period"></div>
+				<div class="dd-empty" style="display:none"></div>
+				<div class="dd-content">
+					<div class="dd-kpis"></div>
+					<div class="dd-grid">
+						<div class="dd-card">
+							<div class="dd-card-title">${__("Monthly Cost / M3 by Category")}</div>
+							<div class="dd-chart" data-chart="monthly"></div>
+						</div>
+						<div class="dd-card">
+							<div class="dd-card-title">${__("Cost Mix")}</div>
+							<div class="dd-chart" data-chart="mix"></div>
+						</div>
+						<div class="dd-card dd-wide">
+							<div class="dd-card-title">${__("Daily Total Cost / M3 (with 7-day average)")}</div>
+							<div class="dd-chart" data-chart="daily"></div>
+						</div>
+						<div class="dd-card">
+							<div class="dd-card-title dd-projects-title">${__("Project Comparison - Cost / M3")}</div>
+							<div class="dd-chart" data-chart="projects"></div>
+						</div>
+						<div class="dd-card">
+							<div class="dd-card-title">${__("Monthly Treated Water (M3)")}</div>
+							<div class="dd-chart" data-chart="volume"></div>
+						</div>
+					</div>
+					<div class="dd-card dd-tabs-card">
+						<div class="dd-tabbar">
+							<button class="dd-tab" data-tab="projects">${__("Projects")}</button>
+							<button class="dd-tab" data-tab="monthly">${__("Monthly")}</button>
+							<button class="dd-tab" data-tab="detail">${__("DOR Detail")}</button>
+							<button class="dd-tab" data-tab="flagged">${__("Flagged Days")}<span class="dd-badge"></span></button>
+							<span class="dd-spacer"></span>
+							<button class="btn btn-xs btn-default dd-export">${__("Export CSV")}</button>
+						</div>
+						<div class="dd-pane" data-pane="projects"></div>
+						<div class="dd-pane" data-pane="monthly"></div>
+						<div class="dd-pane" data-pane="detail"></div>
+						<div class="dd-pane" data-pane="flagged"></div>
+					</div>
+					<div class="dd-footer text-muted"></div>
+				</div>
+			</div>
+		`).appendTo(this.page.main);
+
+		this.$body.on("click", ".dd-tab", (e) => {
+			this.active_tab = $(e.currentTarget).data("tab");
+			this.render_tabs();
+		});
+		this.$body.on("click", ".dd-export", () => this.export_csv());
+		this.$body.on("click", "th[data-sort]", (e) => {
+			const $th = $(e.currentTarget);
+			const id = $th.closest("table").data("table");
+			const key = $th.data("sort");
+			const cur = this.sort[id];
+			this.sort[id] = {
+				key,
+				dir: cur && cur.key === key && cur.dir === "desc" ? "asc" : "desc",
+			};
+			this.render_tables();
+		});
+		this.$body.on("click", ".dd-more", (e) => {
+			const id = $(e.currentTarget).data("table");
+			this.limit[id] = (this.limit[id] || 100) + 200;
+			this.render_tables();
+		});
+	}
+
+	// --------------------------------------------------------
+	// Filters
+	// --------------------------------------------------------
+	preset_range(name) {
+		const m = moment();
+		const f = "YYYY-MM-DD";
+		switch (name) {
+			case "This Month":
+				return [m.clone().startOf("month").format(f), m.clone().endOf("month").format(f)];
+			case "Last Month": {
+				const l = m.clone().subtract(1, "month");
+				return [l.clone().startOf("month").format(f), l.clone().endOf("month").format(f)];
+			}
+			case "Last 3 Months":
+				return [m.clone().subtract(2, "months").startOf("month").format(f), m.format(f)];
+			case "Year to Date":
+				return [m.clone().startOf("year").format(f), m.format(f)];
+			case "Last 12 Months":
+				return [m.clone().subtract(11, "months").startOf("month").format(f), m.format(f)];
+			case "Last 30 Days":
+			default:
+				return [m.clone().subtract(29, "days").format(f), m.format(f)];
+		}
+	}
+
+	apply_preset(name) {
+		if (name === "Custom") return;
+		const [from, to] = this.preset_range(name);
+		this.silent = true;
+		this.f.preset.set_value(name);
+		this.f.from_date.set_value(from);
+		this.f.to_date.set_value(to);
+		setTimeout(() => {
+			this.silent = false;
+		}, 500);
+		this.refresh_debounced();
+	}
+
+	on_date_change() {
+		if (this.silent) return;
+		this.silent = true;
+		this.f.preset.set_value("Custom");
+		setTimeout(() => {
+			this.silent = false;
+		}, 500);
+		this.refresh_debounced();
+	}
+
+	get_filters() {
+		return {
+			from_date: this.f.from_date.get_value(),
+			to_date: this.f.to_date.get_value(),
+			project: this.f.project.get_value() || "",
+			exclude_zero: this.f.exclude_zero.get_value() ? 1 : 0,
+			compare: this.f.compare.get_value() ? 1 : 0,
+		};
+	}
+
+	target() {
+		return flt(this.f.target.get_value());
+	}
+
+	display() {
+		return this.f.display.get_value() || "Both";
+	}
+
+	// --------------------------------------------------------
+	// Data
+	// --------------------------------------------------------
+	refresh() {
+		const filters = this.get_filters();
+		if (!filters.from_date || !filters.to_date) return;
+
+		const req_id = ++this.req_id;
+		this.$body.addClass("dd-loading");
+
+		frappe.call({
+			method: API,
+			args: { filters },
+			callback: (r) => {
+				if (req_id !== this.req_id) return; // stale response
+				this.$body.removeClass("dd-loading");
+				this.data = r.message;
+				this.render();
+			},
+			error: () => {
+				this.$body.removeClass("dd-loading");
+			},
+		});
+	}
+
+	// --------------------------------------------------------
+	// Formatting helpers
+	// --------------------------------------------------------
+	fmt_cur(v, decimals = 2) {
+		return format_currency(flt(v), this.currency, decimals);
+	}
+	fmt_m3(v) {
+		return format_currency(flt(v), this.currency, 3);
+	}
+	fmt_num(v, decimals = 2) {
+		return format_number(flt(v), null, decimals);
+	}
+	esc(v) {
+		return frappe.utils.escape_html(v == null ? "" : String(v));
+	}
+	user_date(d) {
+		return d ? frappe.datetime.str_to_user(d) : "";
+	}
+	link(url, text) {
+		return `<a href="${url}" target="_blank" rel="noopener">${this.esc(text)}</a>`;
+	}
+	project_link(id, name) {
+		if (!id) return this.esc(name || __("(No Project)"));
+		return this.link(`/app/project/${encodeURIComponent(id)}`, name || id);
+	}
+	dor_link(name) {
+		return this.link(`/app/daily-operation-report/${encodeURIComponent(name)}`, name);
+	}
+
+	delta_html(cur, prev, good_when_up) {
+		if (!flt(prev)) return `<span class="dd-delta dd-na" title="${__("No previous data")}">&mdash;</span>`;
+		const pct = ((flt(cur) - flt(prev)) / flt(prev)) * 100;
+		if (Math.abs(pct) < 0.05) return `<span class="dd-delta dd-na">0.0%</span>`;
+		const up = pct > 0;
+		const good = up === good_when_up;
+		return `<span class="dd-delta ${good ? "dd-good" : "dd-bad"}" title="${__("vs previous period")}">${
+			up ? "&#9650;" : "&#9660;"
+		} ${Math.abs(pct).toFixed(1)}%</span>`;
+	}
+
+	// --------------------------------------------------------
+	// Render
+	// --------------------------------------------------------
+	render() {
+		const d = this.data;
+		if (!d) return;
+
+		this.render_period();
+
+		if (!d.kpis) {
+			this.$body.find(".dd-content").hide();
+			this.$body
+				.find(".dd-empty")
+				.html(`${__("No submitted Daily Operation Reports found for the selected filters.")}`)
+				.show();
+			return;
+		}
+
+		this.$body.find(".dd-empty").hide();
+		this.$body.find(".dd-content").show();
+
+		this.render_kpis();
+		this.render_charts();
+		this.render_tables();
+		this.render_tabs();
+
+		let footer = `${__("Generated")}: ${d.generated_at} &nbsp;|&nbsp; ${__("DORs")}: ${d.row_count}`;
+		if (d.rows_truncated) {
+			footer += ` &nbsp;|&nbsp; ${__("DOR Detail shows the latest {0} only", [d.rows.length])}`;
+		}
+		this.$body.find(".dd-footer").html(footer);
+	}
+
+	render_period() {
+		const d = this.data;
+		const p = d.period;
+		let html = `${__("Period")}: <b>${this.user_date(p.from_date)}</b> &rarr; <b>${this.user_date(
+			p.to_date
+		)}</b> (${__("{0} days", [p.days])})`;
+		const project = this.f.project.get_value();
+		if (project) html += ` &nbsp;|&nbsp; ${__("Project")}: <b>${this.esc(project)}</b>`;
+		if (d.previous_period) {
+			html += ` &nbsp;|&nbsp; ${__("Compared with")} ${this.user_date(
+				d.previous_period.from_date
+			)} &rarr; ${this.user_date(d.previous_period.to_date)}`;
+		}
+		this.$body.find(".dd-period").html(html);
+	}
+
+	kpi(label, value, delta, sub, color, over) {
+		return `
+			<div class="dd-kpi ${over ? "dd-kpi-over" : ""}" style="border-top-color:${color}">
+				<div class="dd-kpi-label">${label}</div>
+				<div class="dd-kpi-value">${value}</div>
+				<div class="dd-kpi-foot">${delta || ""}<span class="dd-kpi-sub">${sub || ""}</span></div>
+			</div>`;
+	}
+
+	render_kpis() {
+		const d = this.data;
+		const k = d.kpis;
+		const p = d.previous_kpis;
+		const target = this.target();
+		const dl = (key, good_up) => (p ? this.delta_html(k[key], p[key], good_up) : "");
+
+		const over = target && k.total_cost_per_m3 > target;
+		let target_sub = "";
+		if (target) {
+			target_sub = over
+				? `<span class="dd-bad-text">${__("Above target")} (${this.fmt_m3(target)})</span>`
+				: `<span class="dd-good-text">${__("Within target")} (${this.fmt_m3(target)})</span>`;
+		}
+
+		const cards = [];
+		cards.push(
+			this.kpi(
+				__("Treated Water (m³)"),
+				this.fmt_num(k.treated_water),
+				dl("treated_water", true),
+				`${this.fmt_num(k.avg_daily_volume)} m³/${__("day")} &middot; ${k.days_with_data} ${__("days")}`,
+				"#1976a8"
+			)
+		);
+		cards.push(
+			this.kpi(__("Total Cost"), this.fmt_cur(k.total_cost), dl("total_cost", false), `${k.dor_count} ${__("DORs")}`, "#1976a8")
+		);
+		cards.push(
+			this.kpi(
+				__("Total Cost / m³"),
+				this.fmt_m3(k.total_cost_per_m3),
+				dl("total_cost_per_m3", false),
+				target_sub,
+				over ? "#e24c4c" : "#2e9e6f",
+				over
+			)
+		);
+
+		CATS.forEach((c) => {
+			const share = k.total_cost ? (k[`${c.key}_cost`] / k.total_cost) * 100 : 0;
+			cards.push(
+				this.kpi(
+					`${__(c.label)} / m³`,
+					this.fmt_m3(k[`${c.key}_cost_per_m3`]),
+					dl(`${c.key}_cost_per_m3`, false),
+					`${share.toFixed(1)}% ${__("of cost")}`,
+					c.color
+				)
+			);
+		});
+
+		// Peak / best day (days with treated water only)
+		const days = d.daily.filter((x) => x.treated_water > 0);
+		if (days.length) {
+			const peak = days.reduce((a, b) => (b.total_cost_per_m3 > a.total_cost_per_m3 ? b : a));
+			const best = days.reduce((a, b) => (b.total_cost_per_m3 < a.total_cost_per_m3 ? b : a));
+			cards.push(
+				this.kpi(__("Peak Day / m³"), this.fmt_m3(peak.total_cost_per_m3), "", this.user_date(peak.date), "#e24c4c")
+			);
+			cards.push(
+				this.kpi(__("Best Day / m³"), this.fmt_m3(best.total_cost_per_m3), "", this.user_date(best.date), "#2e9e6f")
+			);
+		}
+
+		this.$body.find(".dd-kpis").html(cards.join(""));
+	}
+
+	// --------------------------------------------------------
+	// Charts
+	// --------------------------------------------------------
+	chart(name, config) {
+		const $el = this.$body.find(`[data-chart="${name}"]`);
+		$el.empty();
+		try {
+			new frappe.Chart($el[0], Object.assign({ height: 260 }, config));
+		} catch (e) {
+			console.error(`DOR dashboard chart ${name} failed`, e);
+		}
+	}
+
+	round(v) {
+		return Math.round(flt(v) * 10000) / 10000;
+	}
+
+	render_charts() {
+		const d = this.data;
+		const target = this.target();
+		const markers = target
+			? [{ label: __("Target"), value: target, options: { labelPos: "left" } }]
+			: [];
+		const tip = { formatTooltipY: (v) => this.fmt_m3(v) };
+		const colors = CATS.map((c) => c.color);
+
+		// 1. Monthly stacked cost / m3
+		this.chart("monthly", {
+			type: "bar",
+			colors,
+			data: {
+				labels: d.monthly.map((m) => m.month_label),
+				datasets: CATS.map((c) => ({
+					name: __(c.label),
+					values: d.monthly.map((m) => this.round(m[`${c.key}_cost_per_m3`])),
+				})),
+				yMarkers: markers,
+			},
+			barOptions: { stacked: 1, spaceRatio: 0.4 },
+			tooltipOptions: tip,
+		});
+
+		// 2. Cost mix donut
+		const k = d.kpis;
+		if (k.total_cost > 0) {
+			this.chart("mix", {
+				type: "donut",
+				colors,
+				data: {
+					labels: CATS.map((c) => __(c.label)),
+					datasets: [{ values: CATS.map((c) => this.round(k[`${c.key}_cost`])) }],
+				},
+				tooltipOptions: { formatTooltipY: (v) => this.fmt_cur(v) },
+			});
+		} else {
+			this.$body.find('[data-chart="mix"]').html(`<div class="text-muted">${__("No cost data")}</div>`);
+		}
+
+		// 3. Daily trend + 7-day average (SUM cost / SUM volume over the window)
+		const daily = d.daily;
+		const avg7 = daily.map((_, i) => {
+			const win = daily.slice(Math.max(0, i - 6), i + 1);
+			const cost = win.reduce((s, x) => s + x.total_cost, 0);
+			const vol = win.reduce((s, x) => s + x.treated_water, 0);
+			return vol ? this.round(cost / vol) : 0;
+		});
+		this.chart("daily", {
+			type: "line",
+			colors: ["#1976a8", "#f0a030"],
+			data: {
+				labels: daily.map((x) => moment(x.date).format("DD MMM")),
+				datasets: [
+					{ name: __("Total Cost / M3"), values: daily.map((x) => this.round(x.total_cost_per_m3)) },
+					{ name: __("7-day average"), values: avg7 },
+				],
+				yMarkers: markers,
+			},
+			axisOptions: { xIsSeries: 1 },
+			lineOptions: { hideDots: daily.length > 31 ? 1 : 0, regionFill: 0 },
+			tooltipOptions: tip,
+		});
+
+		// 4. Project comparison (top 12 by total cost, stacked per category)
+		const top = d.projects.slice(0, 12);
+		this.$body
+			.find(".dd-projects-title")
+			.text(
+				d.projects.length > 12
+					? __("Project Comparison - Cost / M3 (top 12 by cost)")
+					: __("Project Comparison - Cost / M3")
+			);
+		this.chart("projects", {
+			type: "bar",
+			colors,
+			data: {
+				labels: top.map((x) => x.project_name),
+				datasets: CATS.map((c) => ({
+					name: __(c.label),
+					values: top.map((x) => this.round(x[`${c.key}_cost_per_m3`])),
+				})),
+				yMarkers: markers,
+			},
+			barOptions: { stacked: 1, spaceRatio: 0.4 },
+			tooltipOptions: tip,
+		});
+
+		// 5. Monthly volume
+		this.chart("volume", {
+			type: "bar",
+			colors: ["#1976a8"],
+			data: {
+				labels: d.monthly.map((m) => m.month_label),
+				datasets: [{ name: __("Treated Water (M3)"), values: d.monthly.map((m) => this.round(m.treated_water)) }],
+			},
+			barOptions: { spaceRatio: 0.4 },
+			tooltipOptions: { formatTooltipY: (v) => `${this.fmt_num(v)} m³` },
+		});
+	}
+
+	// --------------------------------------------------------
+	// Tables
+	// --------------------------------------------------------
+	value_columns() {
+		const display = this.display();
+		const show_cost = display === "Both" || display === "Cost Only";
+		const show_m3 = display === "Both" || display === "Cost per M3 Only";
+		const cols = [{ key: "treated_water", label: __("Treated Water (M3)"), kind: "num" }];
+
+		CATS.forEach((c) => {
+			if (show_cost) cols.push({ key: `${c.key}_cost`, label: __(`${c.label} Cost`), kind: "cur" });
+			if (show_m3) cols.push({ key: `${c.key}_cost_per_m3`, label: `${__(c.label)} / M3`, kind: "m3", m3: true });
+		});
+		if (show_cost) cols.push({ key: "total_cost", label: __("Total Cost"), kind: "cur" });
+		if (show_m3) cols.push({ key: "total_cost_per_m3", label: __("Total Cost / M3"), kind: "m3", m3: true, total: true });
+		return cols;
+	}
+
+	cell(col, row) {
+		const v = row[col.key];
+		switch (col.kind) {
+			case "num":
+				return this.fmt_num(v);
+			case "cur":
+				return this.fmt_cur(v);
+			case "m3": {
+				const over = col.total && this.target() && flt(v) > this.target();
+				return `<span class="${over ? "dd-over" : ""}">${this.fmt_m3(v)}</span>`;
+			}
+			case "int":
+				return cstr(v);
+			case "pct":
+				return `${flt(v).toFixed(1)}%`;
+			case "html":
+				return col.render(row);
+			default:
+				return this.esc(v);
+		}
+	}
+
+	raw_cell(col, row) {
+		if (col.kind === "html") return col.raw ? col.raw(row) : "";
+		const v = row[col.key];
+		return v == null ? "" : v;
+	}
+
+	sorted_rows(id, rows, columns) {
+		const s = this.sort[id];
+		if (!s) return rows;
+		const col = columns.find((c) => c.key === s.key);
+		const get = (r) => (col && col.sort_value ? col.sort_value(r) : r[s.key]);
+		return rows.slice().sort((a, b) => {
+			const x = get(a);
+			const y = get(b);
+			let cmp;
+			if (typeof x === "number" && typeof y === "number") cmp = x - y;
+			else cmp = String(x == null ? "" : x).localeCompare(String(y == null ? "" : y));
+			return s.dir === "asc" ? cmp : -cmp;
+		});
+	}
+
+	table(id, columns, rows, total_row, default_limit = 100) {
+		rows = this.sorted_rows(id, rows, columns);
+		const limit = this.limit[id] || default_limit;
+		const shown = rows.slice(0, limit);
+		const s = this.sort[id];
+
+		this.tables = this.tables || {};
+		this.tables[id] = { columns, rows, total_row };
+
+		const head = columns
+			.map((c) => {
+				const arrow = s && s.key === c.key ? (s.dir === "asc" ? " &#9650;" : " &#9660;") : "";
+				const align = c.kind === "text" || c.kind === "html" ? "" : "dd-r";
+				return `<th class="${align} ${c.m3 ? "dd-m3" : ""}" data-sort="${c.key}">${c.label}${arrow}</th>`;
+			})
+			.join("");
+
+		const body = shown
+			.map(
+				(row) =>
+					`<tr>${columns
+						.map((c) => {
+							const align = c.kind === "text" || c.kind === "html" ? "" : "dd-r";
+							return `<td class="${align} ${c.m3 ? "dd-m3" : ""}">${this.cell(c, row)}</td>`;
+						})
+						.join("")}</tr>`
+			)
+			.join("");
+
+		let foot = "";
+		if (total_row) {
+			foot = `<tr class="dd-total">${columns
+				.map((c, i) => {
+					const align = c.kind === "text" || c.kind === "html" ? "" : "dd-r";
+					const content = i === 0 && c.kind !== "num" && c.kind !== "cur" && c.kind !== "m3" ? __("Total") : this.total_cell(c, total_row);
+					return `<td class="${align} ${c.m3 ? "dd-m3" : ""}">${content}</td>`;
+				})
+				.join("")}</tr>`;
+		}
+
+		const more =
+			rows.length > shown.length
+				? `<div class="dd-more-wrap"><button class="btn btn-xs btn-default dd-more" data-table="${id}">${__(
+						"Show more"
+				  )} (${shown.length} / ${rows.length})</button></div>`
+				: "";
+
+		return `<div class="dd-table-wrap"><table class="dd-table" data-table="${id}"><thead><tr>${head}</tr></thead><tbody>${body}</tbody>${
+			foot ? `<tfoot>${foot}</tfoot>` : ""
+		}</table></div>${more}`;
+	}
+
+	total_cell(col, row) {
+		if (col.kind === "html" || col.kind === "text") return "";
+		if (col.kind === "pct") return "100.0%";
+		if (row[col.key] == null) return "";
+		return this.cell(col, row);
+	}
+
+	render_tables() {
+		const d = this.data;
+		const k = d.kpis;
+		const value_cols = this.value_columns();
+
+		// Projects
+		const project_rows = d.projects.map((p) =>
+			Object.assign({}, p, { share: k.total_cost ? (p.total_cost / k.total_cost) * 100 : 0 })
+		);
+		const project_cols = [
+			{
+				key: "project_name",
+				label: __("Project"),
+				kind: "html",
+				render: (r) => this.project_link(r.project, r.project_name),
+				raw: (r) => r.project_name,
+				sort_value: (r) => r.project_name,
+			},
+			{ key: "dor_count", label: __("DORs"), kind: "int" },
+			...value_cols,
+			{ key: "share", label: __("Share of Cost"), kind: "pct" },
+		];
+		this.$body.find('[data-pane="projects"]').html(this.table("projects", project_cols, project_rows, k));
+
+		// Monthly
+		const monthly_cols = [
+			{ key: "month_sort", label: __("Month"), kind: "html", render: (r) => this.esc(r.month_label), raw: (r) => r.month_label, sort_value: (r) => r.month_sort },
+			{ key: "dor_count", label: __("DORs"), kind: "int" },
+			...value_cols,
+		];
+		this.$body.find('[data-pane="monthly"]').html(this.table("monthly", monthly_cols, d.monthly, k));
+
+		// DOR detail
+		const detail_cols = [
+			{ key: "dor", label: __("DOR"), kind: "html", render: (r) => this.dor_link(r.dor), raw: (r) => r.dor, sort_value: (r) => r.dor },
+			{ key: "date", label: __("Date"), kind: "html", render: (r) => this.esc(this.user_date(r.date)), raw: (r) => r.date, sort_value: (r) => r.date },
+			{
+				key: "project_name",
+				label: __("Project"),
+				kind: "html",
+				render: (r) => this.project_link(r.project, r.project_name),
+				raw: (r) => r.project_name || r.project,
+				sort_value: (r) => r.project_name || r.project,
+			},
+			...value_cols,
+		];
+		this.$body.find('[data-pane="detail"]').html(this.table("detail", detail_cols, d.rows, null));
+
+		// Flagged days
+		const a = d.anomalies;
+		const flagged_cols = [
+			{ key: "dor", label: __("DOR"), kind: "html", render: (r) => this.dor_link(r.dor), raw: (r) => r.dor, sort_value: (r) => r.dor },
+			{ key: "date", label: __("Date"), kind: "html", render: (r) => this.esc(this.user_date(r.date)), raw: (r) => r.date, sort_value: (r) => r.date },
+			{
+				key: "project_name",
+				label: __("Project"),
+				kind: "html",
+				render: (r) => this.project_link(r.project, r.project_name),
+				raw: (r) => r.project_name,
+				sort_value: (r) => r.project_name,
+			},
+			{ key: "treated_water", label: __("Treated Water (M3)"), kind: "num" },
+			{ key: "total_cost_per_m3", label: __("Total Cost / M3"), kind: "m3", m3: true },
+			{ key: "mean", label: __("Period Average / M3"), kind: "m3" },
+			{ key: "pct_above", label: __("Above Average"), kind: "pct" },
+			{ key: "driver", label: __("Main Driver"), kind: "text" },
+		];
+		const flagged_note = a.items.length
+			? `<div class="dd-note">${__(
+					"DORs with Total Cost / M3 above {0} (average + 2 standard deviations). Main driver = category furthest above its own average.",
+					[this.fmt_m3(a.threshold)]
+			  )}</div>`
+			: `<div class="dd-note">${__(
+					"No unusual days found (needs at least 8 DORs with treated water and some variation)."
+			  )}</div>`;
+		this.$body
+			.find('[data-pane="flagged"]')
+			.html(flagged_note + (a.items.length ? this.table("flagged", flagged_cols, a.items, null) : ""));
+		this.$body.find(".dd-badge").text(a.items.length ? a.items.length : "");
+	}
+
+	render_tabs() {
+		this.$body.find(".dd-tab").removeClass("active");
+		this.$body.find(`.dd-tab[data-tab="${this.active_tab}"]`).addClass("active");
+		this.$body.find(".dd-pane").hide();
+		this.$body.find(`.dd-pane[data-pane="${this.active_tab}"]`).show();
+		this.current_table = { projects: "projects", monthly: "monthly", detail: "detail", flagged: "flagged" }[
+			this.active_tab
+		];
+	}
+
+	// --------------------------------------------------------
+	// Export / drill-down
+	// --------------------------------------------------------
+	export_csv() {
+		const t = this.tables && this.tables[this.current_table];
+		if (!t) {
+			frappe.show_alert({ message: __("Nothing to export yet"), indicator: "orange" });
+			return;
+		}
+
+		const q = (v) => `"${String(v == null ? "" : v).replace(/"/g, '""')}"`;
+		const header = t.columns.map((c) => q(c.label)).join(",");
+		const lines = t.rows.map((r) => t.columns.map((c) => q(this.raw_cell(c, r))).join(","));
+		const csv = "\ufeff" + [header, ...lines].join("\n");
+
+		const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement("a");
+		a.href = url;
+		a.download = `dor_cost_${this.current_table}_${frappe.datetime.get_today()}.csv`;
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+		URL.revokeObjectURL(url);
+	}
+
+	open_report() {
+		const f = this.get_filters();
+		const route_options = {
+			from_date: f.from_date,
+			to_date: f.to_date,
+			exclude_zero_volume: f.exclude_zero,
+			display: this.display(),
+			group_by: "None",
+		};
+		if (f.project) route_options.project = f.project;
+		frappe.route_options = route_options;
+		frappe.set_route("query-report", REPORT_NAME);
+	}
+
+	// --------------------------------------------------------
+	// Styles
+	// --------------------------------------------------------
+	inject_css() {
+		if (document.getElementById("dor-dashboard-style")) return;
+		const style = document.createElement("style");
+		style.id = "dor-dashboard-style";
+		style.textContent = `
+			.dd-root { padding: 6px 0 30px; }
+			.dd-root.dd-loading .dd-content { opacity: .5; pointer-events: none; transition: opacity .15s; }
+			.dd-period { font-size: 12px; color: var(--text-muted); margin: 4px 0 12px; }
+			.dd-empty { padding: 40px; text-align: center; color: var(--text-muted); background: var(--card-bg); border: 1px dashed var(--border-color); border-radius: 8px; }
+
+			.dd-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin-bottom: 14px; }
+			.dd-kpi { background: var(--card-bg); border: 1px solid var(--border-color); border-top: 3px solid #1976a8; border-radius: 8px; padding: 12px 14px; }
+			.dd-kpi-over { background: rgba(226, 76, 76, .06); }
+			.dd-kpi-label { font-size: 11px; text-transform: uppercase; letter-spacing: .4px; color: var(--text-muted); margin-bottom: 4px; }
+			.dd-kpi-value { font-size: 22px; font-weight: 700; color: var(--heading-color); line-height: 1.2; }
+			.dd-kpi-foot { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 11px; flex-wrap: wrap; }
+			.dd-kpi-sub { color: var(--text-muted); }
+			.dd-delta { font-weight: 600; }
+			.dd-good, .dd-good-text { color: #2e9e6f; }
+			.dd-bad, .dd-bad-text { color: #e24c4c; }
+			.dd-na { color: var(--text-muted); }
+			.dd-over { color: #e24c4c; font-weight: 700; }
+
+			.dd-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+			.dd-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 12px 14px; min-width: 0; }
+			.dd-wide { grid-column: 1 / -1; }
+			.dd-card-title { font-weight: 600; font-size: 13px; margin-bottom: 8px; color: var(--heading-color); }
+			.dd-chart .chart-container { margin: 0; }
+
+			.dd-tabs-card { padding: 0; overflow: hidden; }
+			.dd-tabbar { display: flex; align-items: center; gap: 2px; padding: 8px 10px 0; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; }
+			.dd-tab { background: none; border: none; padding: 8px 14px; font-size: 13px; color: var(--text-muted); border-bottom: 2px solid transparent; cursor: pointer; }
+			.dd-tab.active { color: var(--heading-color); font-weight: 600; border-bottom-color: #1976a8; }
+			.dd-badge { margin-left: 6px; background: #e24c4c; color: #fff; border-radius: 10px; padding: 0 6px; font-size: 10px; }
+			.dd-badge:empty { display: none; }
+			.dd-spacer { flex: 1; }
+			.dd-export { margin-bottom: 6px; }
+			.dd-pane { padding: 0; }
+			.dd-note { padding: 10px 14px; font-size: 12px; color: var(--text-muted); }
+
+			.dd-table-wrap { overflow-x: auto; }
+			.dd-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+			.dd-table th { position: sticky; top: 0; background: var(--subtle-fg, var(--control-bg)); padding: 8px 10px; text-align: left; font-weight: 600; white-space: nowrap; cursor: pointer; border-bottom: 1px solid var(--border-color); user-select: none; }
+			.dd-table td { padding: 7px 10px; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
+			.dd-table tbody tr:hover { background: var(--control-bg); }
+			.dd-table .dd-r { text-align: right; }
+			.dd-table .dd-m3 { color: #1976a8; font-weight: 600; }
+			.dd-table .dd-m3 .dd-over { color: #e24c4c; }
+			.dd-table tfoot td { font-weight: 700; background: var(--control-bg); border-top: 2px solid #1976a8; }
+			.dd-more-wrap { text-align: center; padding: 10px; }
+			.dd-footer { font-size: 11px; margin-top: 10px; }
+
+			@media (max-width: 900px) { .dd-grid { grid-template-columns: 1fr; } }
+			@media print {
+				.page-head, .navbar, .dd-tabbar, .dd-more-wrap { display: none !important; }
+				.dd-pane { display: block !important; page-break-inside: avoid; }
+				.dd-card, .dd-kpi { break-inside: avoid; }
+			}
+		`;
+		document.head.appendChild(style);
+	}
+}

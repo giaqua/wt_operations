@@ -2,8 +2,15 @@
 # For license information, please see license.txt
 #
 # ============================================================
-# DOR Cost Analysis - Script Report
+# DOR Cost Analysis v3 - Script Report
 # ------------------------------------------------------------
+# Changes vs v2:
+#   - "hide_chart" filter (Check, default 1): when checked the report
+#     returns no chart.
+#   - When a Project filter is set, the Project Name is shown in the
+#     grid (extra "Project Name" column), in the grouped rows, and in
+#     the print header/table.
+#
 # Cost model (per Daily Operation Report):
 #     chemical_cost   = SUM(Chemical Usage Table.chemical_used_amount)
 #     manpower_cost   = DOR.manpower_cost_per_treated_water
@@ -12,33 +19,8 @@
 #     total_cost      = sum of the four above
 #     <category>/M3   = <category cost> / waste_water_treated_volume
 #
-# Filters:
-#     from_date, to_date   (used unless filter_month is set)
-#     filter_month/year    (Select "January".."December" + year - a
-#                           quick way to pick a whole month instead
-#                           of setting From/To manually; overrides
-#                           from_date/to_date when set)
-#     project              (optional Link)
-#     exclude_zero_volume  (Check - same as "Cost Dashboard With Qty")
-#     display              (Select: "Both" / "Cost Only" / "Cost per M3 Only")
-#     group_by             (Select: "None" / "Month" / "Project" / "Month + Project")
-#                           aggregates the daily rows into monthly
-#                           and/or per-project totals with recomputed
-#                           per-m3 rates (never an average of daily
-#                           ratios - always SUM(cost) / SUM(volume))
-#
-# Uses raw SQL (one query, LEFT JOIN against the child table) rather
-# than frappe.get_all + per-row queries, so it scales to large date
-# ranges without the N-call pattern the client script dialog uses.
-#
-# PRINT: the "Print" button in dor_cost_analysis.js calls the
-# whitelisted get_print_html() below via frappe.call, which returns
-# a fully-rendered HTML page (not a PDF). The button opens that HTML
-# in a new tab so the user can review it first; the browser's own
-# print dialog (triggered automatically) is what turns it into a
-# PDF/printout if and when the user chooses "Print" or "Save as PDF"
-# from there - all data fetching, grouping, and totals math still
-# happen here in Python.
+# Grouped per-m3 rates are always SUM(cost) / SUM(volume), never an
+# average of daily ratios.
 # ============================================================
 
 import calendar
@@ -46,7 +28,7 @@ import datetime
 
 import frappe
 from frappe import _
-from frappe.utils import flt, fmt_money, formatdate, get_first_day, get_last_day, get_url, now_datetime
+from frappe.utils import cint, flt, fmt_money, formatdate, get_first_day, get_last_day, get_url, now_datetime
 
 MONTH_NAMES = list(calendar.month_name)  # index 0 = "", 1 = "January", ... 12 = "December"
 
@@ -66,9 +48,10 @@ def execute(filters=None):
 	show_cost = display in ("Both", "Cost Only")
 	show_per_m3 = display in ("Both", "Cost per M3 Only")
 	group_by = filters.get("group_by") or "None"
+	show_project_name = bool(filters.get("project"))
 
 	raw_rows, totals = get_raw_data_and_totals(filters)
-	columns = get_columns(show_cost, show_per_m3, group_by)
+	columns = get_columns(show_cost, show_per_m3, group_by, show_project_name)
 
 	data = build_report_rows(raw_rows, group_by)
 	if totals:
@@ -78,7 +61,7 @@ def execute(filters=None):
 		data.append(totals_row)
 
 	report_summary = get_report_summary(totals)
-	chart = get_chart(raw_rows, group_by)
+	chart = None if cint(filters.get("hide_chart")) else get_chart(raw_rows, group_by)
 
 	return columns, data, None, chart, report_summary
 
@@ -128,12 +111,14 @@ def get_raw_data_and_totals(filters):
 			dor.name AS dor,
 			dor.date AS date,
 			dor.project AS project,
+			proj.project_name AS project_name,
 			dor.waste_water_treated_volume AS treated_water,
 			COALESCE(chem.chemical_cost, 0) AS chemical_cost,
 			COALESCE(dor.manpower_cost_per_treated_water, 0) AS manpower_cost,
 			COALESCE(dor.spare_part_cost_per_treated_water, 0) AS spare_part_cost,
 			COALESCE(dor.other_cost_per_treated_water, 0) AS other_cost
 		FROM `tabDaily Operation Report` dor
+		LEFT JOIN `tabProject` proj ON proj.name = dor.project
 		LEFT JOIN (
 			SELECT parent, SUM(chemical_used_amount) AS chemical_cost
 			FROM `tabChemical Usage Table`
@@ -163,6 +148,7 @@ def get_raw_data_and_totals(filters):
 				"dor": row.dor,
 				"date": row.date,
 				"project": row.project,
+				"project_name": row.project_name or "",
 				"month_label": row.date.strftime("%B %Y") if row.date else "",
 				"month_sort": row.date.strftime("%Y-%m") if row.date else "",
 				"treated_water": treated_water,
@@ -185,6 +171,7 @@ def get_raw_data_and_totals(filters):
 			"dor": None,
 			"date": None,
 			"project": None,
+			"project_name": None,
 			"month_label": None,
 			"treated_water": sum(d["treated_water"] for d in data),
 			"chemical_cost": sum(d["chemical_cost"] for d in data),
@@ -219,7 +206,7 @@ def apply_totals_labels(totals_row, group_by):
 
 
 # ------------------------------------------------------------
-# Grouping (shared by the on-screen grid, the print PDF, and the chart)
+# Grouping
 # ------------------------------------------------------------
 def group_rows(raw_rows, key_fn, label_fn):
 	"""Aggregate raw daily rows by an arbitrary key, recomputing every
@@ -278,7 +265,10 @@ def build_report_rows(raw_rows, group_by):
 		return group_rows(
 			raw_rows,
 			key_fn=lambda r: r["project"] or _("(No Project)"),
-			label_fn=lambda r: {"project": r["project"] or _("(No Project)")},
+			label_fn=lambda r: {
+				"project": r["project"] or _("(No Project)"),
+				"project_name": r.get("project_name") or "",
+			},
 		)
 
 	if group_by == "Month + Project":
@@ -288,6 +278,7 @@ def build_report_rows(raw_rows, group_by):
 			label_fn=lambda r: {
 				"month_label": r["month_label"],
 				"project": r["project"] or _("(No Project)"),
+				"project_name": r.get("project_name") or "",
 			},
 		)
 
@@ -297,8 +288,9 @@ def build_report_rows(raw_rows, group_by):
 # ------------------------------------------------------------
 # Columns
 # ------------------------------------------------------------
-def get_columns(show_cost, show_per_m3, group_by):
+def get_columns(show_cost, show_per_m3, group_by, show_project_name=False):
 	columns = []
+	project_name_col = {"label": _("Project Name"), "fieldname": "project_name", "fieldtype": "Data", "width": 200}
 
 	if group_by == "None":
 		columns += [
@@ -306,11 +298,15 @@ def get_columns(show_cost, show_per_m3, group_by):
 			{"label": _("Date"), "fieldname": "date", "fieldtype": "Date", "width": 95},
 			{"label": _("Project"), "fieldname": "project", "fieldtype": "Link", "options": "Project", "width": 140},
 		]
+		if show_project_name:
+			columns.append(project_name_col)
 	else:
 		if group_by in ("Month", "Month + Project"):
 			columns.append({"label": _("Month"), "fieldname": "month_label", "fieldtype": "Data", "width": 110})
 		if group_by in ("Project", "Month + Project"):
-			columns.append({"label": _("Project"), "fieldname": "project", "fieldtype": "Data", "width": 140})
+			# Value stays the project ID; the JS formatter renders the project
+			# name as a link that opens the Project in a new tab.
+			columns.append({"label": _("Project"), "fieldname": "project", "fieldtype": "Data", "width": 240})
 		columns.append({"label": _("DOR Count"), "fieldname": "dor_count", "fieldtype": "Int", "width": 90})
 
 	columns.append(
@@ -387,13 +383,6 @@ def get_chart(raw_rows, group_by):
 
 # ============================================================
 # PRINT / REVIEW (HTML, not PDF)
-# Called by the "Print" button (dor_cost_analysis.js) via
-# frappe.call. Reuses resolve_filters()/get_raw_data_and_totals()/
-# build_report_rows() so the printed numbers - grouped or not -
-# can never drift from what's on screen. Returns HTML so the user
-# gets a normal browser print-preview tab to review before they
-# actually print or save as PDF, rather than a PDF being generated
-# and downloaded immediately.
 # ============================================================
 
 
@@ -444,9 +433,11 @@ def _number(value):
 	return "{:,.2f}".format(flt(value))
 
 
-def _label_header_cells(group_by):
+def _label_header_cells(group_by, show_project_name=False):
+	name_th = f"<th>{_('Project Name')}</th>" if show_project_name else ""
+
 	if group_by == "None":
-		return f"<th>{_('Date')}</th><th>{_('Project')}</th>"
+		return f"<th>{_('Date')}</th><th>{_('Project')}</th>{name_th}"
 
 	cells = ""
 	if group_by in ("Month", "Month + Project"):
@@ -457,25 +448,33 @@ def _label_header_cells(group_by):
 	return cells
 
 
-def _label_row_cells(row, group_by):
+def _label_row_cells(row, group_by, show_project_name=False):
+	name_td = (
+		f"<td>{frappe.utils.escape_html(row.get('project_name') or '')}</td>" if show_project_name else ""
+	)
+
 	if group_by == "None":
 		return (
 			f"<td>{formatdate(row['date']) if row.get('date') else ''}</td>"
 			f"<td>{frappe.utils.escape_html(row.get('project') or '')}</td>"
+			f"{name_td}"
 		)
 
 	cells = ""
 	if group_by in ("Month", "Month + Project"):
 		cells += f"<td>{frappe.utils.escape_html(row.get('month_label') or '')}</td>"
 	if group_by in ("Project", "Month + Project"):
-		cells += f"<td>{frappe.utils.escape_html(row.get('project') or '')}</td>"
+		project_label = row.get("project_name") or row.get("project") or ""
+		cells += f"<td>{frappe.utils.escape_html(project_label)}</td>"
 	cells += f"<td class='text-right'>{row.get('dor_count', '')}</td>"
 	return cells
 
 
-def _totals_label_cells(totals, group_by):
+def _totals_label_cells(totals, group_by, show_project_name=False):
+	name_td = "<td></td>" if show_project_name else ""
+
 	if group_by == "None":
-		return f"<td>{_('Total')}</td><td></td>"
+		return f"<td>{_('Total')}</td><td></td>{name_td}"
 
 	cells = ""
 	if group_by in ("Month", "Month + Project"):
@@ -503,15 +502,19 @@ def _value_cells(row, show_cost, show_per_m3):
 
 
 def build_print_html(rows, totals, filters, company, show_cost, show_per_m3, group_by):
-	"""Render the same visual language as the client-script print view
-	(gradient header band, logo, KPI cards, tinted /M3 columns) as a
-	standalone HTML page the browser can preview and print directly."""
+	"""Render the branded print view as a standalone HTML page the
+	browser can preview and print directly."""
 
-	project_line = (
-		f"{_('Project')}: <strong>{frappe.utils.escape_html(filters.get('project'))}</strong> &nbsp;|&nbsp; "
-		if filters.get("project")
-		else ""
-	)
+	show_project_name = bool(filters.get("project"))
+
+	project_line = ""
+	if filters.get("project"):
+		project_name = frappe.db.get_value("Project", filters.get("project"), "project_name") or ""
+		project_display = frappe.utils.escape_html(filters.get("project"))
+		if project_name and project_name != filters.get("project"):
+			project_display += f" &ndash; {frappe.utils.escape_html(project_name)}"
+		project_line = f"{_('Project')}: <strong>{project_display}</strong> &nbsp;|&nbsp; "
+
 	group_by_line = (
 		f"{_('Grouped by')}: <strong>{frappe.utils.escape_html(_(group_by))}</strong> &nbsp;|&nbsp; "
 		if group_by != "None"
@@ -558,7 +561,7 @@ def build_print_html(rows, totals, filters, company, show_cost, show_per_m3, gro
 			</div>
 		</div>"""
 
-	header_cells = _label_header_cells(group_by) + f"<th class='text-right'>{_('Treated Water (M3)')}</th>"
+	header_cells = _label_header_cells(group_by, show_project_name) + f"<th class='text-right'>{_('Treated Water (M3)')}</th>"
 	for fieldname, cost_label, per_m3_label in CATEGORIES:
 		if show_cost:
 			header_cells += f"<th class='text-right'>{_(cost_label)}</th>"
@@ -570,10 +573,12 @@ def build_print_html(rows, totals, filters, company, show_cost, show_per_m3, gro
 		header_cells += f"<th class='text-right col-per-m3'>{_('Total Cost / M3')}</th>"
 
 	body_rows_html = "".join(
-		f"<tr>{_label_row_cells(row, group_by)}{_value_cells(row, show_cost, show_per_m3)}</tr>" for row in rows
+		f"<tr>{_label_row_cells(row, group_by, show_project_name)}{_value_cells(row, show_cost, show_per_m3)}</tr>"
+		for row in rows
 	)
 	totals_row_html = (
-		f"<tr class='totals-row'>{_totals_label_cells(totals, group_by)}{_value_cells(totals, show_cost, show_per_m3)}</tr>"
+		f"<tr class='totals-row'>{_totals_label_cells(totals, group_by, show_project_name)}"
+		f"{_value_cells(totals, show_cost, show_per_m3)}</tr>"
 	)
 
 	logo_html = f"<img src='{company['logo']}' class='company-logo' />" if company.get("logo") else ""
@@ -724,9 +729,7 @@ def build_print_html(rows, totals, filters, company, show_cost, show_per_m3, gro
 			</div>
 		</div>
 		<script>
-			// Opens the browser's native print dialog, which itself shows a
-			// preview the user can review, adjust, cancel, or use to save
-			// as PDF - nothing is generated or downloaded automatically.
+			// Opens the browser's native print dialog (also a preview).
 			window.onload = function () {{ window.print(); }};
 		</script>
 	</body>

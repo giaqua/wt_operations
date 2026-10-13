@@ -1,19 +1,12 @@
 // ============================================================
-// DOR Cost Analysis - Script Report client script
-// Defines filters (date range or Month/Year shortcut, project,
-// group-by Month/Project, exclude-zero-volume, and the Cost /
-// Cost per M3 / Both display toggle), highlights the "/ M3"
-// columns, and adds a "Print" button that calls the whitelisted
-// get_print_html() Python method, which returns a fully-rendered
-// HTML page (company logo/name, colored header, KPI cards). That
-// HTML opens in a new tab and triggers the browser's print dialog -
-// a normal print preview the user can review before printing or
-// saving as PDF, rather than a PDF being generated up front.
+// DOR Cost Analysis v3 - Script Report client script
+// Changes vs v2:
+//   - New "Hide Chart" filter (checked by default) - the chart is
+//     only drawn when the user unchecks it.
+//   - Project Name is shown (grid + print) when a Project is filtered.
 //
 // IMPORTANT: update PY_MODULE_PATH below to match where you place
-// this report folder, e.g.
-//   "your_app.water_treatment_operations.report.dor_cost_analysis.dor_cost_analysis"
-// (app_name.module_name_snake_case.report.report_name.report_name)
+// this report folder.
 // ============================================================
 
 const PY_MODULE_PATH =
@@ -56,7 +49,7 @@ frappe.query_reports["DOR Cost Analysis V3"] = {
 				"September",
 				"October",
 				"November",
-				"December",
+		"December",
 			],
 			description: __("Optional - overrides From/To Date with the full selected month"),
 		},
@@ -89,6 +82,12 @@ frappe.query_reports["DOR Cost Analysis V3"] = {
 			default: 0,
 		},
 		{
+			fieldname: "hide_chart",
+			label: __("Hide Chart"),
+			fieldtype: "Check",
+			default: 1,
+		},
+		{
 			fieldname: "display",
 			label: __("Show"),
 			fieldtype: "Select",
@@ -99,6 +98,24 @@ frappe.query_reports["DOR Cost Analysis V3"] = {
 	],
 
 	formatter(value, row, column, data, default_formatter) {
+		const group_by = frappe.query_report.get_filter_value("group_by");
+
+		// Grouped by Project: show the project name instead of the ID,
+		// as a link that opens the Project in a new tab.
+		if (
+			column.fieldname === "project" &&
+			group_by &&
+			group_by !== "None" &&
+			data &&
+			!data.is_total_row &&
+			data.project_name
+		) {
+			const url = `/app/project/${encodeURIComponent(data.project)}`;
+			return `<a href="${url}" target="_blank" rel="noopener">${frappe.utils.escape_html(
+				data.project_name
+			)}</a>`;
+		}
+
 		value = default_formatter(value, row, column, data);
 
 		if (data && data.is_total_row) {
@@ -115,12 +132,6 @@ frappe.query_reports["DOR Cost Analysis V3"] = {
 
 // ------------------------------------------------------------
 // Print button handler
-// All data fetching, grouping, and totals math happen server-side
-// in get_print_html() (Python) - this just calls it and opens the
-// returned HTML in a new tab. The tab triggers the browser's native
-// print dialog on load, which is itself a preview the user can
-// review, adjust, or cancel before actually printing/saving as PDF.
-// No PDF is generated or downloaded up front.
 // ------------------------------------------------------------
 function print_dor_cost_analysis(report) {
 	const filters = frappe.query_report.get_filter_values(true);

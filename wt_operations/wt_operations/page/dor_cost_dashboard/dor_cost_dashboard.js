@@ -10,7 +10,8 @@
 //     peak / best day
 //   - Charts: monthly cost/M3 by category (stacked), cost mix (donut),
 //     daily trend + 7-day average, project comparison, monthly volume
-//   - Tabs: Projects, Monthly, DOR Detail, Flagged Days (sortable,
+//   - Sections as tabs: Overview (KPIs + monthly charts), Trends (daily /
+//     volume), Projects (chart + table), Monthly, DOR Detail, Flagged Days (sortable,
 //     show-more, CSV export, links open in a new tab)
 //   - Print and "open in DOR Cost Analysis report" drill-down
 //
@@ -54,7 +55,7 @@ class DORCostDashboard {
 
 		this.data = null;
 		this.currency = frappe.defaults.get_default("currency") || "";
-		this.active_tab = "projects";
+		this.active_tab = "overview";
 		this.sort = {};
 		this.limit = {};
 		this.silent = false;
@@ -154,43 +155,62 @@ class DORCostDashboard {
 				<div class="dd-period"></div>
 				<div class="dd-empty" style="display:none"></div>
 				<div class="dd-content">
-					<div class="dd-kpis"></div>
-					<div class="dd-grid">
-						<div class="dd-card">
-							<div class="dd-card-title">${__("Monthly Cost / M3 by Category")}</div>
-							<div class="dd-chart" data-chart="monthly"></div>
+					<div class="dd-tabbar dd-main-tabs">
+						<button class="dd-tab" data-tab="overview">${__("Overview")}</button>
+						<button class="dd-tab" data-tab="trends">${__("Trends")}</button>
+						<button class="dd-tab" data-tab="projects">${__("Projects")}</button>
+						<button class="dd-tab" data-tab="monthly">${__("Monthly")}</button>
+						<button class="dd-tab" data-tab="detail">${__("DOR Detail")}</button>
+						<button class="dd-tab" data-tab="flagged">${__("Flagged Days")}<span class="dd-badge"></span></button>
+						<span class="dd-spacer"></span>
+						<button class="btn btn-xs btn-default dd-export">${__("Export CSV")}</button>
+					</div>
+
+					<div class="dd-pane" data-pane="overview">
+						<div class="dd-kpis"></div>
+						<div class="dd-grid">
+							<div class="dd-card">
+								<div class="dd-card-title">${__("Monthly Cost / M3 by Category")}</div>
+								<div class="dd-chart" data-chart="monthly"></div>
+							</div>
+							<div class="dd-card">
+								<div class="dd-card-title">${__("Cost Mix")}</div>
+								<div class="dd-chart" data-chart="mix"></div>
+							</div>
 						</div>
-						<div class="dd-card">
-							<div class="dd-card-title">${__("Cost Mix")}</div>
-							<div class="dd-chart" data-chart="mix"></div>
-						</div>
-						<div class="dd-card dd-wide">
+					</div>
+
+					<div class="dd-pane" data-pane="trends">
+						<div class="dd-card dd-gap">
 							<div class="dd-card-title">${__("Daily Total Cost / M3 (with 7-day average)")}</div>
 							<div class="dd-chart" data-chart="daily"></div>
 						</div>
-						<div class="dd-card">
-							<div class="dd-card-title dd-projects-title">${__("Project Comparison - Cost / M3")}</div>
-							<div class="dd-chart" data-chart="projects"></div>
-						</div>
-						<div class="dd-card">
+						<div class="dd-card dd-gap">
 							<div class="dd-card-title">${__("Monthly Treated Water (M3)")}</div>
 							<div class="dd-chart" data-chart="volume"></div>
 						</div>
 					</div>
-					<div class="dd-card dd-tabs-card">
-						<div class="dd-tabbar">
-							<button class="dd-tab" data-tab="projects">${__("Projects")}</button>
-							<button class="dd-tab" data-tab="monthly">${__("Monthly")}</button>
-							<button class="dd-tab" data-tab="detail">${__("DOR Detail")}</button>
-							<button class="dd-tab" data-tab="flagged">${__("Flagged Days")}<span class="dd-badge"></span></button>
-							<span class="dd-spacer"></span>
-							<button class="btn btn-xs btn-default dd-export">${__("Export CSV")}</button>
+
+					<div class="dd-pane" data-pane="projects">
+						<div class="dd-card dd-gap">
+							<div class="dd-card-title dd-projects-title">${__("Project Comparison - Cost / M3")}</div>
+							<div class="dd-chart" data-chart="projects"></div>
 						</div>
-						<div class="dd-pane" data-pane="projects"></div>
-						<div class="dd-pane" data-pane="monthly"></div>
-						<div class="dd-pane" data-pane="detail"></div>
-						<div class="dd-pane" data-pane="flagged"></div>
+						<div class="dd-card dd-tbl" data-tbl="projects"></div>
 					</div>
+
+					<div class="dd-pane" data-pane="monthly">
+						<div class="dd-card dd-tbl" data-tbl="monthly"></div>
+					</div>
+
+					<div class="dd-pane" data-pane="detail">
+						<div class="dd-card dd-tbl" data-tbl="detail"></div>
+					</div>
+
+					<div class="dd-pane" data-pane="flagged">
+						<div class="dd-card dd-tbl" data-tbl="flagged"></div>
+					</div>
+
 					<div class="dd-footer text-muted"></div>
 				</div>
 			</div>
@@ -372,7 +392,6 @@ class DORCostDashboard {
 		this.$body.find(".dd-content").show();
 
 		this.render_kpis();
-		this.render_charts();
 		this.render_tables();
 		this.render_tabs();
 
@@ -501,9 +520,11 @@ class DORCostDashboard {
 			: [];
 		const tip = { formatTooltipY: (v) => this.fmt_m3(v) };
 		const colors = CATS.map((c) => c.color);
+		const on = (...tabs) => tabs.includes(this.active_tab);
 
 		// 1. Monthly stacked cost / m3
-		this.chart("monthly", {
+		if (on("overview"))
+			this.chart("monthly", {
 			type: "bar",
 			colors,
 			data: {
@@ -520,7 +541,9 @@ class DORCostDashboard {
 
 		// 2. Cost mix donut
 		const k = d.kpis;
-		if (k.total_cost > 0) {
+		if (!on("overview")) {
+			// not visible - skip
+		} else if (k.total_cost > 0) {
 			this.chart("mix", {
 				type: "donut",
 				colors,
@@ -542,7 +565,8 @@ class DORCostDashboard {
 			const vol = win.reduce((s, x) => s + x.treated_water, 0);
 			return vol ? this.round(cost / vol) : 0;
 		});
-		this.chart("daily", {
+		if (on("trends"))
+			this.chart("daily", {
 			type: "line",
 			colors: ["#1976a8", "#f0a030"],
 			data: {
@@ -567,7 +591,8 @@ class DORCostDashboard {
 					? __("Project Comparison - Cost / M3 (top 12 by cost)")
 					: __("Project Comparison - Cost / M3")
 			);
-		this.chart("projects", {
+		if (on("projects"))
+			this.chart("projects", {
 			type: "bar",
 			colors,
 			data: {
@@ -583,7 +608,8 @@ class DORCostDashboard {
 		});
 
 		// 5. Monthly volume
-		this.chart("volume", {
+		if (on("trends"))
+			this.chart("volume", {
 			type: "bar",
 			colors: ["#1976a8"],
 			data: {
@@ -737,7 +763,7 @@ class DORCostDashboard {
 			...value_cols,
 			{ key: "share", label: __("Share of Cost"), kind: "pct" },
 		];
-		this.$body.find('[data-pane="projects"]').html(this.table("projects", project_cols, project_rows, k));
+		this.$body.find('[data-tbl="projects"]').html(this.table("projects", project_cols, project_rows, k));
 
 		// Monthly
 		const monthly_cols = [
@@ -745,7 +771,7 @@ class DORCostDashboard {
 			{ key: "dor_count", label: __("DORs"), kind: "int" },
 			...value_cols,
 		];
-		this.$body.find('[data-pane="monthly"]').html(this.table("monthly", monthly_cols, d.monthly, k));
+		this.$body.find('[data-tbl="monthly"]').html(this.table("monthly", monthly_cols, d.monthly, k));
 
 		// DOR detail
 		const detail_cols = [
@@ -761,7 +787,7 @@ class DORCostDashboard {
 			},
 			...value_cols,
 		];
-		this.$body.find('[data-pane="detail"]').html(this.table("detail", detail_cols, d.rows, null));
+		this.$body.find('[data-tbl="detail"]').html(this.table("detail", detail_cols, d.rows, null));
 
 		// Flagged days
 		const a = d.anomalies;
@@ -791,19 +817,25 @@ class DORCostDashboard {
 					"No unusual days found (needs at least 8 DORs with treated water and some variation)."
 			  )}</div>`;
 		this.$body
-			.find('[data-pane="flagged"]')
+			.find('[data-tbl="flagged"]')
 			.html(flagged_note + (a.items.length ? this.table("flagged", flagged_cols, a.items, null) : ""));
 		this.$body.find(".dd-badge").text(a.items.length ? a.items.length : "");
 	}
 
 	render_tabs() {
+		const tab = this.active_tab;
 		this.$body.find(".dd-tab").removeClass("active");
-		this.$body.find(`.dd-tab[data-tab="${this.active_tab}"]`).addClass("active");
+		this.$body.find(`.dd-tab[data-tab="${tab}"]`).addClass("active");
 		this.$body.find(".dd-pane").hide();
-		this.$body.find(`.dd-pane[data-pane="${this.active_tab}"]`).show();
-		this.current_table = { projects: "projects", monthly: "monthly", detail: "detail", flagged: "flagged" }[
-			this.active_tab
-		];
+		this.$body.find(`.dd-pane[data-pane="${tab}"]`).show();
+
+		const table_tabs = { projects: "projects", monthly: "monthly", detail: "detail", flagged: "flagged" };
+		this.current_table = table_tabs[tab] || null;
+		this.$body.find(".dd-export").toggle(!!this.current_table);
+
+		// Charts are drawn only when their tab is visible (frappe-charts
+		// cannot size itself inside a hidden container).
+		if (this.data && this.data.kpis) this.render_charts();
 	}
 
 	// --------------------------------------------------------
@@ -878,7 +910,9 @@ class DORCostDashboard {
 			.dd-card-title { font-weight: 600; font-size: 13px; margin-bottom: 8px; color: var(--heading-color); }
 			.dd-chart .chart-container { margin: 0; }
 
-			.dd-tabs-card { padding: 0; overflow: hidden; }
+			.dd-tbl { padding: 0; overflow: hidden; margin-bottom: 14px; }
+			.dd-gap { margin-bottom: 14px; }
+			.dd-main-tabs { margin-bottom: 14px; padding: 0; }
 			.dd-tabbar { display: flex; align-items: center; gap: 2px; padding: 8px 10px 0; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; }
 			.dd-tab { background: none; border: none; padding: 8px 14px; font-size: 13px; color: var(--text-muted); border-bottom: 2px solid transparent; cursor: pointer; }
 			.dd-tab.active { color: var(--heading-color); font-weight: 600; border-bottom-color: #1976a8; }
@@ -904,7 +938,7 @@ class DORCostDashboard {
 			@media (max-width: 900px) { .dd-grid { grid-template-columns: 1fr; } }
 			@media print {
 				.page-head, .navbar, .dd-tabbar, .dd-more-wrap { display: none !important; }
-				.dd-pane { display: block !important; page-break-inside: avoid; }
+				.dd-pane { page-break-inside: avoid; }
 				.dd-card, .dd-kpi { break-inside: avoid; }
 			}
 		`;
